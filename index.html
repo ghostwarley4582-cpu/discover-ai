@@ -26,10 +26,11 @@ footer{border-top:1px solid var(--line);padding:35px 0;color:var(--muted);font-s
 .toast{position:fixed;right:18px;bottom:18px;background:#17111f;border:1px solid #49325f;padding:14px 17px;border-radius:14px;display:none;z-index:80}
 @media(max-width:850px){.navlinks{display:none}.controls,.feature{grid-template-columns:1fr}.grid{grid-template-columns:1fr 1fr}.admin{grid-template-columns:1fr 1fr}.levels{grid-template-columns:repeat(5,1fr)}}
 @media(max-width:560px){h1{letter-spacing:-2px}.hero{padding-top:55px}.grid{grid-template-columns:1fr}.premium ul{grid-template-columns:1fr}.plans{grid-template-columns:1fr}.admin{grid-template-columns:1fr 1fr}.section-head{display:block}.section-head .btn{margin-top:12px}}
+.control::placeholder, textarea::placeholder{color:#71687d}.control:focus,textarea:focus{outline:1px solid var(--purple)}
 </style>
 </head>
 <body>
-<nav><div class="wrap" style="display:flex;justify-content:space-between;width:100%;align-items:center"><div class="brand"><div class="mark">✦</div>DISCOVER<span style="color:#a855f7">AI</span></div><div class="navlinks"><a href="#explore">Keşfet</a><a href="#levels">Seviyeler</a><a href="#premium">Premium</a><a href="#admin">Yönetim</a></div><div class="actions"><button class="btn" onclick="toast('Demo giriş ekranı hazır. Gerçek auth backend aşamasında bağlanacak.')">Giriş</button><button class="btn primary" onclick="toast('Demo hesabı oluşturuldu.')">Katıl</button></div></div></nav>
+<nav><div class="wrap" style="display:flex;justify-content:space-between;width:100%;align-items:center"><div class="brand"><div class="mark">✦</div>DISCOVER<span style="color:#a855f7">AI</span></div><div class="navlinks"><a href="#explore">Keşfet</a><a href="#levels">Seviyeler</a><a href="#premium">Premium</a><a href="#admin">Yönetim</a></div><div class="actions"><button id="loginBtn" class="btn">Giriş</button><button id="joinBtn" class="btn primary">Katıl</button></div></div></nav>
 
 <main>
 <section class="hero wrap">
@@ -49,39 +50,274 @@ footer{border-top:1px solid var(--line);padding:35px 0;color:var(--muted);font-s
 </section>
 
 <section id="levels" class="wrap">
-<div class="feature"><div class="glass"><div class="eyebrow">PROGRESS ENGINE</div><h2>Keşfettikçe seviye atla.</h2><p class="muted">Her seviye yeni bir özellik ve ödül açar. Demo kullanıcı şu an Level 4.</p><div class="levels" id="levelsGrid"></div><div style="margin-top:18px"><div style="display:flex;justify-content:space-between"><span>Level 4 → 5</span><b>720 / 1000 XP</b></div><div style="height:8px;background:#21182c;border-radius:9px;margin-top:7px"><div style="width:72%;height:100%;border-radius:9px;background:linear-gradient(90deg,#7c3aed,#c084fc)"></div></div></div></div>
-<div class="glass"><div class="eyebrow">BUGÜNÜM</div><h2>₺720 / ₺750</h2><p class="muted">AI tarafından oluşturulan örnek günlük rota.</p><div style="display:grid;gap:10px;margin-top:20px"><div class="control">14:00 · ☕ <b>Kahve keşfi</b><br><span class="muted">₺180 · 70 dk</span></div><div class="control">15:30 · 🎨 <b>Mini sanat deneyimi</b><br><span class="muted">₺250 · 90 dk</span></div><div class="control">17:15 · 🌅 <b>Gün batımı rotası</b><br><span class="muted">Ücretsiz · 60 dk</span></div></div></div></div>
+<div class="feature"><div class="glass"><div class="eyebrow">PROGRESS ENGINE</div><h2>Keşfettikçe seviye atla.</h2><p class="muted">Her seviye yeni bir özellik ve ödül açar. Demo kullanıcı şu an Level 4.</p><div class="levels" id="levelsGrid"></div><div style="margin-top:18px"><div style="display:flex;justify-content:space-between"><span>Level 4 → 5</span><b><span id="xpValue">720 / 1000 XP</span></b></div><div style="height:8px;background:#21182c;border-radius:9px;margin-top:7px"><div id="xpBar" style="width:72%;height:100%;border-radius:9px;background:linear-gradient(90deg,#7c3aed,#c084fc)"></div></div></div></div>
+<div class="glass"><div class="eyebrow">BUGÜNÜM</div><h2>₺720 / ₺750</h2><p class="muted">AI tarafından oluşturulan örnek günlük rota.</p><div id="routePanel" style="display:grid;gap:10px;margin-top:20px"></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"><button class="btn" onclick="shareRoute()">↗ Rotayı Paylaş</button><button class="btn" onclick="clearRoute()">Rota Temizle</button><span class="muted" style="padding:10px">Toplam: <b id="routeTotal">₺0</b></span></div><div style="display:grid;gap:10px;margin-top:20px"><div class="control">14:00 · ☕ <b>Kahve keşfi</b><br><span class="muted">₺180 · 70 dk</span></div><div class="control">15:30 · 🎨 <b>Mini sanat deneyimi</b><br><span class="muted">₺250 · 90 dk</span></div><div class="control">17:15 · 🌅 <b>Gün batımı rotası</b><br><span class="muted">Ücretsiz · 60 dk</span></div></div></div></div>
 </section>
 
-<section id="premium" class="wrap"><div class="premium"><div class="eyebrow">✦ DISCOVER AI ELITE</div><h2 style="font-size:36px">Daha fazla sonuç değil.<br>Daha iyi kararlar.</h2><p class="muted" style="max-width:620px">Premium; alternatif planlar, bütçe optimizasyonu, kişisel rota, “neden bunu seçtik?” analizi ve gelişmiş AI senaryolarını açar.</p><ul><li>Gelişmiş kişisel AI</li><li>Hard Budget optimizasyonu</li><li>Kötü hava için B planı</li><li>“Bundan daha iyisini bul”</li><li>Detaylı rota ve maliyet</li><li>Özel deneyim koleksiyonları</li></ul><button class="btn gold" onclick="openPremium()">Premium'u Gör</button></div></section>
+<section id="premium" class="wrap"><div class="premium"><div class="eyebrow">✦ DISCOVER AI ELITE</div><h2 style="font-size:36px">Daha fazla sonuç değil.<br>Daha iyi kararlar.</h2><p class="muted" style="max-width:620px">Premium; alternatif planlar, bütçe optimizasyonu, kişisel rota, “neden bunu seçtik?” analizi ve gelişmiş AI senaryolarını açar.</p><ul><li>Gelişmiş kişisel AI</li><li>Hard Budget optimizasyonu</li><li>Kötü hava için B planı</li><li>“Bundan daha iyisini bul”</li><li>Detaylı rota ve maliyet</li><li>Özel deneyim koleksiyonları</li></ul><button id="premiumStatus" class="btn gold" onclick="openPremium()">Premium’u Gör</button></div></section>
 
-<section id="admin" class="wrap"><div class="section-head"><div><div class="eyebrow">COMMAND CENTER</div><h2>Moderasyon merkezi</h2><p class="muted">AI tespit eder, önceliklendirir; nihai karar yöneticidedir.</p></div></div><div class="admin"><div class="stat"><span class="muted">Kritik inceleme</span><br><b>17</b></div><div class="stat"><span class="muted">Şikayet</span><br><b>43</b></div><div class="stat"><span class="muted">İşletme inceleme</span><br><b>6</b></div><div class="stat"><span class="muted">Premium</span><br><b>28</b></div></div><div class="alert">🚨 <b>Yüksek öncelik:</b> “Çalışan bana hakaret etti...” — AI risk: %96 · <button class="btn" onclick="toast('Moderasyon kaydı açıldı. Gerçek sistemde admin aksiyonu backend tarafından doğrulanacak.')">İncele</button></div></section>
+<section id="admin" class="wrap"><div class="section-head"><div><div class="eyebrow">COMMAND CENTER</div><h2>Moderasyon merkezi</h2><p class="muted">AI tespit eder, önceliklendirir; nihai karar yöneticidedir.</p></div></div><div class="admin"><div class="stat"><span class="muted">Kritik inceleme</span><br><b>17</b></div><div class="stat"><span class="muted">Şikayet</span><br><b>43</b></div><div class="stat"><span class="muted">İşletme inceleme</span><br><b>6</b></div><div class="stat"><span class="muted">Premium</span><br><b>28</b></div></div><div class="alert">🚨 <b>Yüksek öncelik:</b> “Çalışan bana hakaret etti...” — AI risk: %96 · <button class="btn" onclick="openAdmin()">İncele</button></div></section>
 </main>
 <footer><div class="wrap">DISCOVER AI · Güvenli mimari hedefi: secret'lar yalnızca server tarafında · Demo UI / MVP</div></footer>
 
 <div class="modal" id="premiumModal"><div class="modalbox"><button class="close" onclick="closePremium()">×</button><div class="eyebrow">ELITE MEMBERSHIP</div><h2>Deneyimini yükselt.</h2><div class="plans"><div class="plan"><b>WEEKLY</b><p><strong>₺99</strong></p><button class="btn primary" onclick="subscribe('Haftalık')">Seç</button></div><div class="plan featured"><b>MONTHLY</b><p><strong>₺249</strong></p><button class="btn primary" onclick="subscribe('Aylık')">Seç</button></div><div class="plan"><b>YEARLY</b><p><strong>₺1.999</strong></p><button class="btn gold" onclick="subscribe('Yıllık')">Seç</button></div></div><p class="small">Bu arayüz demo ödeme akışıdır. Gerçek ödeme için sunucu tarafında güvenli bir ödeme sağlayıcısı ve webhook doğrulaması bağlanmalıdır.</p></div></div>
+
+<div class="modal" id="authModal"><div class="modalbox"><button class="close" onclick="closeAuth()">×</button><div class="eyebrow">ACCOUNT</div><h2 id="authTitle">Tekrar hoş geldin</h2><input id="authName" class="control" style="width:100%;margin:8px 0;color:#fff" placeholder="Adın"><input id="authEmail" class="control" style="width:100%;margin:8px 0;color:#fff" placeholder="E-posta" type="email"><input class="control" style="width:100%;margin:8px 0;color:#fff" placeholder="Şifre" type="password"><button id="authAction" class="btn primary" style="width:100%;margin-top:8px" onclick="authSubmit()">Giriş Yap</button><p class="small">Bu sürümde hesap bilgileri yalnızca cihazındaki localStorage'da demo amaçlı tutulur. Gerçek kimlik doğrulama backend ile yapılmalıdır.</p></div></div>
+<div class="modal" id="profileModal"><div class="modalbox"><button class="close" onclick="closeProfile()">×</button><div class="eyebrow">MY PROFILE</div><h2 id="profileName">Kaşif</h2><p class="muted" id="profileEmail"></p><div class="admin" style="margin:18px 0"><div class="stat"><span class="muted">Favori</span><br><b id="profileFav">0</b></div><div class="stat"><span class="muted">Rota</span><br><b id="profileRoute">0</b></div></div><button class="btn" onclick="logout();closeProfile()">Çıkış Yap</button></div></div>
+<div class="modal" id="adminModal"><div class="modalbox"><button class="close" onclick="closeAdmin()">×</button><div class="eyebrow">REPORT CENTER</div><h2>Sorun bildir</h2><p class="muted">Bir işletme veya kullanıcıyla ilgili problem yaşadıysan ayrıntıyı yaz.</p><textarea id="reportText" class="control" style="width:100%;min-height:130px;color:#fff;resize:vertical" placeholder="Örn: Çalışan kaba davrandı..."></textarea><button class="btn primary" style="margin-top:10px" onclick="submitReport()">Bildirimi Gönder</button></div></div>
 <div class="toast" id="toast"></div>
+
 <script>
 const activities=[
- {e:'☕',tag:'KAHVE + ATMOSFER',title:'Geceye Mor Bir Başlangıç',price:180,rating:4.8,dist:'2.1 km',time:'70 dk',why:'Sakinlik ve sosyal enerji dengesine uygun.'},
- {e:'🎨',tag:'SANAT',title:'Mini Sanat Deneyimi',price:250,rating:4.9,dist:'3.4 km',time:'90 dk',why:'Yeni deneyim arayanlar için yüksek uyum.'},
- {e:'🌅',tag:'AÇIK HAVA',title:'Gün Batımı Rotası',price:0,rating:4.9,dist:'4.7 km',time:'60 dk',why:'Bütçeyi korurken deneyimin finalini güçlendirir.'},
- {e:'🍜',tag:'LEZZET',title:'Yerel Lezzet Keşfi',price:290,rating:4.7,dist:'1.8 km',time:'80 dk',why:'Bütçene göre yüksek fiyat/performans.'},
- {e:'🎲',tag:'EĞLENCE',title:'Sürpriz Oyun Gecesi',price:220,rating:4.6,dist:'5.1 km',time:'120 dk',why:'Enerjiyi yükseltmek isteyenler için.'},
- {e:'🌌',tag:'ÜCRETSİZ',title:'Şehir Işıkları Yürüyüşü',price:0,rating:4.8,dist:'3.0 km',time:'75 dk',why:'Sıfır maliyetle güçlü bir deneyim.'}
+ {e:'☕',tag:'KAHVE + ATMOSFER',title:'Geceye Mor Bir Başlangıç',price:180,rating:4.8,dist:'2.1 km',time:'70 dk',why:'Sakinlik ve sosyal enerji dengesine uygun.',moods:['sakin','romantik']},
+ {e:'🎨',tag:'SANAT',title:'Mini Sanat Deneyimi',price:250,rating:4.9,dist:'3.4 km',time:'90 dk',why:'Yeni deneyim arayanlar için yüksek uyum.',moods:['sanat','keşif']},
+ {e:'🌅',tag:'AÇIK HAVA',title:'Gün Batımı Rotası',price:0,rating:4.9,dist:'4.7 km',time:'60 dk',why:'Bütçeyi korurken deneyimin finalini güçlendirir.',moods:['sakin','romantik','keşif']},
+ {e:'🍜',tag:'LEZZET',title:'Yerel Lezzet Keşfi',price:290,rating:4.7,dist:'1.8 km',time:'80 dk',why:'Bütçene göre yüksek fiyat/performans.',moods:['keşif','eğlenceli']},
+ {e:'🎲',tag:'EĞLENCE',title:'Sürpriz Oyun Gecesi',price:220,rating:4.6,dist:'5.1 km',time:'120 dk',why:'Enerjiyi yükseltmek isteyenler için.',moods:['eğlenceli']},
+ {e:'🌌',tag:'ÜCRETSİZ',title:'Şehir Işıkları Yürüyüşü',price:0,rating:4.8,dist:'3.0 km',time:'75 dk',why:'Sıfır maliyetle güçlü bir deneyim.',moods:['sakin','romantik']}
 ];
-function render(items=activities){results.innerHTML=items.map(a=>`<article class="card"><div class="cover"><div class="emoji">${a.e}</div></div><div class="cardbody"><span class="tag">${a.tag}</span><h3>${a.title}</h3><div class="meta"><span class="score">★ ${a.rating}</span><span>📍 ${a.dist}</span><span>⏱ ${a.time}</span></div><p class="muted" style="font-size:13px;line-height:1.5">${a.why}</p><div class="cardfoot"><span class="price">${a.price?'₺'+a.price:'Ücretsiz'}</span><button class="btn" onclick="toast('Aktivite rotana eklendi.')">Rotaya Ekle</button></div></div></article>`).join('')}
-function setMood(v){mood.value=v;toast(v+' seçildi.')}
-function mode(v){modeText.textContent=v}
-function recommend(){let b=+budget.value;let sorted=activities.filter(x=>x.price<=b).sort((a,z)=>z.rating-a.rating);render(sorted.slice(0,6));toast('AI demo önerileri bütçene göre güncellendi.')}
-function surprise(){let b=+budget.value;let pool=activities.filter(x=>x.price<=b);render([pool[Math.floor(Math.random()*pool.length)],...activities.filter(x=>x!==pool[0]).slice(0,5)]);toast('Sürpriz deneyimin hazır.')}
-function openPremium(){premiumModal.classList.add('open')}
-function closePremium(){premiumModal.classList.remove('open')}
-function subscribe(p){closePremium();toast(p+' paket seçildi. Güvenli ödeme bağlantısı backend aşamasında.')}
+
+const state={
+  route: JSON.parse(localStorage.getItem('discoverRoute')||'[]'),
+  favorites: JSON.parse(localStorage.getItem('discoverFavorites')||'[]'),
+  xp: Number(localStorage.getItem('discoverXP')||720),
+  user: JSON.parse(localStorage.getItem('discoverUser')||'null'),
+  premium: localStorage.getItem('discoverPremium')==='1',
+  selectedMood: ''
+};
+
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function save(){localStorage.setItem('discoverRoute',JSON.stringify(state.route));localStorage.setItem('discoverFavorites',JSON.stringify(state.favorites));localStorage.setItem('discoverXP',state.xp);localStorage.setItem('discoverUser',JSON.stringify(state.user));localStorage.setItem('discoverPremium',state.premium?'1':'0')}
+
+function render(items=activities){
+  const b=Number(budget.value);
+  const t=Number(time.value);
+  const filtered=items.filter(a=>a.price<=b && parseInt(a.time)<=t*60);
+  const list=filtered.length?filtered:items.filter(a=>a.price<=b);
+  results.innerHTML=(list.length?list:activities.slice(0,3)).map(a=>{
+    const fav=state.favorites.includes(a.title);
+    const inRoute=state.route.some(x=>x.title===a.title);
+    return `<article class="card">
+      <div class="cover"><div class="emoji">${a.e}</div></div>
+      <div class="cardbody">
+        <span class="tag">${a.tag}</span><h3>${esc(a.title)}</h3>
+        <div class="meta"><span class="score">★ ${a.rating}</span><span>📍 ${a.dist}</span><span>⏱ ${a.time}</span></div>
+        <p class="muted" style="font-size:13px;line-height:1.5">${esc(a.why)}</p>
+        <div class="cardfoot">
+          <span class="price">${a.price?'₺'+a.price:'Ücretsiz'}</span>
+          <div style="display:flex;gap:6px">
+            <button class="btn" aria-label="Favori" onclick='toggleFavorite(${JSON.stringify(a.title)})'>${fav?'♥':'♡'}</button>
+            <button class="btn" onclick='addRoute(${JSON.stringify(a.title)})'>${inRoute?'✓ Eklendi':'Rotaya Ekle'}</button>
+          </div>
+        </div>
+      </div></article>`;
+  }).join('');
+  updateRoute();
+}
+
+function getActivity(title){return activities.find(a=>a.title===title)}
+function addRoute(title){
+  const a=getActivity(title); if(!a)return;
+  if(state.route.some(x=>x.title===title)){toast('Bu deneyim zaten rotanda.');return}
+  state.route.push(a); state.xp=Math.min(1000,state.xp+25); save(); render(); toast('Deneyim rotana eklendi. +25 XP');
+}
+function removeRoute(title){state.route=state.route.filter(x=>x.title!==title);save();render();toast('Rotadan çıkarıldı.')}
+function toggleFavorite(title){
+  state.favorites=state.favorites.includes(title)?state.favorites.filter(x=>x!==title):[...state.favorites,title];
+  save();render();toast(state.favorites.includes(title)?'Favorilere eklendi.':'Favorilerden çıkarıldı.');
+}
+function updateRoute(){
+  const total=state.route.reduce((s,a)=>s+a.price,0);
+  const box=document.getElementById('routePanel');
+  if(box) box.innerHTML=state.route.length?state.route.map(a=>`<div class="control" style="display:flex;justify-content:space-between;align-items:center">
+    <span>${a.e} <b>${esc(a.title)}</b><br><span class="muted">₺${a.price||0} · ${a.time}</span></span>
+    <button class="btn" onclick='removeRoute(${JSON.stringify(a.title)})'>Çıkar</button></div>`).join(''):`<div class="control muted">Henüz rota oluşturmadın. Bir deneyimde “Rotaya Ekle”ye bas.</div>`;
+  const totalEl=document.getElementById('routeTotal'); if(totalEl) totalEl.textContent='₺'+total;
+  const xpEl=document.getElementById('xpValue'); if(xpEl) xpEl.textContent=state.xp+' / 1000 XP';
+  const bar=document.getElementById('xpBar'); if(bar) bar.style.width=Math.min(100,state.xp/10)+'%';
+}
+function setMood(v){state.selectedMood=v; mood.value=v; recommend()}
+function mode(v){modeText.textContent=v;localStorage.setItem('discoverMode',v);toast(v+' modu aktif.')}
+function recommend(){
+  const b=Number(budget.value), t=Number(time.value), q=(mood.value||'').toLowerCase();
+  let list=activities.filter(a=>a.price<=b && parseInt(a.time)<=t*60);
+  const moodMatch=list.filter(a=>a.moods.some(m=>q.includes(m)));
+  if(moodMatch.length) list=moodMatch.concat(list.filter(a=>!moodMatch.includes(a)));
+  list.sort((a,z)=>z.rating-a.rating);
+  render(list); toast('AI önerileri bütçe, zaman ve moduna göre güncellendi.');
+}
+function surprise(){
+  const b=Number(budget.value), t=Number(time.value);
+  const pool=activities.filter(a=>a.price<=b && parseInt(a.time)<=t*60);
+  const p=pool.length?pool:activities.filter(a=>a.price<=b);
+  if(!p.length){toast('Bu bütçeyle uygun sonuç bulunamadı.');return}
+  const pick=p[Math.floor(Math.random()*p.length)];
+  render([pick,...p.filter(x=>x!==pick)]); toast('🎲 Sürpriz deneyimin hazır: '+pick.title);
+}
+
+function openPremium(){document.getElementById('premiumModal').classList.add('open')}
+function closePremium(){document.getElementById('premiumModal').classList.remove('open')}
+function subscribe(p){
+  state.premium=true; save(); closePremium();
+  toast('✦ '+p+' Premium aktif edildi (demo).');
+  document.getElementById('premiumStatus').textContent='PREMIUM AKTİF';
+}
+function openAuth(type='login'){document.getElementById('authModal').classList.add('open');document.getElementById('authTitle').textContent=type==='login'?'Tekrar hoş geldin':'DISCOVER AI’a katıl';document.getElementById('authAction').textContent=type==='login'?'Giriş Yap':'Hesap Oluştur';}
+function closeAuth(){document.getElementById('authModal').classList.remove('open')}
+function authSubmit(){
+  const name=document.getElementById('authName').value.trim()||'Kaşif';
+  const email=document.getElementById('authEmail').value.trim();
+  if(!email.includes('@')){toast('Geçerli bir e-posta gir.');return}
+  state.user={name,email};save();closeAuth();updateAuthUI();toast('Hoş geldin, '+name+'!')}
+function logout(){state.user=null;save();updateAuthUI();toast('Çıkış yapıldı.')}
+function updateAuthUI(){
+  const btn=document.getElementById('loginBtn');
+  if(state.user){btn.textContent=state.user.name;btn.onclick=()=>openProfile()}
+  else{btn.textContent='Giriş';btn.onclick=()=>openAuth('login')}
+}
+function openProfile(){
+  document.getElementById('profileModal').classList.add('open');
+  document.getElementById('profileName').textContent=state.user?.name||'Kaşif';
+  document.getElementById('profileEmail').textContent=state.user?.email||'';
+  document.getElementById('profileFav').textContent=state.favorites.length;
+  document.getElementById('profileRoute').textContent=state.route.length;
+}
+function closeProfile(){document.getElementById('profileModal').classList.remove('open')}
+
+function openAdmin(){
+  if(!state.user){toast('Yönetim merkezi için önce giriş yapmalısın.');openAuth('login');return}
+  document.getElementById('adminModal').classList.add('open');
+}
+function closeAdmin(){document.getElementById('adminModal').classList.remove('open')}
+function submitReport(){
+  const text=document.getElementById('reportText').value.trim();
+  if(text.length<8){toast('Lütfen sorunu biraz daha açık yaz.');return}
+  const reports=JSON.parse(localStorage.getItem('discoverReports')||'[]');
+  reports.push({text,user:state.user?.email||'guest',date:new Date().toISOString()});
+  localStorage.setItem('discoverReports',JSON.stringify(reports));
+  document.getElementById('reportText').value='';toast('Şikayet kaydedildi. Demo admin kuyruğuna gönderildi.');closeAdmin();
+}
+function clearRoute(){state.route=[];save();render();toast('Rota temizlendi.')}
+function shareRoute(){
+  const text=state.route.length?'DISCOVER AI rotam: '+state.route.map(x=>x.title).join(' → '):'DISCOVER AI ile kendi rotanı oluştur.';
+  if(navigator.share) navigator.share({title:'DISCOVER AI',text}).catch(()=>{});
+  else navigator.clipboard?.writeText(text).then(()=>toast('Rota metni panoya kopyalandı.'));
+}
 function toast(t){const x=document.getElementById('toast');x.textContent=t;x.style.display='block';clearTimeout(window.tt);window.tt=setTimeout(()=>x.style.display='none',2600)}
+
 const rewards=['Kaşif rozeti','Profil rozeti','Rota temaları','AI tercih profili','Koleksiyonlar','Insider rozeti','Özel AI modu','Elite profil','Master rozeti','Legend'];
 levelsGrid.innerHTML=rewards.map((r,i)=>`<div class="level ${i===3?'active':''}"><b>${i+1}</b><span class="reward">${r}</span></div>`).join('');
+
+document.getElementById('budget').addEventListener('input',e=>{budgetText.textContent='₺'+e.target.value;recommend()});
+document.getElementById('time').addEventListener('input',e=>{timeText.textContent=e.target.value+' saat';recommend()});
+document.getElementById('loginBtn').onclick=()=>openAuth('login');
+document.getElementById('joinBtn').onclick=()=>openAuth('join');
+document.getElementById('premiumStatus').textContent=state.premium?'PREMIUM AKTİF':'PREMIUM’U GÖR';
+updateAuthUI();
 render();
 </script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://ymevkncvdkabohrzqasy.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_b_srPWflLRrFV4ayykMa-g_mFb3Z8rz";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+let authMode = "login";
+
+function openAuth(type="login"){
+  authMode=type;
+  document.getElementById("authModal").classList.add("open");
+  document.getElementById("authTitle").textContent=type==="login"?"Tekrar hoş geldin":"DISCOVER AI’a katıl";
+  document.getElementById("authAction").textContent=type==="login"?"Giriş Yap":"Hesap Oluştur";
+  document.getElementById("authName").style.display=type==="login"?"none":"block";
+}
+function closeAuth(){document.getElementById("authModal").classList.remove("open")}
+async function authSubmit(){
+  const name=document.getElementById("authName").value.trim();
+  const email=document.getElementById("authEmail").value.trim();
+  const password=document.querySelector("#authModal input[type=password]").value;
+  if(!email || !password){toast("E-posta ve şifre gerekli.");return}
+  if(password.length<6){toast("Şifre en az 6 karakter olmalı.");return}
+  const btn=document.getElementById("authAction");btn.disabled=true;
+  try{
+    if(authMode==="join"){
+      const {data,error}=await sb.auth.signUp({email,password,options:{data:{full_name:name,username:name||undefined}}});
+      if(error) throw error;
+      toast(data.session?"Hesabın oluşturuldu ve giriş yapıldı.":"Kayıt tamamlandı. E-postanı doğrula, sonra giriş yap.");
+    }else{
+      const {error}=await sb.auth.signInWithPassword({email,password});
+      if(error) throw error;
+      toast("Giriş başarılı.");
+    }
+    closeAuth();await syncUser();
+  }catch(e){toast(e.message||"İşlem başarısız.")}finally{btn.disabled=false}
+}
+async function syncUser(){
+  const {data:{user}}=await sb.auth.getUser();
+  if(!user){state.user=null;state.favorites=[];state.route=[];state.xp=0;state.premium=false;save();updateAuthUI();render();return}
+  const {data:profile}=await sb.from("profiles").select("*").eq("id",user.id).maybeSingle();
+  state.user={id:user.id,email:user.email,name:profile?.full_name||user.user_metadata?.full_name||"Kaşif"};
+  state.xp=profile?.xp??0;state.premium=profile?.is_premium??false;
+  const {data:favs}=await sb.from("favorites").select("activity_id, activities(*)").eq("user_id",user.id);
+  state.favorites=(favs||[]).map(x=>x.activities?.title).filter(Boolean);
+  const {data:routes}=await sb.from("routes").select("id").eq("user_id",user.id).order("updated_at",{ascending:false}).limit(1);
+  if(routes?.length){
+    const {data:items}=await sb.from("route_items").select("activities(*)").eq("route_id",routes[0].id).order("position");
+    state.route=(items||[]).map(x=>x.activities).filter(Boolean);
+  }else state.route=[];
+  save();updateAuthUI();render();
+  const ps=document.getElementById("premiumStatus");if(ps)ps.textContent=state.premium?"PREMIUM AKTİF":"PREMIUM’U GÖR";
+}
+async function toggleFavorite(title){
+  const {data:{user}}=await sb.auth.getUser();
+  if(!user){toast("Favorilere eklemek için giriş yapmalısın.");openAuth("login");return}
+  const {data:dbAct}=await sb.from("activities").select("id,title").eq("title",title).limit(1).maybeSingle();
+  if(!dbAct){toast("Bu deneyim henüz veritabanında yok.");return}
+  const {data:existing}=await sb.from("favorites").select("id").eq("user_id",user.id).eq("activity_id",dbAct.id).maybeSingle();
+  if(existing){
+    await sb.from("favorites").delete().eq("id",existing.id);state.favorites=state.favorites.filter(x=>x!==title);toast("Favorilerden çıkarıldı.");
+  }else{
+    const {error}=await sb.from("favorites").insert({user_id:user.id,activity_id:dbAct.id});
+    if(error){toast(error.message);return}state.favorites.push(title);toast("Favorilere eklendi.");
+  }
+  save();render();
+}
+async function addRoute(title){
+  const {data:{user}}=await sb.auth.getUser();
+  if(!user){toast("Rota oluşturmak için giriş yapmalısın.");openAuth("login");return}
+  if(state.route.some(x=>x.title===title)){toast("Bu deneyim zaten rotanda.");return}
+  const {data:a}=await sb.from("activities").select("*").eq("title",title).limit(1).maybeSingle();
+  if(!a){toast("Deneyim veritabanında bulunamadı.");return}
+  let {data:route}=await sb.from("routes").select("*").eq("user_id",user.id).order("updated_at",{ascending:false}).limit(1).maybeSingle();
+  if(!route){
+    const r=await sb.from("routes").insert({user_id:user.id,title:"Bugünüm",budget:Number(budget.value)}).select().single();
+    if(r.error){toast(r.error.message);return}route=r.data;
+  }
+  const r2=await sb.from("route_items").insert({route_id:route.id,activity_id:a.id,position:state.route.length});
+  if(r2.error){toast(r2.error.message);return}
+  state.route.push(a);state.xp+=25;
+  await sb.from("xp_events").insert({user_id:user.id,amount:25,reason:"Deneyimi rotaya ekledi"});
+  await sb.from("profiles").update({xp:state.xp}).eq("id",user.id);
+  save();render();toast("Deneyim rotana eklendi. +25 XP");
+}
+async function removeRoute(title){
+  const {data:{user}}=await sb.auth.getUser();if(!user)return;
+  const {data:routes}=await sb.from("routes").select("id").eq("user_id",user.id).order("updated_at",{ascending:false}).limit(1);
+  const {data:a}=await sb.from("activities").select("id").eq("title",title).maybeSingle();
+  if(routes?.[0]&&a)await sb.from("route_items").delete().eq("route_id",routes[0].id).eq("activity_id",a.id);
+  state.route=state.route.filter(x=>x.title!==title);save();render();toast("Rotadan çıkarıldı.");
+}
+async function logout(){
+  await sb.auth.signOut();state.user=null;state.route=[];state.favorites=[];state.xp=0;state.premium=false;save();updateAuthUI();render();toast("Çıkış yapıldı.");
+}
+async function subscribe(plan){
+  if(!state.user){closePremium();openAuth("join");toast("Premium için önce hesap oluştur.");return}
+  toast("Gerçek ödeme altyapısı bir sonraki aşamada bağlanacak.");
+}
+sb.auth.onAuthStateChange(()=>setTimeout(syncUser,0));
+setTimeout(syncUser,100);
+</script>
+
 </body>
 </html>

@@ -1,11 +1,7 @@
-# DISCOVER AI
+# DISCOVER AI V3
+Supabase Auth + temel kullanıcı verileri bağlanmış frontend MVP.
 
-Bütçe + zaman + mod üzerinden kişisel aktivite/deneyim önerileri sunan mobil uyumlu MVP.
+Bağlı: gerçek kayıt/giriş, otomatik profile, XP, favoriler, rotalar, XP events ve çıkış.
+Demo: Premium ödeme.
 
-## GitHub Pages
-1. `index.html` dosyasını repoya yükle.
-2. Settings → Pages → Deploy from branch → `main` / root seç.
-3. Gerçek AI, auth, ödeme ve admin işlemleri için backend bağlanmalıdır.
-
-## Güvenlik
-Bu MVP'de gerçek secret/API key bulunmaz. Üretimde AI ve ödeme anahtarları frontend'e konulmamalı; server-side secret olarak tutulmalı, tüm admin işlemleri authorization + audit log ile korunmalıdır.
+Güvenlik: yalnızca Supabase Publishable Key frontend'de kullanılır. Secret/service_role anahtar kullanılmaz. RLS politikaları veritabanında aktif olmalıdır.
