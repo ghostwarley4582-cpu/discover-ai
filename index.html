@@ -10,22 +10,28 @@
 :root{--bg:#08060d;--panel:#100b18;--panel2:#151020;--text:#f7f3ff;--muted:#aaa0b7;--purple:#8b5cf6;--purple2:#c084fc;--line:#2a2139;--green:#69e7b7;--danger:#ff6b8a}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 70% 5%,#261343 0,#10091a 34%,#08060d 75%);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
 button,input,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(1120px,92%);margin:auto}
-nav{height:76px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(8,6,13,.82);backdrop-filter:blur(18px);position:sticky;top:0;z-index:20}
+nav{height:76px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(8,6,13,.88);backdrop-filter:blur(18px);position:sticky;top:0;z-index:20}
 .brand{font-weight:900;letter-spacing:3px;font-size:22px}.brand span{color:var(--purple2)}
 .navlinks{display:flex;gap:10px;align-items:center}.btn{border:1px solid var(--line);background:#120d1c;color:var(--text);padding:13px 18px;border-radius:16px}.btn.primary{background:linear-gradient(135deg,#7c3aed,#b04cff);border-color:#a855f7;box-shadow:0 10px 35px rgba(139,92,246,.25)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
 .hero{padding:70px 0 35px;text-align:center}.eyebrow{display:inline-flex;gap:10px;align-items:center;padding:11px 16px;border:1px solid #50326e;border-radius:999px;color:#dccdff;background:#0d0914}.eyebrow:before{content:"";width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 18px var(--green)}
 h1{font-size:clamp(46px,8vw,86px);line-height:.98;letter-spacing:-4px;margin:28px auto 20px;max-width:900px}h1 span{background:linear-gradient(90deg,#fff,#b36cff);-webkit-background-clip:text;color:transparent}
 .lead{font-size:20px;line-height:1.7;color:#b9afc5;max-width:780px;margin:auto}
 .ai-box{margin:45px auto 0;max-width:920px;padding:18px;border:1px solid #38264f;border-radius:28px;background:linear-gradient(145deg,#100b18,#09070e);box-shadow:0 30px 80px rgba(91,35,150,.16)}
 .prompt{display:flex;gap:10px}.prompt input{flex:1;min-width:0;background:#08070d;color:#fff;border:1px solid #332642;border-radius:20px;padding:20px;outline:none}.prompt input:focus{border-color:var(--purple)}
-.chips{display:flex;flex-wrap:wrap;gap:9px;margin:15px 0}.chip{background:#120d1b;border:1px solid #30233f;color:#ddd3e7;padding:9px 13px;border-radius:999px}
+.chips{display:flex;flex-wrap:wrap;gap:9px;margin:15px 0}.chip{background:#120d1b;border:1px solid #30233f;color:#ddd3e7;padding:9px 13px;border-radius:999px}.chip.active{border-color:#9d62ff;background:#211332;color:#fff}
 .controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}.control{background:#0d0a12;border:1px solid var(--line);padding:15px;border-radius:17px;text-align:left}.control label{display:block;color:var(--muted);font-size:12px;margin-bottom:7px}.control strong{display:block;margin-bottom:9px}.range{width:100%;accent-color:var(--purple)}
 section{padding:45px 0}.section-head{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:20px}.section-head h2{margin:5px 0;font-size:30px}.muted{color:var(--muted)}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.card{background:linear-gradient(160deg,#171020,#0d0913);border:1px solid var(--line);border-radius:22px;padding:18px;transition:.2s}.card:hover{transform:translateY(-4px);border-color:#67408a}.cover{height:120px;border-radius:17px;background:radial-gradient(circle at 30% 20%,#8b5cf6,#26143f 45%,#0a0710);display:grid;place-items:center;font-size:45px}.tag{display:inline-block;margin-top:12px;padding:5px 9px;border-radius:999px;background:#20142e;color:#d8c3f5;font-size:12px}.meta{color:#9f95aa;font-size:13px;line-height:1.6}.why{color:#d7cbe0;font-size:13px;line-height:1.5}.price{font-weight:900;font-size:20px}.row{display:flex;justify-content:space-between;align-items:center;gap:10px}.mini{padding:9px 12px;border-radius:12px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.card{background:linear-gradient(160deg,#171020,#0d0913);border:1px solid var(--line);border-radius:22px;padding:18px;transition:.2s}.card:hover{transform:translateY(-4px);border-color:#67408a}
+.cover{height:120px;border-radius:17px;background:radial-gradient(circle at 30% 20%,#8b5cf6,#26143f 45%,#0a0710);display:grid;place-items:center;font-size:45px;position:relative}.score{position:absolute;right:9px;top:9px;background:#0b0810d9;border:1px solid #6d4590;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:800}
+.tag{display:inline-block;margin-top:12px;padding:5px 9px;border-radius:999px;background:#20142e;color:#d8c3f5;font-size:12px}.meta{color:#9f95aa;font-size:13px;line-height:1.7}.why{color:#d7cbe0;font-size:13px;line-height:1.5}.price{font-weight:900;font-size:20px}.row{display:flex;justify-content:space-between;align-items:center;gap:10px}.mini{padding:9px 12px;border-radius:12px}
+.match{margin-top:12px;padding:10px 12px;background:#0d0a12;border:1px solid #2f2440;border-radius:13px;font-size:12px;color:#cfc3da}.card-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.card-actions .btn{width:100%}
+.empty{grid-column:1/-1;padding:28px;border:1px dashed #4a355c;border-radius:20px;text-align:center;background:#0d0913}.loading{opacity:.7}
 .feature-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.glass{background:#100c17;border:1px solid var(--line);border-radius:18px;padding:18px}.levels{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.level{background:#100c17;border:1px solid var(--line);border-radius:16px;padding:13px;text-align:center}.level.active{border-color:#8b5cf6;box-shadow:0 0 25px rgba(139,92,246,.15)}.reward{color:#d2b5ff;font-size:12px;margin-top:6px}
-.premium{position:relative;overflow:hidden;background:linear-gradient(135deg,#1b102d,#0e0815);border:1px solid #5a3b79;border-radius:28px;padding:30px}.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}.plan{background:#0b0810;border:1px solid var(--line);border-radius:18px;padding:20px}.plan b{font-size:27px}
+.premium{position:relative;overflow:hidden;background:linear-gradient(135deg,#1b102d,#0e0815);border:1px solid #5a3b79;border-radius:28px;padding:30px}.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}.plan{background:#0b0810;border:1px solid var(--line);border-radius:18px;padding:20px}.plan h3{font-size:27px;margin:8px 0 14px}
 .admin{display:grid;grid-template-columns:1fr 1fr;gap:14px}.alert{border-left:3px solid var(--danger);background:#190b12;padding:15px;border-radius:12px}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(10px);display:none;place-items:center;z-index:50;padding:18px}.modal.open{display:grid}.modalbox{width:min(560px,100%);background:#100b18;border:1px solid #543572;border-radius:25px;padding:25px;max-height:90vh;overflow:auto}.close{float:right;background:none;border:0;color:#aaa;font-size:25px}.form{display:grid;gap:10px}.form input,.form textarea{width:100%;background:#09070d;color:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}.toast{position:fixed;right:18px;bottom:18px;background:#17101f;border:1px solid #49325f;border-radius:15px;padding:14px 17px;display:none;z-index:70}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(10px);display:none;place-items:center;z-index:50;padding:18px}.modal.open{display:grid}.modalbox{width:min(560px,100%);background:#100b18;border:1px solid #543572;border-radius:25px;padding:25px;max-height:90vh;overflow:auto}.close{float:right;background:none;border:0;color:#aaa;font-size:25px}.form{display:grid;gap:10px}.form input,.form textarea{width:100%;background:#09070d;color:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}.toast{position:fixed;right:18px;bottom:18px;max-width:min(92vw,520px);background:#17101f;border:1px solid #49325f;border-radius:15px;padding:14px 17px;display:none;z-index:70}
+.route-item{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.route-total{display:flex;justify-content:space-between;margin-top:12px;font-size:18px}
 footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-size:13px}
 @media(max-width:800px){.navlinks .desktop{display:none}.hero{padding-top:45px}h1{letter-spacing:-2px}.controls,.grid,.plans,.admin{grid-template-columns:1fr}.feature-grid{grid-template-columns:1fr 1fr}.levels{grid-template-columns:repeat(2,1fr)}.prompt{flex-direction:column}.prompt .btn{width:100%}.section-head{align-items:start;flex-direction:column}}
 </style>
@@ -33,88 +39,101 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 <body>
 
 <nav>
-  <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;width:100%">
-    <div class="brand">✦ DISCOVER <span>AI</span></div>
-    <div class="navlinks">
-      <button class="btn desktop" onclick="scrollToId('explore')">Keşfet</button>
-      <button class="btn" id="loginBtn" onclick="openAuth('login')">Giriş</button>
-      <button class="btn primary" id="joinBtn" onclick="openAuth('join')">Katıl</button>
-    </div>
-  </div>
+<div class="wrap" style="display:flex;align-items:center;justify-content:space-between;width:100%">
+<div class="brand">✦ DISCOVER <span>AI</span></div>
+<div class="navlinks">
+<button class="btn desktop" onclick="scrollToId('explore')">Keşfet</button>
+<button class="btn" id="loginBtn" onclick="openAuth('login')">Giriş</button>
+<button class="btn primary" id="joinBtn" onclick="openAuth('join')">Katıl</button>
+</div>
+</div>
 </nav>
 
 <main>
 <section class="hero wrap">
-  <div class="eyebrow">AI DESTEKLİ KİŞİSEL DENEYİM MOTORU</div>
-  <h1>Bütçeni söyle.<br><span>Bugününü biz tasarlayalım.</span></h1>
-  <p class="lead">Paranı, zamanını ve ne hissettiğini anlayan yeni nesil keşif deneyimi. Sıradan mekan listeleri değil; sana göre hazırlanmış planlar.</p>
+<div class="eyebrow">AI DESTEKLİ KİŞİSEL DENEYİM MOTORU</div>
+<h1>Bütçeni söyle.<br><span>Bugününü biz tasarlayalım.</span></h1>
+<p class="lead">Paranı, zamanını ve ne hissettiğini anlayan yeni nesil keşif deneyimi. Sıradan mekan listeleri değil; sana göre hazırlanmış planlar.</p>
 
-  <div class="ai-box">
-    <div class="prompt">
-      <input id="mood" placeholder="Örn: Sevgilimle sakin ama özel bir gün geçirmek istiyorum...">
-      <button class="btn primary" onclick="recommend()">✦ Bana Öner</button>
-    </div>
-    <div class="chips">
-      <button class="chip" onclick="setMood('❤️ Romantik')">❤️ Romantik</button>
-      <button class="chip" onclick="setMood('🌿 Sakin')">🌿 Sakin</button>
-      <button class="chip" onclick="setMood('🎉 Eğlenceli')">🎉 Eğlenceli</button>
-      <button class="chip" onclick="setMood('🧠 Keşif')">🧠 Keşif</button>
-      <button class="chip" onclick="setMood('🎨 Sanat')">🎨 Sanat</button>
-    </div>
-    <div class="controls">
-      <div class="control"><label>BUGÜNÜN BÜTÇESİ</label><strong id="budgetText">₺750</strong><input id="budget" class="range" type="range" min="0" max="5000" step="50" value="750"></div>
-      <div class="control"><label>ZAMAN</label><strong id="timeText">4 saat</strong><input id="time" class="range" type="range" min="1" max="12" value="4"></div>
-      <div class="control"><label>MOD</label><strong id="modeText">Kişisel</strong><div class="chips" style="margin:0"><button class="chip mini" onclick="setMode('Kişisel')">Kişisel</button><button class="chip mini" onclick="setMode('Çift')">Çift</button><button class="chip mini" onclick="setMode('Arkadaş')">Arkadaş</button></div></div>
-    </div>
-  </div>
+<div class="ai-box">
+<div class="prompt">
+<input id="mood" placeholder="Örn: Sevgilimle sakin ama özel bir gün geçirmek istiyorum...">
+<button class="btn primary" onclick="recommend()">✦ Bana Öner</button>
+</div>
+<div class="chips">
+<button class="chip" onclick="setMood('Romantik',this)">❤️ Romantik</button>
+<button class="chip" onclick="setMood('Sakin',this)">🌿 Sakin</button>
+<button class="chip" onclick="setMood('Eğlenceli',this)">🎉 Eğlenceli</button>
+<button class="chip" onclick="setMood('Keşif',this)">🧠 Keşif</button>
+<button class="chip" onclick="setMood('Sanat',this)">🎨 Sanat</button>
+</div>
+<div class="controls">
+<div class="control"><label>BUGÜNÜN BÜTÇESİ</label><strong id="budgetText">₺750</strong><input id="budget" class="range" type="range" min="0" max="5000" step="50" value="750"></div>
+<div class="control"><label>ZAMAN</label><strong id="timeText">4 saat</strong><input id="time" class="range" type="range" min="1" max="12" value="4"></div>
+<div class="control"><label>MOD</label><strong id="modeText">Kişisel</strong><div class="chips" style="margin:0"><button class="chip mini" onclick="setMode('Kişisel')">Kişisel</button><button class="chip mini" onclick="setMode('Çift')">Çift</button><button class="chip mini" onclick="setMode('Arkadaş')">Arkadaş</button></div></div>
+</div>
+</div>
 </section>
 
 <section id="explore" class="wrap">
-  <div class="section-head"><div><div class="eyebrow">AI CURATED</div><h2>Sana uygun deneyimler</h2><p class="muted">Bütçe ve tercihlerine göre sıralanır.</p></div><button class="btn" onclick="surprise()">✦ Surprise Me</button></div>
-  <div id="results" class="grid"></div>
+<div class="section-head">
+<div><div class="eyebrow">DISCOVER SCORE</div><h2>Sana uygun deneyimler</h2><p id="resultSummary" class="muted">Bütçe + zaman + mod + ruh hali birlikte değerlendiriliyor.</p></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button class="btn" onclick="better()">↻ Bundan daha iyisini bul</button>
+<button class="btn" onclick="surprise()">✦ Surprise Me</button>
+</div>
+</div>
+<div id="results" class="grid"><div class="empty loading">Aktiviteler yükleniyor...</div></div>
 </section>
 
 <section id="levels" class="wrap">
-  <div class="section-head"><div><div class="eyebrow">PROGRESS ENGINE</div><h2>Keşfettikçe seviye atla.</h2><p class="muted">Her seviye yeni bir özellik veya ödül açar.</p></div></div>
-  <div class="glass">
-    <div class="row"><b>BUGÜNÜN</b><b id="xpLabel">720 / 750 XP</b></div>
-    <div style="height:9px;background:#251b32;border-radius:99px;margin-top:10px"><div id="xpBar" style="height:100%;width:72%;background:linear-gradient(90deg,#7c3aed,#c084fc);border-radius:99px"></div></div>
-    <div id="levelsGrid" class="levels" style="margin-top:18px"></div>
-  </div>
+<div class="section-head"><div><div class="eyebrow">PROGRESS ENGINE</div><h2>Keşfettikçe seviye atla.</h2><p class="muted">10 seviyeli sistem. Her seviye yeni bir ödül ve keşif katmanı açar.</p></div></div>
+<div class="glass">
+<div class="row"><b>BUGÜNÜN İLERLEMESİ</b><b id="xpLabel">0 / 750 XP</b></div>
+<div style="height:9px;background:#251b32;border-radius:99px;margin-top:10px"><div id="xpBar" style="height:100%;width:0%;background:linear-gradient(90deg,#7c3aed,#c084fc);border-radius:99px"></div></div>
+<div id="levelsGrid" class="levels" style="margin-top:18px"></div>
+</div>
 </section>
 
 <section class="wrap">
-  <div class="feature-grid">
-    <div class="glass"><b>🧠 Kişisel AI</b><p class="muted">Zamanla tercihlerini öğrenen öneri motoru.</p></div>
-    <div class="glass"><b>💰 Hard Budget</b><p class="muted">Belirlediğin bütçenin dışına çıkmayan plan.</p></div>
-    <div class="glass"><b>🗺️ Bugünüm</b><p class="muted">Tek tek mekan değil, uygulanabilir rota.</p></div>
-    <div class="glass"><b>🛡️ Güven</b><p class="muted">Şikayet ve moderasyon sistemiyle daha güvenli keşif.</p></div>
-  </div>
+<div class="feature-grid">
+<div class="glass"><b>🧠 Kişisel AI</b><p class="muted">Zamanla tercihlerini öğrenen öneri motoru.</p></div>
+<div class="glass"><b>💰 Hard Budget</b><p class="muted">Belirlediğin bütçenin dışına çıkmayan plan.</p></div>
+<div class="glass"><b>🗺️ Bugünüm</b><p class="muted">Tek tek mekan değil, uygulanabilir rota.</p></div>
+<div class="glass"><b>🛡️ Güven</b><p class="muted">Şikayet ve moderasyon sistemiyle daha güvenli keşif.</p></div>
+</div>
 </section>
 
 <section class="wrap">
-  <div class="premium">
-    <div class="eyebrow">✦ DISCOVER AI ELITE</div>
-    <h2>Premium sadece daha fazla sonuç değil.</h2>
-    <p class="lead" style="text-align:left">Daha gelişmiş kişiselleştirme, bütçe optimizasyonu, rota oluşturma, “Bundan daha iyisini bul”, hava durumuna göre B planı ve kişisel AI tercih profili.</p>
-    <div class="plans">
-      <div class="plan"><span class="muted">Haftalık</span><h3>₺99</h3><button class="btn primary" onclick="subscribe('Haftalık')">Premium'a geç</button></div>
-      <div class="plan"><span class="muted">Aylık</span><h3>₺249</h3><button class="btn primary" onclick="subscribe('Aylık')">Premium'a geç</button></div>
-      <div class="plan"><span class="muted">Yıllık</span><h3>₺1.999</h3><button class="btn primary" onclick="subscribe('Yıllık')">Premium'a geç</button></div>
-    </div>
-  </div>
+<div class="premium">
+<div class="eyebrow">✦ DISCOVER AI ELITE</div>
+<h2>Premium sadece daha fazla sonuç değil.</h2>
+<p class="lead" style="text-align:left">Daha gelişmiş kişiselleştirme, bütçe optimizasyonu, rota oluşturma, “Bundan daha iyisini bul”, hava durumuna göre B planı ve kişisel AI tercih profili.</p>
+<div class="plans">
+<div class="plan"><span class="muted">Haftalık</span><h3>₺99</h3><button class="btn primary" onclick="subscribe('Haftalık')">Premium'a geç</button></div>
+<div class="plan"><span class="muted">Aylık</span><h3>₺249</h3><button class="btn primary" onclick="subscribe('Aylık')">Premium'a geç</button></div>
+<div class="plan"><span class="muted">Yıllık</span><h3>₺1.999</h3><button class="btn primary" onclick="subscribe('Yıllık')">Premium'a geç</button></div>
+</div>
+</div>
+</section>
+
+<section class="wrap">
+<div class="glass">
+<div class="section-head" style="margin-bottom:8px"><div><div class="eyebrow">BUGÜNÜM</div><h2 style="margin-bottom:0">Rotan</h2></div><button class="btn" onclick="openRoute()">Rotayı Gör</button></div>
+<div id="routeBox" class="muted">Henüz deneyim eklemedin.</div>
+</div>
 </section>
 
 <section id="admin" class="wrap">
-  <div class="section-head"><div><div class="eyebrow">COMMAND CENTER</div><h2>Yönetim ve güvenlik</h2><p class="muted">Gerçek admin işlemleri yalnızca yetkili hesaplarda backend/RLS ile yapılmalıdır.</p></div><button class="btn" onclick="openAdmin()">Yönetim</button></div>
-  <div class="admin">
-    <div class="glass"><b>📊 Sistem</b><p class="muted">Kullanıcılar · Aktiviteler · Premium · XP</p></div>
-    <div class="alert"><b>🚨 Moderasyon kuyruğu</b><p class="muted">Şikayetler, hakaret/profanity ve işletme sorunları admin incelemesine düşer.</p></div>
-  </div>
+<div class="section-head"><div><div class="eyebrow">COMMAND CENTER</div><h2>Yönetim ve güvenlik</h2><p class="muted">Gerçek admin işlemleri yalnızca yetkili hesaplarda backend/RLS ile yapılmalıdır.</p></div><button class="btn" onclick="openAdmin()">Yönetim</button></div>
+<div class="admin">
+<div class="glass"><b>📊 Sistem</b><p class="muted">Kullanıcılar · Aktiviteler · Premium · XP</p></div>
+<div class="alert"><b>🚨 Moderasyon kuyruğu</b><p class="muted">Şikayetler, hakaret/profanity ve işletme sorunları admin incelemesine düşer.</p></div>
+</div>
 </section>
 </main>
 
-<footer><div class="wrap">DISCOVER AI · Güvenli mimari hedefi: publishable key tarayıcıda kullanılabilir; secret/service_role anahtarları asla frontend'e konmaz.</div></footer>
+<footer><div class="wrap">DISCOVER AI · Publishable key tarayıcıda kullanılabilir; secret/service_role anahtarları asla frontend'e konmaz.</div></footer>
 
 <div id="authModal" class="modal"><div class="modalbox">
 <button class="close" onclick="closeModal('authModal')">×</button><div class="eyebrow">ACCOUNT</div>
@@ -129,9 +148,24 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 <p class="muted">E-posta doğrulaması Supabase Auth ayarlarına göre gerekebilir.</p>
 </div></div>
 
-<div id="profileModal" class="modal"><div class="modalbox"><button class="close" onclick="closeModal('profileModal')">×</button><div class="eyebrow">PROFILE</div><h2 id="profileName">Kaşif</h2><p id="profileEmail" class="muted"></p><div class="glass"><b id="profileLevel">Seviye 1</b><p>XP: <span id="profileXP">0</span></p><p>Favoriler: <span id="profileFav">0</span></p><p>Rotalar: <span id="profileRoutes">0</span></p></div><button class="btn" onclick="logout()">Çıkış</button></div></div>
+<div id="profileModal" class="modal"><div class="modalbox">
+<button class="close" onclick="closeModal('profileModal')">×</button><div class="eyebrow">PROFILE</div>
+<h2 id="profileName">Kaşif</h2><p id="profileEmail" class="muted"></p>
+<div class="glass"><b id="profileLevel">Seviye 1</b><p>XP: <span id="profileXP">0</span></p><p>Favoriler: <span id="profileFav">0</span></p><p>Rotalar: <span id="profileRoutes">0</span></p></div>
+<button class="btn" onclick="logout()">Çıkış</button>
+</div></div>
 
-<div id="adminModal" class="modal"><div class="modalbox"><button class="close" onclick="closeModal('adminModal')">×</button><div class="eyebrow">COMMAND CENTER</div><h2>Yönetim merkezi</h2><p class="muted">Bu arayüz demo görünümüdür. Gerçek admin yetkilendirmesi backend/RLS ile doğrulanmalıdır.</p><textarea id="reportText" rows="5" placeholder="Örnek şikayet: işletmede sorun yaşandı..."></textarea><button class="btn primary" style="margin-top:10px" onclick="submitReport()">Şikayeti kaydet</button></div></div>
+<div id="routeModal" class="modal"><div class="modalbox">
+<button class="close" onclick="closeModal('routeModal')">×</button><div class="eyebrow">BUGÜNÜM</div><h2>Bugünkü rotan</h2>
+<div id="routeModalBody"></div>
+</div></div>
+
+<div id="adminModal" class="modal"><div class="modalbox">
+<button class="close" onclick="closeModal('adminModal')">×</button><div class="eyebrow">COMMAND CENTER</div><h2>Yönetim merkezi</h2>
+<p class="muted">Bu arayüz demo görünümüdür. Gerçek admin yetkilendirmesi backend/RLS ile doğrulanmalıdır.</p>
+<textarea id="reportText" rows="5" placeholder="Örnek şikayet: işletmede sorun yaşandı..."></textarea>
+<button class="btn primary" style="margin-top:10px" onclick="submitReport()">Şikayeti kaydet</button>
+</div></div>
 
 <div id="toast" class="toast"></div>
 
@@ -141,164 +175,261 @@ const SUPABASE_URL="https://ymevkncvdkabohrzqasy.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_b_srPWflLRrFV4ayykMa-g_mFb3Z8rz";
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 
-const activities=[
-{id:1,emoji:"☕",tag:"KAHVE + ATMOSFER",title:"Geceye Mor Bir Başlangıç",price:180,rating:4.8,dist:"2.1 km",time:70,why:"Sakin ve özel bir başlangıç isteyenler için."},
-{id:2,emoji:"🎨",tag:"SANAT",title:"Mini Sanat Deneyimi",price:250,rating:4.9,dist:"3.4 km",time:90,why:"Yeni deneyim arayan ama yorulmak istemeyenler için."},
-{id:3,emoji:"🌅",tag:"AÇIK HAVA",title:"Gün Batımı Rotası",price:0,rating:4.9,dist:"4.7 km",time:60,why:"Bütçeyi korurken kaliteli zaman geçirmeni sağlar."},
-{id:4,emoji:"🍽️",tag:"LEZZET",title:"Yerel Lezzet Keşfi",price:290,rating:4.7,dist:"1.8 km",time:80,why:"Bütçene göre yüksek değer / fiyat dengesi."},
-{id:5,emoji:"🎉",tag:"EĞLENCE",title:"Sürpriz Oyun Gecesi",price:220,rating:4.6,dist:"5.1 km",time:120,why:"Enerjiyi yükseltmek isteyenler için."},
-{id:6,emoji:"🌿",tag:"ÜCRETSİZ",title:"Şehir Işıkları Yürüyüşü",price:0,rating:4.8,dist:"3.0 km",time:75,why:"Sıfır maliyetle şehir keşfi."}
-];
-
+let activities=[];
 let state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel"};
+let lastResults=[];
+let betterOffset=0;
 
-function toast(t){const x=document.getElementById("toast");x.textContent=t;x.style.display="block";clearTimeout(window.__toast);window.__toast=setTimeout(()=>x.style.display="none",2600)}
-function scrollToId(id){document.getElementById(id)?.scrollIntoView({behavior:"smooth"})}
-function openModal(id){document.getElementById(id).classList.add("open")}
-function closeModal(id){document.getElementById(id).classList.remove("open")}
-function setMood(v){document.getElementById("mood").value=v.replace(/^.\s/,"");recommend()}
-function setMode(v){state.mode=v;document.getElementById("modeText").textContent=v;recommend()}
-document.getElementById("budget").addEventListener("input",e=>{document.getElementById("budgetText").textContent="₺"+Number(e.target.value).toLocaleString("tr-TR");recommend()});
-document.getElementById("time").addEventListener("input",e=>{document.getElementById("timeText").textContent=e.target.value+" saat";recommend()});
+const $=id=>document.getElementById(id);
+function toast(t){const x=$("toast");x.textContent=t;x.style.display="block";clearTimeout(window.__toast);window.__toast=setTimeout(()=>x.style.display="none",3000)}
+function scrollToId(id){$(id)?.scrollIntoView({behavior:"smooth"})}
+function openModal(id){$(id).classList.add("open")}
+function closeModal(id){$(id).classList.remove("open")}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function normalize(s){return String(s||"").toLocaleLowerCase("tr-TR").replace(/ı/g,"i").replace(/ş/g,"s").replace(/ğ/g,"g").replace(/ü/g,"u").replace(/ö/g,"o").replace(/ç/g,"c")}
+function currentBudget(){return Number($("budget").value)}
+function currentTime(){return Number($("time").value)*60}
+function queryText(){return normalize($("mood").value)}
+function priceText(p){return Number(p||0)===0?"Ücretsiz":"₺"+Number(p).toLocaleString("tr-TR")}
+function emojiFor(a){const t=normalize(a.title+" "+a.tag);if(t.includes("sanat"))return"🎨";if(t.includes("yuruyus"))return"🌅";if(t.includes("kahve"))return"☕";if(t.includes("lezzet"))return"🍽️";if(t.includes("oyun")||t.includes("eglence"))return"🎉";if(t.includes("muz")||t.includes("kultur"))return"🏛️";if(t.includes("foto"))return"📸";if(t.includes("manzara"))return"🌃";return a.emoji||"✨"}
 
-function render(items=activities){
- const budget=Number(document.getElementById("budget").value), time=Number(document.getElementById("time").value)*60;
- const mood=document.getElementById("mood").value.toLowerCase();
- let list=items.filter(a=>a.price<=budget && a.time<=time);
- if(mood.includes("sakin")||mood.includes("romantik")) list=list.sort((a,b)=>b.rating-a.rating);
- if(!list.length) list=[...activities].filter(a=>a.price<=budget).slice(0,3);
- document.getElementById("results").innerHTML=list.map(a=>`
- <article class="card">
-  <div class="cover">${a.emoji}</div><span class="tag">${esc(a.tag)}</span>
-  <h3>${esc(a.title)}</h3><div class="meta">★ ${a.rating} · ${a.dist} · ${a.time} dk</div>
-  <p class="why">${esc(a.why)}</p><div class="row"><span class="price">${a.price?("₺"+a.price):"Ücretsiz"}</span>
-  <button class="btn mini" onclick="toggleFavorite(${a.id})">${state.favorites.includes(a.id)?"♥":"♡"}</button></div>
-  <button class="btn primary" style="width:100%;margin-top:10px" onclick="addRoute(${a.id})">Rotama ekle</button>
- </article>`).join("");
+function normalizeActivity(a){
+  return {
+    id:a.id,title:a.title||"Deneyim",price:Number(a.price||0),rating:Number(a.rating||0),
+    tag:a.tag||"KEŞİF",description:a.description||"",why:a.why||a.description||"Bütçene ve zamanına göre değerlendirildi.",
+    time:Number(a.duration_min||a.time||60),dist:Number(a.distance_km||a.dist_km||0),
+    moods:Array.isArray(a.moods)?a.moods:[],city:a.city||"İstanbul",emoji:a.emoji||"✨",is_active:a.is_active!==false
+  };
 }
-function recommend(){render();toast("AI önerileri bütçe, zaman ve moduna göre güncellendi.")}
-function surprise(){const a=activities[Math.floor(Math.random()*activities.length)];document.getElementById("mood").value="Bana bugün şaşırtıcı ama bütçeme uygun bir deneyim bul";document.getElementById("budget").value=Math.max(Number(document.getElementById("budget").value),a.price);document.getElementById("budgetText").textContent="₺"+Number(document.getElementById("budget").value).toLocaleString("tr-TR");render([a]);toast("Sürpriz deneyimin hazır.")}
-function getActivity(id){return activities.find(x=>x.id===id)}
-function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+
+async function loadActivities(){
+  $("results").innerHTML='<div class="empty loading">Aktiviteler Supabase üzerinden yükleniyor...</div>';
+  const {data,error}=await sb.from("activities").select("id,title,price,rating,tag,description,why,duration_min,distance_km,moods,city,emoji,is_active").eq("is_active",true);
+  if(error){
+    console.error(error);activities=[];$("results").innerHTML='<div class="empty">Aktiviteler yüklenemedi. Supabase activities tablosu/RLS ayarını kontrol et.</div>';return;
+  }
+  const map=new Map();
+  (data||[]).map(normalizeActivity).forEach(a=>{if(!map.has(normalize(a.title)))map.set(normalize(a.title),a)});
+  activities=[...map.values()];
+  recommend(true);
+}
+
+function moodMatch(a,q){
+  const hay=normalize([a.title,a.tag,a.description,a.why,...a.moods].join(" "));
+  const words=q.split(/\s+/).filter(w=>w.length>2);
+  const matched=words.filter(w=>hay.includes(w));
+  return Math.min(1,matched.length/Math.max(1,Math.min(3,words.length)));
+}
+
+function scoreActivity(a){
+  const budget=currentBudget(), time=currentTime(), q=queryText(), mode=normalize(state.mode);
+  if(a.price>budget || a.time>time)return -1;
+  let score=0;
+  const budgetFit=budget===0?(a.price===0?1:0):Math.max(0,1-Math.abs(budget-a.price)/Math.max(budget,1));
+  const timeFit=Math.max(0,1-Math.max(0,a.time-time)/Math.max(time,1));
+  const moodFit=q?moodMatch(a,q):0;
+  const modeFit=(mode==="cift"&&normalize(a.moods.join(" ")).includes("romantik"))?1:
+                (mode==="arkadas"&&normalize(a.moods.join(" ")).includes("eglenceli"))?1:
+                (mode==="kisisel"&&normalize(a.moods.join(" ")).includes("kesif"))?.7:0;
+  const ratingFit=Math.max(0,Math.min(1,a.rating/5));
+  const distanceFit=a.dist>0?Math.max(0,1-a.dist/15):.65;
+  score=budgetFit*28+timeFit*18+moodFit*25+modeFit*10+ratingFit*14+distanceFit*5;
+  if(a.price===0 && budget<=300)score+=4;
+  return Math.round(Math.min(100,score));
+}
+
+function recommend(silent=false){
+  if(!activities.length){$("results").innerHTML='<div class="empty">Şu anda gösterilecek aktif deneyim bulunamadı.</div>';return}
+  betterOffset=0;
+  let list=activities.map(a=>({...a,score:scoreActivity(a)})).filter(a=>a.score>=0);
+  list.sort((a,b)=>b.score-a.score || b.rating-a.rating);
+  lastResults=list;
+  render(list.slice(0,6));
+  $("resultSummary").textContent=`${list.length} uygun deneyim bulundu · Bütçe ${priceText(currentBudget())} · ${currentTime()/60} saat · ${state.mode}`;
+  if(!silent)toast("DISCOVER Score güncellendi.");
+}
+
+function render(list){
+  if(!list.length){$("results").innerHTML='<div class="empty"><b>Bu kombinasyona uygun deneyim bulamadım.</b><p class="muted">Bütçeyi veya zamanı biraz artırmayı deneyebilirsin.</p></div>';return}
+  $("results").innerHTML=list.map(a=>{
+    const fav=state.favorites.includes(a.id);
+    const moodNames=(a.moods||[]).slice(0,2).join(" · ");
+    return `<article class="card">
+      <div class="cover">${emojiFor(a)}<span class="score">%${a.score} Uyum</span></div>
+      <span class="tag">${esc(a.tag)}</span>
+      <h3>${esc(a.title)}</h3>
+      <div class="meta">★ ${a.rating.toFixed(1)} · ${a.dist?esc(a.dist+" km"):"Konum yok"} · ${a.time} dk · ${esc(a.city)}</div>
+      <p class="why">${esc(a.why)}</p>
+      <div class="match">🧠 <b>Neden bu?</b> ${esc(moodNames?moodNames+" ile eşleşiyor. ":"")}Bütçene ve zamanına uyuyor.</div>
+      <div class="row" style="margin-top:12px"><span class="price">${priceText(a.price)}</span><button class="btn mini" onclick="toggleFavorite(${JSON.stringify(a.id)})">${fav?"♥":"♡"}</button></div>
+      <div class="card-actions">
+        <button class="btn primary" onclick="addRoute(${JSON.stringify(a.id)})">Rotama ekle</button>
+        <button class="btn" onclick="reportActivity(${JSON.stringify(a.title)})">Bildir</button>
+      </div>
+    </article>`;
+  }).join("");
+}
+
+function setMood(v,el){
+  $("mood").value=v;
+  document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
+  if(el)el.classList.add("active");
+  recommend();
+}
+function setMode(v){state.mode=v;$("modeText").textContent=v;recommend()}
+$("budget").addEventListener("input",e=>{$("budgetText").textContent="₺"+Number(e.target.value).toLocaleString("tr-TR");recommend(true)});
+$("time").addEventListener("input",e=>{$("timeText").textContent=e.target.value+" saat";recommend(true)});
+
+function surprise(){
+  if(!activities.length)return toast("Henüz aktivite yüklenmedi.");
+  const candidates=activities.map(a=>({...a,score:scoreActivity(a)})).filter(a=>a.score>=0);
+  if(!candidates.length)return toast("Mevcut bütçe ve zamanda sürpriz bulunamadı.");
+  const pool=candidates.slice().sort((a,b)=>b.score-a.score).slice(0,Math.min(6,candidates.length));
+  const a=pool[Math.floor(Math.random()*pool.length)];
+  $("mood").value="Sürpriz";
+  render([{...a,score:scoreActivity(a)}]);
+  $("resultSummary").textContent="🎲 Bütçene ve zamanına uyan sürpriz deneyim.";
+  scrollToId("explore");toast("Sürpriz deneyimin hazır.");
+}
+
+function better(){
+  if(!lastResults.length)return recommend();
+  betterOffset=(betterOffset+3)%Math.max(1,lastResults.length);
+  const list=lastResults.slice(betterOffset).concat(lastResults.slice(0,betterOffset)).slice(0,6);
+  render(list);
+  toast("Alternatif sonuçlar getirildi.");
+}
+
+function getActivity(id){return activities.find(x=>String(x.id)===String(id))}
 
 async function openAuth(type="login"){
- document.getElementById("authTitle").textContent=type==="login"?"DISCOVER AI'a giriş":"DISCOVER AI'a katıl";
- document.querySelector("#authModal .btn.primary").textContent=type==="login"?"Giriş yap":"Hesap oluştur";
- document.getElementById("authName").style.display=type==="login"?"none":"block";
- document.getElementById("authModal").dataset.mode=type;openModal("authModal");
+  $("authTitle").textContent=type==="login"?"DISCOVER AI'a giriş":"DISCOVER AI'a katıl";
+  document.querySelector("#authModal .btn.primary").textContent=type==="login"?"Giriş yap":"Hesap oluştur";
+  $("authName").style.display=type==="login"?"none":"block";
+  $("authModal").dataset.mode=type;openModal("authModal");
 }
-function switchAuth(){openAuth(document.getElementById("authModal").dataset.mode==="login"?"join":"login")}
+function switchAuth(){openAuth($("authModal").dataset.mode==="login"?"join":"login")}
+
 async function submitAuth(){
- const mode=document.getElementById("authModal").dataset.mode||"join",name=document.getElementById("authName").value.trim(),email=document.getElementById("authEmail").value.trim(),password=document.getElementById("authPassword").value;
- if(!email||password.length<6)return toast("E-posta ve en az 6 karakterli şifre gerekli.");
- try{
-  if(mode==="join"){
-   const {data,error}=await sb.auth.signUp({email,password,options:{data:{full_name:name,username:name||undefined}}});
-   if(error)throw error;
-   toast("Kayıt tamamlandı. E-posta doğrulaması gerekebilir.");
-  }else{
-   const {error}=await sb.auth.signInWithPassword({email,password});
-   if(error)throw error;toast("Giriş başarılı.");
-  }
-  closeModal("authModal");await syncUser();
- }catch(e){toast("İşlem başarısız: "+(e.message||"Bilinmeyen hata"))}
+  const mode=$("authModal").dataset.mode||"join",name=$("authName").value.trim(),email=$("authEmail").value.trim(),password=$("authPassword").value;
+  if(!email||password.length<6)return toast("E-posta ve en az 6 karakterli şifre gerekli.");
+  try{
+    if(mode==="join"){
+      const {data,error}=await sb.auth.signUp({email,password,options:{data:{full_name:name,username:name||undefined}}});
+      if(error)throw error;
+      toast(data.session?"Kayıt ve giriş başarılı.":"Kayıt tamamlandı. E-posta doğrulaması gerekebilir.");
+    }else{
+      const {error}=await sb.auth.signInWithPassword({email,password});
+      if(error)throw error;toast("Giriş başarılı.");
+    }
+    closeModal("authModal");await syncUser();
+  }catch(e){toast("İşlem başarısız: "+(e.message||"Bilinmeyen hata"))}
 }
 
 async function syncUser(){
- try{
-  const {data:{user}}=await sb.auth.getUser();state.user=user;
-  if(!user){state.profile=null;state.favorites=[];state.routes=[];updateAuthUI();return}
-  let p=await sb.from("profiles").select("*").eq("id",user.id).maybeSingle();
-  if(p.error) throw p.error;
-  if(!p.data){
-   const username=user.user_metadata?.username||user.email?.split("@")[0]||"Kaşif";
-   const ins=await sb.from("profiles").insert({id:user.id,username,level:1,xp:0}).select().single();
-   if(ins.error) throw ins.error;p=ins;
-  }
-  state.profile=p.data;state.xp=Number(p.data.xp||0);state.favorites=[];state.routes=[];
-  const fav=await sb.from("favorites").select("activity_id").eq("user_id",user.id);
-  if(!fav.error)state.favorites=(fav.data||[]).map(x=>x.activity_id);
-  const routes=await sb.from("routes").select("id,title,budget,updated_at").eq("user_id",user.id).order("updated_at",{ascending:false});
-  if(!routes.error)state.routes=routes.data||[];
-  updateAuthUI();updateLevels();render();
- }catch(e){console.error(e);toast("Profil verisi alınamadı. RLS/tablo ayarlarını kontrol et.")}
+  try{
+    const {data:{user}}=await sb.auth.getUser();state.user=user;
+    if(!user){state.profile=null;state.favorites=[];state.routes=[];state.xp=0;updateAuthUI();updateLevels();return}
+    let p=await sb.from("profiles").select("*").eq("id",user.id).maybeSingle();
+    if(p.error)throw p.error;
+    if(!p.data){
+      const username=user.user_metadata?.username||user.email?.split("@")[0]||"Kaşif";
+      const ins=await sb.from("profiles").insert({id:user.id,username,level:1,xp:0}).select().single();
+      if(ins.error)throw ins.error;p=ins;
+    }
+    state.profile=p.data;state.xp=Number(p.data.xp||0);
+    const fav=await sb.from("favorites").select("activity_id").eq("user_id",user.id);
+    if(!fav.error)state.favorites=(fav.data||[]).map(x=>x.activity_id);
+    const routes=await sb.from("routes").select("id,title,budget,updated_at").eq("user_id",user.id).order("updated_at",{ascending:false});
+    if(!routes.error)state.routes=routes.data||[];
+    updateAuthUI();updateLevels();render(lastResults.length?lastResults.slice(0,6):[]);
+  }catch(e){console.error(e);toast("Profil verisi alınamadı: "+(e.message||"RLS/tablo ayarlarını kontrol et."))}
 }
 
 function updateAuthUI(){
- const logged=!!state.user;
- document.getElementById("loginBtn").textContent=logged?"Profil":"Giriş";
- document.getElementById("loginBtn").onclick=logged?()=>openProfile():()=>openAuth("login");
- document.getElementById("joinBtn").textContent=logged?"Çıkış":"Katıl";
- document.getElementById("joinBtn").onclick=logged?()=>logout():()=>openAuth("join");
+  const logged=!!state.user;
+  $("loginBtn").textContent=logged?"Profil":"Giriş";
+  $("loginBtn").onclick=logged?()=>openProfile():()=>openAuth("login");
+  $("joinBtn").textContent=logged?"Çıkış":"Katıl";
+  $("joinBtn").onclick=logged?()=>logout():()=>openAuth("join");
 }
-async function openProfile(){
- if(!state.user)return openAuth("login");
- document.getElementById("profileName").textContent=state.profile?.username||"Kaşif";
- document.getElementById("profileEmail").textContent=state.user.email||"";
- document.getElementById("profileLevel").textContent="Seviye "+(state.profile?.level||1);
- document.getElementById("profileXP").textContent=state.xp;
- document.getElementById("profileFav").textContent=state.favorites.length;
- document.getElementById("profileRoutes").textContent=state.routes.length;
- openModal("profileModal");
+function openProfile(){
+  if(!state.user)return openAuth("login");
+  $("profileName").textContent=state.profile?.username||"Kaşif";
+  $("profileEmail").textContent=state.user.email||"";
+  $("profileLevel").textContent="Seviye "+(state.profile?.level||1);
+  $("profileXP").textContent=state.xp;$("profileFav").textContent=state.favorites.length;$("profileRoutes").textContent=state.routes.length;
+  openModal("profileModal");
 }
-async function logout(){await sb.auth.signOut();state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel"};updateAuthUI();render();closeModal("profileModal");toast("Çıkış yapıldı.")}
+async function logout(){await sb.auth.signOut();state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel"};updateAuthUI();updateLevels();recommend(true);closeModal("profileModal");toast("Çıkış yapıldı.")}
 
 async function toggleFavorite(id){
- if(!state.user){toast("Favoriye eklemek için giriş yap.");return openAuth("login")}
- const exists=state.favorites.includes(id);
- try{
-  if(exists){
-   const {error}=await sb.from("favorites").delete().eq("user_id",state.user.id).eq("activity_id",id);if(error)throw error;
-   state.favorites=state.favorites.filter(x=>x!==id);toast("Favorilerden çıkarıldı.");
-  }else{
-   const {error}=await sb.from("favorites").insert({user_id:state.user.id,activity_id:id});if(error)throw error;
-   state.favorites.push(id);toast("Favorilere eklendi.");
-  }
-  render();
- }catch(e){toast("Favori işlemi başarısız: "+e.message)}
+  if(!state.user){toast("Favoriye eklemek için giriş yap.");return openAuth("login")}
+  const exists=state.favorites.includes(id);
+  try{
+    if(exists){
+      const {error}=await sb.from("favorites").delete().eq("user_id",state.user.id).eq("activity_id",id);if(error)throw error;
+      state.favorites=state.favorites.filter(x=>x!==id);toast("Favorilerden çıkarıldı.");
+    }else{
+      const {error}=await sb.from("favorites").insert({user_id:state.user.id,activity_id:id});if(error)throw error;
+      state.favorites.push(id);toast("Favorilere eklendi.");
+    }
+    render(lastResults.slice(0,6));
+  }catch(e){toast("Favori işlemi başarısız: "+e.message)}
 }
 
 async function addRoute(id){
- if(!state.user){toast("Rota oluşturmak için giriş yap.");return openAuth("login")}
- const a=getActivity(id);if(!a)return;
- try{
-  let route=state.routes[0];
-  if(!route){
-   const ins=await sb.from("routes").insert({user_id:state.user.id,title:"Bugünüm",budget:Number(document.getElementById("budget").value)}).select().single();
-   if(ins.error)throw ins.error;route=ins.data;state.routes=[route];
-  }
-  const ri=await sb.from("route_items").insert({route_id:route.id,activity_id:id,position:1});
-  if(ri.error)throw ri.error;
-  const xp=await sb.from("xp_events").insert({user_id:state.user.id,amount:25,reason:"Deneyimi rotaya ekledi"});
-  if(xp.error)console.warn("XP event:",xp.error.message);
-  state.xp+=25;await sb.from("profiles").update({xp:state.xp,level:Math.max(1,Math.floor(state.xp/750)+1)}).eq("id",state.user.id);
-  toast("Deneyim rotana eklendi. +25 XP");await syncUser();
- }catch(e){toast("Rota işlemi başarısız: "+e.message)}
+  if(!state.user){toast("Rota oluşturmak için giriş yap.");return openAuth("login")}
+  const a=getActivity(id);if(!a)return;
+  try{
+    let route=state.routes[0];
+    if(!route){
+      const ins=await sb.from("routes").insert({user_id:state.user.id,title:"Bugünüm",budget:currentBudget()}).select().single();
+      if(ins.error)throw ins.error;route=ins.data;state.routes=[route];
+    }
+    const ri=await sb.from("route_items").insert({route_id:route.id,activity_id:id,position:1});
+    if(ri.error)throw ri.error;
+    const xp=await sb.from("xp_events").insert({user_id:state.user.id,amount:25,reason:"Deneyimi rotaya ekledi"});
+    if(xp.error)console.warn("XP event:",xp.error.message);
+    state.xp+=25;
+    await sb.from("profiles").update({xp:state.xp,level:Math.min(10,Math.max(1,Math.floor(state.xp/750)+1))}).eq("id",state.user.id);
+    await syncUser();toast("Deneyim rotana eklendi. +25 XP");openRoute();
+  }catch(e){toast("Rota işlemi başarısız: "+e.message)}
+}
+
+function openRoute(){
+  if(!state.user){toast("Rotanı görmek için giriş yap.");return openAuth("login")}
+  const body=$("routeModalBody");
+  if(!state.routes.length){body.innerHTML='<div class="empty">Henüz rota oluşturmadın.</div>';openModal("routeModal");return}
+  const r=state.routes[0];
+  body.innerHTML=`<div class="glass"><div class="row"><b>${esc(r.title||"Bugünüm")}</b><span>₺${Number(r.budget||0).toLocaleString("tr-TR")}</span></div><p class="muted">Rotaya eklediğin deneyimler burada birikir.</p></div>`;
+  openModal("routeModal");
 }
 
 function updateLevels(){
- const rewards=["Kaşif rozeti","Profil rozeti","Rota temaları","AI tercih profili","Koleksiyonlar","Insider rozeti","Özel AI modu","Elite profil","Master rozeti","Legend rozeti"];
- const level=Math.min(10,Math.max(1,state.profile?.level||Math.floor(state.xp/750)+1));
- document.getElementById("levelsGrid").innerHTML=rewards.map((r,i)=>`<div class="level ${i+1===level?"active":""}"><b>${i+1}</b><div class="reward">${r}</div></div>`).join("");
- const cur=state.xp%750, pct=Math.min(100,Math.round(cur/750*100));
- document.getElementById("xpLabel").textContent=cur+" / 750 XP";document.getElementById("xpBar").style.width=pct+"%";
+  const rewards=["Kaşif rozeti","Profil rozeti","Rota temaları","AI tercih profili","Koleksiyonlar","Insider rozeti","Özel AI modu","Elite profil","Master rozeti","Legend rozeti"];
+  const level=Math.min(10,Math.max(1,state.profile?.level||Math.floor(state.xp/750)+1));
+  $("levelsGrid").innerHTML=rewards.map((r,i)=>`<div class="level ${i+1===level?"active":""}"><b>${i+1}</b><div class="reward">${r}</div></div>`).join("");
+  const cur=state.xp%750,pct=Math.min(100,Math.round(cur/750*100));
+  $("xpLabel").textContent=cur+" / 750 XP";$("xpBar").style.width=pct+"%";
 }
 
 function subscribe(plan){if(!state.user){toast("Premium için önce hesap oluştur.");return openAuth("join")}toast(plan+" Premium seçildi. Gerçek ödeme bağlantısı sonraki aşamada kurulacak.")}
 function openAdmin(){if(!state.user)return openAuth("login");openModal("adminModal")}
+function reportActivity(title){if(!state.user)return openAuth("login");$("reportText").value="Aktivite bildirimi: "+title+"\\n";openModal("adminModal")}
 async function submitReport(){
- const text=document.getElementById("reportText").value.trim();if(!text)return toast("Şikayet metni gerekli.");
- try{
-  const {error}=await sb.from("reports").insert({user_id:state.user.id,type:"user_report",description:text});
-  if(error)throw error;document.getElementById("reportText").value="";toast("Şikayet kaydedildi.");closeModal("adminModal");
- }catch(e){toast("Rapor tablosu/RLS hazır değil: "+e.message)}
+  const text=$("reportText").value.trim();if(!text)return toast("Şikayet metni gerekli.");
+  try{const {error}=await sb.from("reports").insert({user_id:state.user.id,type:"activity_report",description:text});if(error)throw error;$("reportText").value="";toast("Şikayet kaydedildi.");closeModal("adminModal")}
+  catch(e){toast("Rapor işlemi başarısız: "+e.message)}
 }
 
-document.getElementById("authModal").addEventListener("click",e=>{if(e.target.classList.contains("modal"))e.currentTarget.classList.remove("open")});
-document.getElementById("profileModal").addEventListener("click",e=>{if(e.target.classList.contains("modal"))e.currentTarget.classList.remove("open")});
-document.getElementById("adminModal").addEventListener("click",e=>{if(e.target.classList.contains("modal"))e.currentTarget.classList.remove("open")});
+["authModal","profileModal","routeModal","adminModal"].forEach(id=>$(id).addEventListener("click",e=>{if(e.target.classList.contains("modal"))closeModal(id)}));
 
-(async()=>{updateAuthUI();render();updateLevels();sb.auth.onAuthStateChange(()=>setTimeout(syncUser,0));await syncUser()})();
+(async()=>{
+  updateAuthUI();updateLevels();
+  sb.auth.onAuthStateChange(()=>setTimeout(syncUser,0));
+  await Promise.all([loadActivities(),syncUser()]);
+})();
 </script>
 </body>
 </html>
