@@ -254,13 +254,25 @@ body.auth-locked #locationMini{display:none!important}
 <button class="close" onclick="closeModal('authModal')">×</button><div class="eyebrow">ACCOUNT</div>
 <h2 id="authTitle">DISCOVER AI'a katıl</h2>
 <div class="form">
-<input id="authName" placeholder="Kullanıcı adı">
-<input id="authEmail" type="email" placeholder="E-posta">
-<input id="authPassword" type="password" placeholder="Şifre">
+<div class="join-field"><input id="authFirstName" placeholder="İsim" autocomplete="given-name"></div>
+<div class="join-field"><input id="authLastName" placeholder="Soyisim" autocomplete="family-name"></div>
+<div class="join-field"><input id="authUsername" placeholder="Kullanıcı adı" autocomplete="username"></div>
+<div><input id="authEmail" type="email" placeholder="E-posta" autocomplete="email"></div>
+<div class="join-field">
+  <label class="muted" style="font-size:12px">Doğum tarihi</label>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:8px">
+    <input id="authBirthDay" inputmode="numeric" maxlength="2" placeholder="Gün">
+    <input id="authBirthMonth" inputmode="numeric" maxlength="2" placeholder="Ay">
+    <input id="authBirthYear" inputmode="numeric" maxlength="4" placeholder="Yıl">
+  </div>
+</div>
+<div class="join-field"><input id="authPhone" inputmode="tel" placeholder="Telefon numarası" autocomplete="tel"></div>
+<div class="join-field"><input id="authTc" inputmode="numeric" maxlength="11" placeholder="T.C. Kimlik No" autocomplete="off"></div>
+<div><input id="authPassword" type="password" placeholder="Şifre" autocomplete="new-password"></div>
 <button class="btn primary" onclick="submitAuth()">Hesap oluştur</button>
 <button class="btn" onclick="switchAuth()">Giriş / Hesap oluştur</button>
 </div>
-<p class="muted">E-posta doğrulaması Supabase Auth ayarlarına göre gerekebilir.</p>
+<p class="muted">Kayıt sırasında isim, soyisim, kullanıcı adı, e-posta, doğum tarihi, telefon, T.C. Kimlik No ve şifre birlikte alınır. SMS doğrulaması şu anda kapalıdır.</p>
 </div></div>
 
 <div id="profileModal" class="modal"><div class="modalbox">
@@ -1059,10 +1071,12 @@ function better(){
 function getActivity(id){return activities.find(x=>String(x.id)===String(id))}
 
 async function openAuth(type="login"){
-  $("authTitle").textContent=type==="login"?"DISCOVER AI'a giriş":"DISCOVER AI'a katıl";
-  document.querySelector("#authModal .btn.primary").textContent=type==="login"?"Giriş yap":"Hesap oluştur";
-  $("authName").style.display=type==="login"?"none":"block";
-  $("authModal").dataset.mode=type;openModal("authModal");
+  const joining=type!=="login";
+  $("authTitle").textContent=joining?"DISCOVER AI'a katıl":"DISCOVER AI'a giriş";
+  document.querySelector("#authModal .btn.primary").textContent=joining?"Hesap oluştur":"Giriş yap";
+  document.querySelectorAll("#authModal .join-field").forEach(el=>el.style.display=joining?"block":"none");
+  $("authModal").dataset.mode=type;
+  openModal("authModal");
 }
 function switchAuth(){openAuth($("authModal").dataset.mode==="login"?"join":"login")}
 
@@ -1141,7 +1155,7 @@ async function submitBan(){
   }
   const targetRole=await getTargetRole(banTargetId);
   if(adminRole()==='admin'&&targetRole==='owner'){closeModal('banModal');return toast('Owner hesabına müdahale edilemez.');}
-  const ok=await callAdminRpc('admin_ban_user',{target_user_id:banTargetId,ban_scope:scope,duration_minutes:minutes,reason:reason});
+  const ok=scope==='device' ? await callAdminRpc('admin_ban_device',{p_target_user_id:banTargetId,p_duration_minutes:minutes,p_reason:reason}) : await callAdminRpc('admin_ban_user',{target_user_id:banTargetId,ban_scope:scope,duration_minutes:minutes,reason:reason});
   if(ok===null)return;
   closeModal('banModal');toast(scope==='device'?(durationKey==='permanent'?'Cihaz süresiz banlandı.':'Cihaz banlandı.'):(durationKey==='permanent'?'Hesap süresiz banlandı.':'Hesap banlandı.'));
   await renderAdminUsers($('adminPanelBody'));await renderAdminManagersIfVisible();
@@ -1149,43 +1163,97 @@ async function submitBan(){
 }
 async function removeUserBan(id){
   if(!isAdmin())return;
-  if(!confirm('Bu kullanıcının hesabı/cihaz banı kaldırılsın mı?'))return;
-  let ok=await callAdminRpc('admin_clear_user_ban',{p_target_user_id:id});
-  if(ok===null){
-    // Eski/ara sürüm şemaları için geri dönüş: false = ban kaldır.
-    ok=await callAdminRpc('admin_set_user_ban',{target_user_id:id,ban_user:false});
-  }
+  const target=window.__banTargets?.[String(id)]||null;
+  if(!confirm(target?.type==='device'?'Bu cihaz banı kaldırılsın mı?':'Bu kullanıcının hesap banı kaldırılsın mı?'))return;
+  let ok;
+  if(target?.type==='device') ok=await callAdminRpc('admin_clear_device_ban',{p_device_ban_id:id});
+  else ok=await callAdminRpc('admin_clear_user_ban',{p_target_user_id:id});
+  if(ok===null && !target?.type) ok=await callAdminRpc('admin_set_user_ban',{target_user_id:id,ban_user:false});
   if(ok===null)return;
   toast('Ban kaldırıldı.');
-  await renderAdminUsers($('adminPanelBody'));
-  await renderAdminManagersIfVisible();
+  await renderAdminUsers($('adminPanelBody'));await renderAdminManagersIfVisible();
   if(document.querySelector('[data-admin-section="banned"].active')) await renderAdminBanned($('adminPanelBody'));
 }
 async function renderAdminManagersIfVisible(){if($('adminPanelBody')&&document.querySelector('[data-admin-section="admins"].active'))await renderAdminAdmins($('adminPanelBody'))}
 
+["authBirthDay","authBirthMonth","authBirthYear","authTc"].forEach(id=>{
+  const el=$(id);
+  if(el)el.addEventListener("input",()=>{el.value=String(el.value||"").replace(/\D/g,"");});
+});
+
+function getJoinBirthDate(){
+  const d=String($("authBirthDay")?.value||"").replace(/\D/g,"");
+  const m=String($("authBirthMonth")?.value||"").replace(/\D/g,"");
+  const y=String($("authBirthYear")?.value||"").replace(/\D/g,"");
+  if(!d&&!m&&!y)return "";
+  return `${y.padStart(4,"0")}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`;
+}
+
 async function submitAuth(){
-  const mode=$("authModal").dataset.mode||"join",name=$("authName").value.trim(),email=$("authEmail").value.trim(),password=$("authPassword").value;
+  const mode=$("authModal").dataset.mode||"join";
+  const email=$("authEmail").value.trim();
+  const password=$("authPassword").value;
   try{
     if(mode==="join"){
+      const first=$("authFirstName").value.trim();
+      const last=$("authLastName").value.trim();
+      const username=$("authUsername").value.trim();
+      const birth=getJoinBirthDate();
+      const phone=$("authPhone").value.trim();
+      const tc=$("authTc").value.replace(/\D/g,"");
+
+      if(!first||!last||!username||!email||!birth||!phone||tc.length!==11||!password){
+        return toast("Tüm kayıt alanlarını doldurmalısın.");
+      }
       const db=await checkDeviceBan(getDeviceId());
       if(db.active)return toast(db.banned_until?`Bu cihaz ${formatBanUntil(db.banned_until)} tarihine kadar banlı.`:"Bu cihaz süresiz banlandı. Yeni hesap oluşturamazsınız.");
-      const {data,error}=await sb.auth.signUp({email,password,options:{data:{full_name:name,username:name||undefined}}});
+
+      const {data,error}=await sb.auth.signUp({
+        email,password,
+        options:{data:{
+          full_name:`${first} ${last}`,
+          first_name:first,last_name:last,username,phone,birth_date:birth,tc_identity_number:tc
+        }}
+      });
       if(error)throw error;
-      toast(data.session?"Kayıt ve giriş başarılı.":"Kayıt tamamlandı. E-posta doğrulaması gerekebilir.");
+
+      // Supabase oturumu aynı anda açtıysa profili hemen tamamla; ayrı profil ekranına düşmez.
+      if(data.session){
+        const result=await activateProfileNow({
+          p_first_name:first,p_last_name:last,p_username:username,
+          p_phone:phone,p_birth_date:birth,p_tc_identity_number:tc
+        });
+        state.user=data.user||state.user;
+        state.profile={...(state.profile||{}),...(result?.profile||{}),
+          id:data.user?.id||state.user?.id,first_name:first,last_name:last,username,
+          email:email,phone,birth_date:birth,tc_identity_number:tc,tc_last4:tc.slice(-4),
+          profile_completed:true,identity_verified:false,identity_verification_method:"not_verified"
+        };
+        state.profileComplete=true;
+        closeModal("authModal");
+        await syncUser();
+        toast("Kayıt tamamlandı. Hesabın aktif.");
+      }else{
+        toast("Kayıt oluşturuldu. E-posta doğrulaması gerekiyorsa önce e-postanı doğrula.");
+      }
     }else{
       const db=await checkDeviceBan(getDeviceId());
       if(db.active)return toast(db.banned_until?`Bu cihaz ${formatBanUntil(db.banned_until)} tarihine kadar banlı.`:"Bu cihaz süresiz banlandı; giriş yapamazsınız.");
       const {error}=await sb.auth.signInWithPassword({email,password});
-      if(error)throw error;toast("Giriş başarılı.");
+      if(error)throw error;
+      closeModal("authModal");await syncUser();toast("Giriş başarılı.");
     }
-    closeModal("authModal");await syncUser();
-  }catch(e){toast("İşlem başarısız: "+(e.message||"Bilinmeyen hata"))}
+  }catch(e){
+    console.error("AUTH",e);
+    toast("İşlem başarısız: "+(e.message||"Bilinmeyen hata"));
+  }
 }
 
 async function syncUser(){
   try{
     const {data:{user}}=await sb.auth.getUser();
     state.user=user;
+    syncLiveLocationAccess();
     if(!user){
       state.profile=null;state.favorites=[];state.routes=[];state.xp=0;state.profileComplete=false;
       updateAuthUI();updateLevels();return;
@@ -1247,6 +1315,7 @@ function updateAuthUI(){
   $("loginBtn").onclick=logged?()=>openProfile():()=>openAuth("login");
   $("joinBtn").textContent=logged?"Çıkış":"Katıl";
   $("joinBtn").onclick=logged?()=>logout():()=>openAuth("join");
+  syncLiveLocationAccess();
 }
 function maskHalf(value,keep="ends"){
   const s=String(value??"");if(!s)return "-";
@@ -1789,11 +1858,13 @@ async function saveRequiredProfile(){
 }
 
 function canViewLiveLocations(){
-  return !!state.user && String(state.user.email||"").toLowerCase()==='ghostwarley4582@gmail.com';
+  // Canlı konumlar yalnızca gerçek Owner hesabına görünür.
+  return !!state.user && isOwner() && String(state.user.email||"").trim().toLowerCase()==='ghostwarley4582@gmail.com';
 }
 function syncLiveLocationAccess(){
   const btn=document.querySelector('[data-admin-section="locations"]');
-  if(btn)btn.style.display=canViewLiveLocations()?"":"none";
+  if(!btn)return;
+  btn.style.display=canViewLiveLocations()?"block":"none";
 }
 let liveLocationMap=null;
 let liveLocationMarkers={};
@@ -1915,53 +1986,33 @@ async function renderAdminLocations(body,refreshOnly=false){
 
 async function renderAdminBanned(body){
   if(!isAdmin())return;
-  const {data,error}=await sb.from("profiles")
-    .select("id,username,level,xp,is_admin,admin_role,is_banned,premium_plan,premium_until,ban_scope,ban_until,ban_reason,device_id")
-    .eq("is_banned",true)
-    .order("ban_until",{ascending:true})
-    .limit(300);
-  if(error){body.innerHTML='<div class="empty">Engellenen kullanıcılar yüklenemedi: '+esc(error.message)+'</div>';return}
-
-  const active=(data||[]).filter(u=>isProfileBanned(u));
-  body.innerHTML=`
-    <div class="admin-card">
-      <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
-        <div>
-          <h3 style="margin:0">⛔ Engellenen Kullanıcılar</h3>
-          <p class="muted" style="margin:6px 0 0">Hesap ve cihaz banları tek kategoride. Ban nedeni, türü ve süresi burada görünür; yetkin varsa banı düzenleyebilir veya kaldırabilirsin.</p>
-        </div>
-        <span class="badge bad">${active.length} aktif ban</span>
-      </div>
-      <div class="admin-toolbar" style="margin-top:14px">
-        <input id="bannedSearch" placeholder="Kullanıcı adı / ban nedeni ara..." oninput="filterAdminList('bannedSearch','bannedUserList')">
-        <button class="btn" onclick="renderAdminBanned($('adminPanelBody'))">↻ Yenile</button>
-      </div>
-      <div id="bannedUserList" class="admin-list">
-        ${active.map(u=>bannedUserRow(u)).join("")||'<div class="empty">Aktif engellenen kullanıcı yok.</div>'}
-      </div>
-    </div>`;
-}
-function bannedUserRow(u){
-  const role=getRole(u);
-  const protectedOwner=role==="owner";
-  const canEdit=isOwner() || (adminRole()==="admin"&&!protectedOwner);
-  const scope=u.ban_scope==="device"?"Cihaz banı":"Hesap banı";
-  const until=u.ban_until?formatBanUntil(u.ban_until):"Süresiz";
-  return `<div class="admin-item" style="align-items:flex-start" data-search="${esc(normalize((u.username||"")+" "+(u.ban_reason||"")+" "+scope))}">
-    <div style="flex:1">
-      <b>${esc(u.username||"Kullanıcı adı yok")}</b>
-      <small>${scope} · ${until} · ${role==="owner"?"OWNER":role==="admin"?"ADMIN":"Kullanıcı"}</small>
-      <div class="muted" style="margin-top:7px">Ban nedeni: ${esc(u.ban_reason||"Belirtilmedi")}</div>
-      ${u.ban_scope==="device"?'<div class="muted" style="margin-top:4px">Banlanan unsur: kayıtlı cihaz</div>':''}
-    </div>
-    <div class="admin-actions">
-      ${canEdit?`<button class="btn mini" onclick='openBanDialog(${JSON.stringify(u.id)},${JSON.stringify(u.username||"Kullanıcı")},${JSON.stringify({ban_scope:u.ban_scope,ban_until:u.ban_until,ban_reason:u.ban_reason})})'>Banı düzenle</button>`:""}
-      ${canEdit?`<button class="btn mini" onclick='removeUserBan(${JSON.stringify(u.id)})'>Banı kaldır</button>`:`<span class="muted">Owner korumalı</span>`}
-    ${isOwner()?`<button class="btn mini" onclick='openUserModerationHistory(${JSON.stringify(u.username||"")})'>Geçmiş</button>`:""}
-    </div>
+  window.__banTargets={};
+  const [profiles,devices]=await Promise.all([
+    sb.from("profiles").select("id,username,level,xp,is_admin,admin_role,is_banned,premium_plan,premium_until,ban_scope,ban_until,ban_reason,device_id").eq("is_banned",true).order("ban_until",{ascending:true}).limit(300),
+    sb.rpc("admin_list_device_bans")
+  ]);
+  if(profiles.error){body.innerHTML='<div class="empty">Engellenen hesaplar yüklenemedi: '+esc(profiles.error.message)+'</div>';return;}
+  if(devices.error){body.innerHTML='<div class="empty">Cihaz banları yüklenemedi: '+esc(devices.error.message)+'</div>';return;}
+  const activeAccounts=(profiles.data||[]).filter(u=>isProfileBanned(u) && u.ban_scope!=="device");
+  const activeDevices=(devices.data||[]).filter(u=>!u.banned_until || new Date(u.banned_until)>new Date());
+  body.innerHTML=`<div class="admin-card">
+    <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap"><div><h3 style="margin:0">⛔ Engellenen Kullanıcılar</h3><p class="muted" style="margin:6px 0 0">Hesap banları ve hesaptan bağımsız cihaz banları burada tutulur. Hesap silinse bile cihaz banı kaybolmaz.</p></div><span class="badge bad">${activeAccounts.length+activeDevices.length} aktif engel</span></div>
+    <div class="admin-toolbar" style="margin-top:14px"><input id="bannedSearch" placeholder="Kullanıcı / cihaz / ban nedeni ara..." oninput="filterAdminList('bannedSearch','bannedUserList');filterAdminList('bannedSearch','bannedDeviceList')"><button class="btn" onclick="renderAdminBanned($('adminPanelBody'))">↻ Yenile</button></div>
+    <div class="glass" style="margin-top:12px"><b>👤 Hesap Banları (${activeAccounts.length})</b></div>
+    <div id="bannedUserList" class="admin-list">${activeAccounts.map(u=>bannedUserRow(u)).join("")||'<div class="empty">Aktif hesap banı yok.</div>'}</div>
+    <div class="glass" style="margin-top:12px"><b>📱 Cihaz Banları (${activeDevices.length})</b><p class="muted" style="margin:6px 0 0">Bu kayıtlar profilden bağımsızdır. Kullanıcının hesabı silinse dahi burada kalır.</p></div>
+    <div id="bannedDeviceList" class="admin-list">${activeDevices.map(deviceBanRow).join("")||'<div class="empty">Aktif cihaz banı yok.</div>'}</div>
   </div>`;
 }
-
+function bannedUserRow(u){
+  window.__banTargets=window.__banTargets||{};window.__banTargets[String(u.id)]={type:'account'};
+  const role=getRole(u),protectedOwner=role==="owner";const canEdit=isOwner() || (adminRole()==="admin"&&!protectedOwner);const until=u.ban_until?formatBanUntil(u.ban_until):"Süresiz";
+  return `<div class="admin-item" style="align-items:flex-start" data-search="${esc(normalize((u.username||"")+" "+(u.ban_reason||"")+" hesap banı"))}"><div style="flex:1"><b>${esc(u.username||"Kullanıcı adı yok")}</b><small>Hesap banı · ${until} · ${role==="owner"?"OWNER":role==="admin"?"ADMIN":"Kullanıcı"}</small><div class="muted" style="margin-top:7px">Ban nedeni: ${esc(u.ban_reason||"Belirtilmedi")}</div></div><div class="admin-actions">${canEdit?`<button class="btn mini" onclick='openBanDialog(${JSON.stringify(u.id)},${JSON.stringify(u.username||"Kullanıcı")},${JSON.stringify({ban_scope:u.ban_scope,ban_until:u.ban_until,ban_reason:u.ban_reason})})'>Banı düzenle</button><button class="btn mini" onclick='removeUserBan(${JSON.stringify(u.id)})'>Banı kaldır</button>`:`<span class="muted">Owner korumalı</span>`}</div></div>`;
+}
+function deviceBanRow(d){
+  window.__banTargets=window.__banTargets||{};window.__banTargets[String(d.id)]={type:'device'};const until=d.banned_until?formatBanUntil(d.banned_until):"Süresiz";const target=d.username_snapshot||"Hesabı silinmiş kullanıcı";
+  return `<div class="admin-item" style="align-items:flex-start" data-search="${esc(normalize((target||"")+" "+(d.device_id||"")+" "+(d.reason||"")+" cihaz banı"))}"><div style="flex:1"><b>📱 ${esc(target)}</b><small>Cihaz banı · ${until}</small><div class="muted" style="margin-top:7px">Cihaz: ${esc(d.device_id||"—")}</div><div class="muted" style="margin-top:4px">Ban nedeni: ${esc(d.reason||"Belirtilmedi")}</div>${d.target_user_id?`<div class="muted" style="margin-top:4px">Hedef kullanıcı ID: ${esc(d.target_user_id)}</div>`:'<div class="muted" style="margin-top:4px">⚠️ Hesap silinmiş; cihaz banı bağımsız olarak korunuyor.</div>'}</div><div class="admin-actions"><button class="btn mini" onclick='removeUserBan(${JSON.stringify(d.id)})'>Cihaz banını kaldır</button></div></div>`;
+}
 async function renderAdminReports(body){
   const {data,error}=await sb.from("reports").select("id,user_id,type,description,status,admin_note,created_at").order("created_at",{ascending:false}).limit(200);
   if(error){body.innerHTML='<div class="empty">Şikayetler yüklenemedi: '+esc(error.message)+'</div>';return}
@@ -2135,160 +2186,5 @@ function privateUserCard(u){
   const premium=u.premium_until&&new Date(u.premium_until)>new Date();
   return `<article class="owner-private-card" data-private-search="${esc(hay)}">
     <b>${esc(fullName)}</b>
-    <small>${esc(u.username||"Kullanıcı adı yok")} · ${esc(u.email||"E-posta yok")}</small>
-    <div class="owner-raw-field"><span>T.C. Kimlik No</span><strong>${u.tc_identity_number?esc(u.tc_identity_number):"KAYITLI DEĞİL — YENİDEN GİRİLMELİ"}</strong></div>
-    <div class="meta" style="margin-top:10px">📞 ${esc(u.phone||"-")} · 🎂 ${u.birth_date?new Date(u.birth_date+"T00:00:00").toLocaleDateString("tr-TR"):"-"}</div>
-    <div class="meta" style="margin-top:5px">👤 ${role} · ${ban} · ${premium?"Premium":"Free"}</div>
-    <div class="meta" style="margin-top:5px">📱 Telefon: kayıtlı · SMS doğrulaması şimdilik kapalı · 🪪 Kimlik doğrulaması: geçici olarak kapalı</div>
-    <div class="meta" style="margin-top:5px">ID: ${esc(u.id||"-")}</div>
-    <div class="admin-actions" style="margin-top:9px">
-      <button class="btn mini primary" onclick='openOwnerProfile(${JSON.stringify(u.id)})'>Tam profili aç</button>
-    </div>
-    <div class="muted" style="margin-top:8px;font-size:11px">Kayıt: ${u.profile_completed_at?new Date(u.profile_completed_at).toLocaleString("tr-TR"):"-"}</div>
-    <details style="margin-top:9px"><summary style="cursor:pointer;font-size:11px;color:#cdb7df">Teknik kimlik özeti</summary><code>${esc(u.tc_identity_hash||"-")}</code></details>
-  </article>`;
-}
-function filterAdminPrivateUsers(){
-  const q=normalize($("privateUserSearch")?.value||"");
-  document.querySelectorAll("#privateUserList [data-private-search]").forEach(el=>el.style.display=!q||el.dataset.privateSearch.includes(q)?"block":"none");
-}
-
-async function ownerSetIdentityVerification(){
-  toast("Manuel kimlik doğrulaması devre dışı.");
-}
-
-function adminLogCategory(action){
-  const a=String(action||"").toUpperCase();
-  if(a.includes("BAN"))return "ban";
-  if(a.includes("PREMIUM"))return "premium";
-  if(a.includes("ROLE"))return "role";
-  if(a.includes("XP"))return "xp";
-  return "other";
-}
-function adminLogActionLabel(action){
-  const map={
-    ACCOUNT_BANNED:"Hesap banlandı",
-    DEVICE_BANNED:"Cihaz banlandı",
-    BAN_CLEARED:"Ban kaldırıldı",
-    PREMIUM_GRANTED:"Premium verildi",
-    PREMIUM_REMOVED:"Premium kaldırıldı",
-    ROLE_CHANGED:"Rol değiştirildi",
-    XP_CHANGED:"XP / Seviye değiştirildi"
-  };
-  return map[action]||action||"ADMIN_ACTION";
-}
-function filterAdminLogs(){
-  const q=normalize($("adminLogSearch")?.value||"");
-  const cat=$("adminLogCategory")?.value||"all";
-  const rows=adminLogsCache.filter(r=>{
-    const hay=normalize([r.action,r.actor_email,r.target_email,r.details].filter(Boolean).join(" "));
-    return (!q||hay.includes(q)) && (cat==="all"||adminLogCategory(r.action)===cat);
-  });
-  $("adminLogsList").innerHTML=rows.map(r=>`<div class="admin-item" style="align-items:flex-start">
-    <div style="flex:1">
-      <b>${esc(adminLogActionLabel(r.action))}</b>
-      <small>${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""} · ${esc(r.actor_email||"")} ${r.target_email?"→ "+esc(r.target_email):""}</small>
-      <div class="muted" style="margin-top:7px">${esc(r.details||"")}</div>
-    </div>
-    <span class="badge ${adminLogCategory(r.action)==="ban"?"bad":"good"}">${adminLogCategory(r.action).toUpperCase()}</span>
-  </div>`).join("")||'<div class="empty">Filtreye uyan log bulunamadı.</div>';
-}
-async function renderAdminLogs(body,focusTarget=""){
-  if(!isOwner())return;
-  const {data,error}=await sb.from("admin_audit_logs")
-    .select("id,actor_email,action,target_email,details,created_at")
-    .order("created_at",{ascending:false}).limit(500);
-  if(error){body.innerHTML='<div class="empty">Admin logları yüklenemedi: '+esc(error.message)+'</div>';return}
-  adminLogsCache=data||[];
-  body.innerHTML=`
-    <div class="admin-card">
-      <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center">
-        <div>
-          <h3 style="margin:0">🔐 Gizli Admin Logları</h3>
-          <p class="muted" style="margin:6px 0 0">Ban geçmişi dahil tüm yönetici hareketleri yalnızca Owner tarafından görülebilir.</p>
-        </div>
-        <button class="btn" onclick="renderAdminLogs($('adminPanelBody'))">↻ Yenile</button>
-      </div>
-      <div class="admin-toolbar" style="margin-top:14px">
-        <input id="adminLogSearch" placeholder="Yönetici, kullanıcı, işlem veya detay ara..." oninput="filterAdminLogs()" value="${esc(focusTarget)}">
-        <select id="adminLogCategory" onchange="filterAdminLogs()" style="background:#09070d;color:#fff;border:1px solid var(--line);border-radius:12px;padding:12px">
-          <option value="all">Tüm işlemler</option>
-          <option value="ban">⛔ Ban işlemleri</option>
-          <option value="premium">💎 Premium</option>
-          <option value="role">🛡️ Rol</option>
-          <option value="xp">⭐ XP / Seviye</option>
-          <option value="other">Diğer</option>
-        </select>
-      </div>
-      <div id="adminLogsList" class="admin-list"></div>
-    </div>`;
-  filterAdminLogs();
-}
-async function openUserModerationHistory(targetEmail=""){
-  if(!isOwner())return toast("Bu bölüm yalnızca Owner içindir.");
-  await renderAdminLogs($("adminPanelBody"),targetEmail||"");
-}
-
-async function renderAdminAI(body){
-  if(!isOwner())return toast("Bu bölüm yalnızca Owner içindir.");
-  const {data,error}=await sb.from("ai_settings").select("id,budget_weight,time_weight,mood_weight,mode_weight,rating_weight,distance_weight").eq("id",1).maybeSingle();
-  if(error){body.innerHTML='<div class="empty">AI ayarları okunamadı: '+esc(error.message)+'</div>';return}
-  const x=data||{id:1,budget_weight:28,time_weight:18,mood_weight:25,mode_weight:10,rating_weight:14,distance_weight:5};
-  body.innerHTML=`
-    <div class="admin-card"><h3 style="margin-top:0">DISCOVER Score ağırlıkları</h3>
-    <p class="muted">Değerler yüzde/puan ağırlığı olarak kullanılır. Toplamın 100 olması önerilir.</p>
-    <div class="admin-form-grid">
-      ${["budget","time","mood","mode","rating","distance"].map(k=>`<div><label class="muted">${k.toUpperCase()}</label><input id="ai_${k}" type="number" step="1" value="${Number(x[k+"_weight"]||0)}"></div>`).join("")}
-      <div class="admin-full"><button class="btn primary" onclick="saveAISettings()">AI ayarlarını kaydet</button></div>
-    </div></div>`;
-}
-async function saveAISettings(){
-  if(!isOwner())return toast("Bu işlem yalnızca Owner içindir.");
-  const payload={id:1,budget_weight:Number($("ai_budget").value),time_weight:Number($("ai_time").value),mood_weight:Number($("ai_mood").value),mode_weight:Number($("ai_mode").value),rating_weight:Number($("ai_rating").value),distance_weight:Number($("ai_distance").value)};
-  const result=await callAdminRpc("owner_save_ai_settings",payload);
-  if(result===null)return;
-  state.aiSettings=payload;
-  toast("AI ayarları kaydedildi.");
-  recommend(true);
-}
-
-async function renderAdminSettings(body){
-  if(!isOwner())return toast("Bu bölüm yalnızca Owner içindir.");
-  const {data,error}=await sb.from("site_settings").select("key,value").order("key");
-  if(error){body.innerHTML='<div class="empty">Sistem ayarları okunamadı: '+esc(error.message)+'</div>';return}
-  const map=Object.fromEntries((data||[]).map(x=>[x.key,x.value]));
-  body.innerHTML=`
-    <div class="admin-card"><h3 style="margin-top:0">Site ayarları</h3>
-    <div class="admin-form-grid">
-      <div><label class="muted">Haftalık Premium</label><input id="set_weekly" type="number" value="${Number(map.premium_weekly??99)}"></div>
-      <div><label class="muted">Aylık Premium</label><input id="set_monthly" type="number" value="${Number(map.premium_monthly??249)}"></div>
-      <div><label class="muted">Yıllık Premium</label><input id="set_yearly" type="number" value="${Number(map.premium_yearly??1999)}"></div>
-      <div><label class="muted">Bakım modu</label><select id="set_maintenance"><option value="false" ${String(map.maintenance??false)==="false"?"selected":""}>Kapalı</option><option value="true" ${String(map.maintenance??false)==="true"?"selected":""}>Açık</option></select></div>
-      <div class="admin-full"><button class="btn primary" onclick="saveSiteSettings()">Sistem ayarlarını kaydet</button></div>
-    </div></div>`;
-}
-async function saveSiteSettings(){
-  if(!isOwner())return toast("Bu işlem yalnızca Owner içindir.");
-  const items=[
-    {key:"premium_weekly",value:Number($("set_weekly").value)},
-    {key:"premium_monthly",value:Number($("set_monthly").value)},
-    {key:"premium_yearly",value:Number($("set_yearly").value)},
-    {key:"maintenance",value:$("set_maintenance").value==="true"}
-  ];
-  const result=await callAdminRpc("owner_save_site_settings",{settings:items});
-  if(result===null)return;
-  state.siteSettings=Object.fromEntries(items.map(x=>[x.key,x.value]));
-  updatePublicPrices();
-  toast("Sistem ayarları kaydedildi.");
-}
-["authModal","profileModal","ownerProfileModal","routeModal","reportModal","banModal","adminModal"].forEach(id=>$(id).addEventListener("click",e=>{if(id==="adminModal"&&document.querySelector("#banModal.open"))return;if(e.target.classList.contains("modal"))closeModal(id)}));
-
-(async()=>{
-  updateAuthUI();updateLevels();
-  sb.auth.onAuthStateChange(()=>setTimeout(syncUser,0));
-  await syncUser();
-  if(state.user && state.locationReady && state.aiSettings) recommend(true);
-})();
-</script>
-</body>
-</html>
+    <small>${esc(u.username||"Kullanıcı adı yok")} · ${esc(u.em
+Büyük dosya için önizleme kısaltıldı
