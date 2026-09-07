@@ -110,9 +110,9 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 <h2>Premium sadece daha fazla sonuç değil.</h2>
 <p class="lead" style="text-align:left">Daha gelişmiş kişiselleştirme, bütçe optimizasyonu, rota oluşturma, “Bundan daha iyisini bul”, hava durumuna göre B planı ve kişisel AI tercih profili.</p>
 <div class="plans">
-<div class="plan"><span class="muted">Haftalık</span><h3>₺99</h3><button class="btn primary" onclick="subscribe('Haftalık')">Premium'a geç</button></div>
-<div class="plan"><span class="muted">Aylık</span><h3>₺249</h3><button class="btn primary" onclick="subscribe('Aylık')">Premium'a geç</button></div>
-<div class="plan"><span class="muted">Yıllık</span><h3>₺1.999</h3><button class="btn primary" onclick="subscribe('Yıllık')">Premium'a geç</button></div>
+<div class="plan"><span class="muted">Haftalık</span><h3 id="publicPriceWeekly">₺99</h3><button class="btn primary" onclick="subscribe('Haftalık')">Premium'a geç</button></div>
+<div class="plan"><span class="muted">Aylık</span><h3 id="publicPriceMonthly">₺249</h3><button class="btn primary" onclick="subscribe('Aylık')">Premium'a geç</button></div>
+<div class="plan"><span class="muted">Yıllık</span><h3 id="publicPriceYearly">₺1.999</h3><button class="btn primary" onclick="subscribe('Yıllık')">Premium'a geç</button></div>
 </div>
 </div>
 </section>
@@ -199,7 +199,7 @@ const SUPABASE_PUBLISHABLE_KEY="sb_publishable_b_srPWflLRrFV4ayykMa-g_mFb3Z8rz";
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 
 let activities=[];
-let state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel"};
+let state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel",aiSettings:null,siteSettings:{}};
 let lastResults=[];
 let betterOffset=0;
 
@@ -256,7 +256,8 @@ function scoreActivity(a){
                 (mode==="kisisel"&&normalize(a.moods.join(" ")).includes("kesif"))?.7:0;
   const ratingFit=Math.max(0,Math.min(1,a.rating/5));
   const distanceFit=a.dist>0?Math.max(0,1-a.dist/15):.65;
-  score=budgetFit*28+timeFit*18+moodFit*25+modeFit*10+ratingFit*14+distanceFit*5;
+  const w=state.aiSettings||{budget_weight:28,time_weight:18,mood_weight:25,mode_weight:10,rating_weight:14,distance_weight:5};
+  score=budgetFit*Number(w.budget_weight||0)+timeFit*Number(w.time_weight||0)+moodFit*Number(w.mood_weight||0)+modeFit*Number(w.mode_weight||0)+ratingFit*Number(w.rating_weight||0)+distanceFit*Number(w.distance_weight||0);
   if(a.price===0 && budget<=300)score+=4;
   return Math.round(Math.min(100,score));
 }
@@ -361,6 +362,13 @@ async function syncUser(){
       if(ins.error)throw ins.error;p=ins;
     }
     state.profile=p.data;state.xp=Number(p.data.xp||0);
+    state.premium=!!(p.data.premium_until && new Date(p.data.premium_until)>new Date());
+    if(p.data.is_banned===true){
+      toast("Bu hesap engellenmiş.");
+      await sb.auth.signOut();
+      state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel",aiSettings:null,siteSettings:{}};
+      updateAuthUI();return;
+    }
     const fav=await sb.from("favorites").select("activity_id").eq("user_id",user.id);
     if(!fav.error)state.favorites=(fav.data||[]).map(x=>x.activity_id);
     const routes=await sb.from("routes").select("id,title,budget,updated_at").eq("user_id",user.id).order("updated_at",{ascending:false});
@@ -385,7 +393,7 @@ function openProfile(){
   $("profileXP").textContent=state.xp;$("profileFav").textContent=state.favorites.length;$("profileRoutes").textContent=state.routes.length;
   openModal("profileModal");
 }
-async function logout(){await sb.auth.signOut();state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel"};updateAuthUI();updateLevels();recommend(true);closeModal("profileModal");toast("Çıkış yapıldı.")}
+async function logout(){await sb.auth.signOut();state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel",aiSettings:null,siteSettings:{}};updateAuthUI();updateLevels();recommend(true);closeModal("profileModal");toast("Çıkış yapıldı.")}
 
 async function toggleFavorite(id){
   if(!state.user){toast("Favoriye eklemek için giriş yap.");return openAuth("login")}
@@ -438,7 +446,30 @@ function updateLevels(){
   $("xpLabel").textContent=cur+" / 750 XP";$("xpBar").style.width=pct+"%";
 }
 
-function subscribe(plan){if(!state.user){toast("Premium için önce hesap oluştur.");return openAuth("join")}toast(plan+" Premium seçildi. Gerçek ödeme bağlantısı sonraki aşamada kurulacak.")}
+function updatePublicPrices(){
+  const s=state.siteSettings||{};
+  const w=Number(s.premium_weekly??99),m=Number(s.premium_monthly??249),y=Number(s.premium_yearly??1999);
+  $("publicPriceWeekly").textContent="₺"+w.toLocaleString("tr-TR");
+  $("publicPriceMonthly").textContent="₺"+m.toLocaleString("tr-TR");
+  $("publicPriceYearly").textContent="₺"+y.toLocaleString("tr-TR");
+}
+
+async function loadPublicSettings(){
+  const [ai,site]=await Promise.all([
+    sb.from("ai_settings").select("id,budget_weight,time_weight,mood_weight,mode_weight,rating_weight,distance_weight").eq("id",1).maybeSingle(),
+    sb.from("site_settings").select("key,value")
+  ]);
+  if(!ai.error && ai.data) state.aiSettings=ai.data;
+  if(!site.error) state.siteSettings=Object.fromEntries((site.data||[]).map(x=>[x.key,x.value]));
+  updatePublicPrices();
+}
+
+function subscribe(plan){
+  if(!state.user){toast("Premium için önce hesap oluştur.");return openAuth("join")}
+  if(state.premium){toast("Zaten aktif Premium üyeliğin var.");return}
+  const prices={"Haftalık":Number(state.siteSettings?.premium_weekly??99),"Aylık":Number(state.siteSettings?.premium_monthly??249),"Yıllık":Number(state.siteSettings?.premium_yearly??1999)};
+  toast(plan+" Premium · ₺"+prices[plan].toLocaleString("tr-TR")+". Ödeme altyapısı bağlandığında bu plan otomatik aktifleşecek.");
+}
 
 function isAdmin(){return !!state.user && state.profile?.is_admin===true}
 
@@ -681,7 +712,7 @@ async function deleteReport(id){
 }
 
 async function renderAdminPremium(body){
-  const {data,error}=await sb.from("profiles").select("id,username,premium_plan,premium_until").not("premium_until","is",null).order("premium_until",{ascending:false}).limit(200);
+  const {data,error}=await sb.from("profiles").select("id,username,premium_plan,premium_until").not("premium_until","is",null).gt("premium_until",new Date().toISOString()).order("premium_until",{ascending:false}).limit(200);
   if(error){body.innerHTML='<div class="empty">Premium verileri yüklenemedi: '+esc(error.message)+'</div>';return}
   body.innerHTML=`
     <div class="admin-card"><h3 style="margin-top:0">Premium kullanıcılar</h3><p class="muted">Süre dolduğunda hesap otomatik olarak Free kabul edilir.</p>
@@ -704,7 +735,9 @@ async function saveAISettings(){
   const payload={id:1,budget_weight:Number($("ai_budget").value),time_weight:Number($("ai_time").value),mood_weight:Number($("ai_mood").value),mode_weight:Number($("ai_mode").value),rating_weight:Number($("ai_rating").value),distance_weight:Number($("ai_distance").value)};
   const {error}=await sb.from("ai_settings").upsert(payload,{onConflict:"id"});
   if(error)return toast("AI ayarları kaydedilemedi: "+error.message);
+  state.aiSettings=payload;
   toast("AI ayarları kaydedildi.");
+  recommend(true);
 }
 
 async function renderAdminSettings(body){
@@ -730,6 +763,8 @@ async function saveSiteSettings(){
   ];
   const {error}=await sb.from("site_settings").upsert(items,{onConflict:"key"});
   if(error)return toast("Sistem ayarları kaydedilemedi: "+error.message);
+  state.siteSettings=Object.fromEntries(items.map(x=>[x.key,x.value]));
+  updatePublicPrices();
   toast("Sistem ayarları kaydedildi.");
 }
 ["authModal","profileModal","routeModal","reportModal","adminModal"].forEach(id=>$(id).addEventListener("click",e=>{if(e.target.classList.contains("modal"))closeModal(id)}));
@@ -737,7 +772,8 @@ async function saveSiteSettings(){
 (async()=>{
   updateAuthUI();updateLevels();
   sb.auth.onAuthStateChange(()=>setTimeout(syncUser,0));
-  await Promise.all([loadActivities(),syncUser()]);
+  await Promise.all([loadPublicSettings(),loadActivities(),syncUser()]);
+  if(state.aiSettings) recommend(true);
 })();
 </script>
 </body>
