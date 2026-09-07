@@ -174,7 +174,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 </select>
 <label style="margin-top:8px">Ban nedeni</label>
 <textarea id="banReason" rows="4" placeholder="Örn. spam, kötüye kullanım, sahte hesap..." maxlength="500"></textarea>
-<div class="row" style="margin-top:10px;justify-content:flex-end;gap:8px"><button class="btn" onclick="closeModal('banModal')">Vazgeç</button><button class="btn primary" onclick="submitBan()">Banı uygula</button></div>
+<div class="row" style="margin-top:10px;justify-content:flex-end;gap:8px"><button type="button" class="btn" onclick="closeModal('banModal')">Vazgeç</button><button type="button" class="btn primary" onclick="submitBan()">Banı uygula</button></div>
 </div></div></div>
 
 <div id="adminModal" class="modal"><div class="modalbox" style="width:min(1180px,100%)">
@@ -725,7 +725,7 @@ function adminUserRow(u){
       ${canOps?`<button class="btn mini" onclick='editUserStats(${JSON.stringify(u.id)},${Number(u.level||1)},${Number(u.xp||0)})'>XP/Seviye</button>`:""}
       ${canOps?`<button class="btn mini" onclick='toggleUserPremium(${JSON.stringify(u.id)},${premium})'>${premium?"Premium kaldır":"Premium ver"}</button>`:""}
       ${canRole?`<button class="btn mini" onclick='setUserRolePrompt(${JSON.stringify(u.id)},${JSON.stringify(role||"user")})'>Rol</button>`:""}
-      ${canOps?`<button class="btn mini" onclick='toggleUserBan(${JSON.stringify(u.id)},${u.is_banned!==true})'>${isProfileBanned(u)?"Banı kaldır":"Banla"}</button>`:""}
+      ${canOps?`<button type="button" class="btn mini" onclick='handleBanAction(${JSON.stringify(u.id)},${JSON.stringify(u.username||"Kullanıcı")},${isProfileBanned(u)})'>${isProfileBanned(u)?"Banı kaldır":"Banla"}</button>`:""}
     </div>
   </div>`;
 }
@@ -786,10 +786,16 @@ async function toggleUserPremium(id,isPremium){
   }
   await refreshAdminStats();await renderAdminUsers($("adminPanelBody"));
 }
+async function handleBanAction(id,username,isBanned){
+  if(!isAdmin())return toast("Bu işlem için yönetici yetkisi gerekli.");
+  if(isBanned){
+    if(!confirm((username||"Kullanıcı")+" için mevcut ban kaldırılsın mı?"))return;
+    return removeUserBan(id);
+  }
+  return openBanDialog(id,username||"Kullanıcı");
+}
 async function toggleUserBan(id,ban){
-  if(!isAdmin())return;
-  if(ban)return openBanDialog(id,"Kullanıcı");
-  return removeUserBan(id);
+  return handleBanAction(id,"Kullanıcı",!!ban);
 }
 async function promoteUserToAdminByUsername(){
   if(!isAdmin())return;
