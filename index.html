@@ -1721,8 +1721,8 @@ async function sha256Hex(text){
   const hash=await crypto.subtle.digest("SHA-256",data);
   return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,"0")).join("");
 }
-async function submitIdentityForOwnerReview(payload){
-  const {data,error}=await sb.rpc("submit_identity_for_owner_review",payload);
+async function activateProfileNow(payload){
+  const {data,error}=await sb.rpc("activate_profile_now",payload);
   if(error)throw error;
   return data;
 }
@@ -1755,10 +1755,10 @@ async function saveRequiredProfile(){
   btn.disabled=true;btn.textContent="Doğrulanıyor…";err.textContent="";
   const badge=$("identityVerificationBadge"),hint=$("identityVerificationHint");
   if(badge){badge.textContent="Kontrol ediliyor…";badge.classList.remove("bad","ok");}
-  if(hint)hint.textContent="T.C. algoritması ve profil alanları kontrol ediliyor.";
+  if(hint)hint.textContent="T.C. algoritması ve profil alanları sunucu tarafında kontrol ediliyor.";
   try{
     const tcHash=await sha256Hex(tc);
-    const result=await submitIdentityForOwnerReview({
+    const result=await activateProfileNow({
       p_first_name:first,p_last_name:last,p_username:username,p_phone:normalizeTrPhone(phone),
       p_birth_date:birth,p_tc_identity_number:tc,p_tc_hash:tcHash
     });
