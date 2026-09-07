@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#09060d">
 <meta name="description" content="DISCOVER AI — bütçene, zamanına ve moduna göre kişisel deneyimler keşfet.">
-<title>DISCOVER AI — Kişisel Deneyim Motoru · V36</title>
+<title>DISCOVER AI — Kişisel Deneyim Motoru · V55</title>
 <style>
 :root{--bg:#08060d;--panel:#100b18;--panel2:#151020;--text:#f7f3ff;--muted:#aaa0b7;--purple:#8b5cf6;--purple2:#c084fc;--line:#2a2139;--green:#69e7b7;--danger:#ff6b8a}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 70% 5%,#261343 0,#10091a 34%,#08060d 75%);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
@@ -52,6 +52,16 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 .location-dot.ok{background:#59e6bb;box-shadow:0 0 12px rgba(89,230,187,.55)}
 #locationRetry{display:none}
 body.location-locked>nav,body.location-locked>main,body.location-locked>footer{visibility:hidden}
+/* Authentication gate: unauthenticated visitors may only see the login/register path. */
+body.auth-locked>main,body.auth-locked>footer{visibility:hidden;pointer-events:none;user-select:none}
+body.auth-locked{overflow:hidden}
+body.auth-locked .navlinks .desktop{display:none}
+body.auth-locked #locationMini{display:none!important}
+#authAccessGate{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:22px;background:rgba(5,3,9,.97);backdrop-filter:blur(18px)}
+#authAccessGate.hidden{display:none}
+#authAccessGate .auth-gate-card{width:min(620px,94vw);background:#100b18;border:1px solid #543572;border-radius:28px;padding:30px;box-shadow:0 25px 80px rgba(0,0,0,.55);text-align:center}
+#authAccessGate .auth-gate-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+@media(max-width:640px){#authAccessGate .auth-gate-actions{grid-template-columns:1fr}}
 #locationMini{
   display:none;position:fixed;right:18px;top:18px;z-index:80;
   background:#17101f;border:1px solid #49325f;border-radius:999px;
@@ -113,7 +123,7 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </head>
 
-<body class="location-locked">
+<body class="auth-locked">
 <div id="locationGate">
   <div class="location-card">
     <div class="eyebrow">● GÜVENLİ KONUM DOĞRULAMA</div>
@@ -138,6 +148,17 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
 </div>
 <div id="locationMini">📍 Konum aktif</div>
 
+<div id="authAccessGate">
+  <div class="auth-gate-card">
+    <div class="eyebrow">🔐 HESAP GEREKLİ</div>
+    <h2 style="margin:18px 0 10px">DISCOVER AI'a devam et</h2>
+    <p class="lead" style="font-size:16px;text-align:center;margin:0">Site içeriğine erişmek için önce giriş yapmalı veya yeni bir hesap oluşturmalısın.</p>
+    <div class="auth-gate-actions">
+      <button type="button" class="btn" onclick="openAuth('login')">Giriş yap</button>
+      <button type="button" class="btn primary" onclick="openAuth('join')">Kayıt ol</button>
+    </div>
+  </div>
+</div>
 
 <nav>
 <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;width:100%">
@@ -492,6 +513,7 @@ const $=id=>document.getElementById(id);
 
 const LOCATION_REQUIRED=true;
 let requiredLocationBusy=false;
+let locationMiniTimer=null;
 
 function setLocationUI(status, ok=false){
   const t=$("locationStatus"),d=$("locationDot"),allow=$("locationAllow"),retry=$("locationRetry"),help=$("locationHelp"),mini=$("locationMini");
@@ -502,7 +524,15 @@ function setLocationUI(status, ok=false){
   if(help)help.textContent=ok
     ? "Konumun yalnızca DISCOVER AI deneyimini kişiselleştirmek için kullanılacak."
     : "Tarayıcı izin penceresi gelirse “İzin ver” seçeneğini seç.";
-  if(mini)mini.classList.toggle("show",ok);
+  if(mini){
+    clearTimeout(locationMiniTimer);
+    if(ok){
+      mini.classList.add("show");
+      locationMiniTimer=setTimeout(()=>mini.classList.remove("show"),5000);
+    }else{
+      mini.classList.remove("show");
+    }
+  }
 }
 
 async function getLocationPermissionState(){
@@ -1154,12 +1184,19 @@ async function submitAuth(){
 
 async function syncUser(){
   try{
+    const {data:{user}}=await sb.auth.getUser();
+    state.user=user;
+    if(!user){
+      state.profile=null;state.favorites=[];state.routes=[];state.xp=0;state.profileComplete=false;
+      updateAuthUI();updateLevels();return;
+    }
     if(!state.locationReady){
       const ok=await ensureRequiredLocation();
       if(!ok)return;
+    }else{
+      const ok=await ensureRequiredLocation();
+      if(!ok)return;
     }
-    const {data:{user}}=await sb.auth.getUser();state.user=user;
-    if(!user){state.profile=null;state.favorites=[];state.routes=[];state.xp=0;updateAuthUI();updateLevels();return}
     let p=await sb.rpc("get_my_profile_private");
     if(p.error)throw p.error;
     let pdata=p.data||null;
@@ -1193,12 +1230,19 @@ async function syncUser(){
     if(!fav.error)state.favorites=(fav.data||[]).map(x=>x.activity_id);
     const routes=await sb.from("routes").select("id,title,budget,updated_at").eq("user_id",user.id).order("updated_at",{ascending:false});
     if(!routes.error)state.routes=routes.data||[];
-    updateAuthUI();updateLevels();render(lastResults.length?lastResults.slice(0,6):[]);if(state.user&&!state.profileComplete)setTimeout(openProfileCompletion,120);
+    updateAuthUI();updateLevels();
+    if(state.user){
+      await Promise.all([loadPublicSettings(),loadActivities()]);
+    }
+    render(lastResults.length?lastResults.slice(0,6):[]);
+    if(state.user&&!state.profileComplete)setTimeout(openProfileCompletion,120);
   }catch(e){console.error(e);toast("Profil verisi alınamadı: "+(e.message||"RLS/tablo ayarlarını kontrol et."))}
 }
 
 function updateAuthUI(){
   const logged=!!state.user;
+  document.body.classList.toggle("auth-locked",!logged);
+  $("authAccessGate")?.classList.toggle("hidden",logged);
   $("loginBtn").textContent=logged?"Profil":"Giriş";
   $("loginBtn").onclick=logged?()=>openProfile():()=>openAuth("login");
   $("joinBtn").textContent=logged?"Çıkış":"Katıl";
@@ -2225,10 +2269,8 @@ async function saveSiteSettings(){
 (async()=>{
   updateAuthUI();updateLevels();
   sb.auth.onAuthStateChange(()=>setTimeout(syncUser,0));
-  const locationOk=await ensureRequiredLocation();
-  if(!locationOk)return;
-  await Promise.all([loadPublicSettings(),loadActivities(),syncUser()]);
-  if(state.aiSettings) recommend(true);
+  await syncUser();
+  if(state.user && state.locationReady && state.aiSettings) recommend(true);
 })();
 </script>
 </body>
