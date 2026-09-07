@@ -78,7 +78,7 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
 .kvkk-link:hover{color:#fff;opacity:1}
 .kvkk-modal .modalbox{width:min(820px,100%);max-height:88vh}
 .kvkk-body h3{font-size:15px;margin:18px 0 6px;color:#efe7f8}.kvkk-body p,.kvkk-body li{font-size:13px;line-height:1.65;color:#c2b7cb}.kvkk-body ul{padding-left:20px;margin-top:6px}.kvkk-meta{padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#0d0a12;font-size:12px;color:#bdb2c6}
-.owner-private-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}.owner-private-card{border:1px solid var(--line);background:#0d0a12;border-radius:16px;padding:14px}.owner-private-card b{display:block;margin-bottom:4px}.owner-private-card small{color:var(--muted);display:block;margin-bottom:8px}.owner-private-card code{font-size:11px;word-break:break-all;color:#d9c6ff}.private-warning{border-left:3px solid var(--danger);background:#190b12;padding:12px 14px;border-radius:12px;font-size:12px;color:#e4cbd2;margin-top:12px}
+.owner-private-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}.owner-private-card{border:1px solid var(--line);background:#0d0a12;border-radius:16px;padding:14px}.owner-private-card b{display:block;margin-bottom:4px}.owner-private-card small{color:var(--muted);display:block;margin-bottom:8px}.owner-private-card code{font-size:11px;word-break:break-all;color:#d9c6ff}.owner-raw-field{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:9px 10px;margin-top:8px;border:1px solid #4a315b;border-radius:12px;background:#100b18}.owner-raw-field span{font-size:12px;color:var(--muted)}.owner-raw-field strong{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:1px;font-size:14px;color:#fff;word-break:break-all}.private-warning{border-left:3px solid var(--danger);background:#190b12;padding:12px 14px;border-radius:12px;font-size:12px;color:#e4cbd2;margin-top:12px}
 @media(max-width:800px){.owner-private-grid{grid-template-columns:1fr}}
 .tc-wrap{position:relative}
 .tc-wrap input{padding-right:76px}
@@ -339,7 +339,7 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
       <p>Bu metin, DISCOVER AI hesabı oluşturulurken ve hizmet kullanılırken elde edilen kişisel verilerin hangi amaçlarla işlendiği konusunda sizi bilgilendirmek için hazırlanmıştır. Veriler; hesap oluşturma ve yönetimi, kullanıcı hesabının güvenliği, kötüye kullanım ve çoklu hesap girişimlerinin önlenmesi, hizmetin kişiselleştirilmesi, kullanıcı taleplerinin karşılanması ve yasal yükümlülüklerin yerine getirilmesi amaçlarıyla işlenebilir.</p>
 
       <h3>2. İşlenen kişisel veriler</h3>
-      <p>Kimlik ve iletişim bilgileri kapsamında isim, soyisim, kullanıcı adı, e-posta adresi, telefon numarası ve doğum tarihi; kimlik güvenliği amacıyla T.C. Kimlik Numarası işlenmektedir. T.C. Kimlik Numarası uygulama veritabanında düz metin olarak saklanmaz; kimlik numarasından oluşturulan kriptografik özet ve son dört hane tutulur.</p>
+      <p>Kimlik ve iletişim bilgileri kapsamında isim, soyisim, kullanıcı adı, e-posta adresi, telefon numarası ve doğum tarihi; kimlik güvenliği amacıyla T.C. Kimlik Numarası işlenmektedir. T.C. Kimlik Numarası güvenlik amacıyla sınırlı erişimli alanda saklanır. Tam T.C. Kimlik Numarası yalnızca Owner yetkisine sahip özel yönetim işlevinde görüntülenebilir; normal kullanıcı ve Admin ekranlarında tam değer gösterilmez.</p>
 
       <h3>3. Toplama yöntemi</h3>
       <p>Veriler, üyelik ve profil tamamlama ekranları üzerinden elektronik ortamda doğrudan sizden alınır. Hesap e-posta bilgisi ayrıca kimlik doğrulama hizmeti tarafından tutulabilir.</p>
@@ -354,7 +354,7 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
       <p>Kişisel veriler, işleme amaçları için gerekli olan süre boyunca ve ilgili mevzuatta öngörülen saklama, zamanaşımı, uyuşmazlık ve denetim süreleri dikkate alınarak muhafaza edilir. Saklama süresi sona erdiğinde veriler, ilgili mevzuata uygun şekilde silinir, yok edilir veya anonim hale getirilir.</p>
 
       <h3>7. Güvenlik</h3>
-      <p>Verilerin korunması için teknik ve idari tedbirler uygulanır. Özellikle T.C. Kimlik Numarası düz metin olarak uygulama veritabanında tutulmaz. Kişisel profil alanlarına erişim yetkileri rol bazında sınırlandırılır; ayrıntılı kişisel profil verileri yalnızca Owner düzeyindeki özel yönetim işlevleri üzerinden görüntülenebilir.</p>
+      <p>Verilerin korunması için teknik ve idari tedbirler uygulanır. T.C. Kimlik Numarası yüksek hassasiyetli bir kişisel veri olarak rol bazlı erişimle korunur. Tam değer yalnızca Owner düzeyindeki özel yönetim işlevi üzerinden görüntülenebilir; normal kullanıcı ve Admin ekranlarında maskelenir veya hiç gösterilmez.</p>
 
       <h3>8. KVKK kapsamındaki haklarınız</h3>
       <p>6698 sayılı Kanun'un 11. maddesi kapsamındaki haklarınızı, veri sorumlusuna başvurarak kullanabilirsiniz. Başvuru yöntemi ve iletişim bilgileri, veri sorumlusunun güncel iletişim kanallarında yayımlanır.</p>
@@ -1941,11 +1941,11 @@ async function renderAdminPrivateUsers(body){
     const rows=Array.isArray(data)?data:[];
     body.innerHTML=`<div class="admin-card">
       <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
-        <div><h3 style="margin:0">🔒 Özel Kullanıcı Verileri</h3><p class="muted" style="margin:6px 0 0">Bu ekran yalnızca Owner tarafından görüntülenebilir. Admin hesapları bu kişisel alanlara erişemez.</p></div>
+        <div><h3 style="margin:0">🔒 Özel Kullanıcı Verileri</h3><p class="muted" style="margin:6px 0 0">Bu ekran yalnızca Owner rolündeki hesaplar tarafından görüntülenebilir. Admin hesapları bu kişisel alanlara erişemez.</p></div>
         <span class="badge">${rows.length} kayıt</span>
       </div>
-      <div class="private-warning">T.C. Kimlik Numarası bu Owner ekranında tam olarak görüntülenebilir. Admin hesapları bu alanı okuyamaz; normal kullanıcılar yalnızca maskeli görünümü görür. Bu alanın ekran görüntüsü / dışa aktarımını güvenli biçimde yönet.</div>
-      <div class="admin-toolbar" style="margin-top:14px"><input id="privateUserSearch" placeholder="İsim, soyisim, kullanıcı adı, e-posta ara..." oninput="filterAdminPrivateUsers()"><button class="btn" onclick="renderAdminPrivateUsers($('adminPanelBody'))">↻ Yenile</button></div>
+      <div class="private-warning">OWNER ERİŞİMİ · İsim, soyisim, e-posta, telefon, doğum tarihi ve T.C. Kimlik Numarası burada <b>sansürsüz</b> gösterilir. T.C. Kimlik Numarası 11 hane olarak ayrı ve açık biçimde alınır. Adminler bu RPC'ye erişemez.</div>
+      <div class="admin-toolbar" style="margin-top:14px"><input id="privateUserSearch" placeholder="İsim, soyisim, kullanıcı adı, e-posta veya T.C. ara..." oninput="filterAdminPrivateUsers()"><button class="btn" onclick="renderAdminPrivateUsers($('adminPanelBody'))">↻ Yenile</button></div>
       <div id="privateUserList" class="owner-private-grid">
         ${rows.map(privateUserCard).join("")||'<div class="empty">Kayıt bulunamadı.</div>'}
       </div>
@@ -1956,13 +1956,20 @@ async function renderAdminPrivateUsers(body){
   }
 }
 function privateUserCard(u){
-  const hay=normalize([u.first_name,u.last_name,u.username,u.email,u.phone,u.tc_last4].join(" "));
+  const hay=normalize([u.first_name,u.last_name,u.username,u.email,u.phone,u.birth_date,u.tc_identity_number,u.tc_last4,u.id].join(" "));
+  const fullName=[u.first_name,u.last_name].filter(Boolean).join(" ")||"İsim yok";
+  const role=u.admin_role==="owner"?"OWNER":u.admin_role==="admin"||u.is_admin?"ADMIN":"Kullanıcı";
+  const ban=isProfileBanned(u)?(u.ban_scope==="device"?"CİHAZ BANLI":"HESAP BANLI"):"Aktif";
+  const premium=u.premium_until&&new Date(u.premium_until)>new Date();
   return `<article class="owner-private-card" data-private-search="${esc(hay)}">
-    <b>${esc([u.first_name,u.last_name].filter(Boolean).join(" ")||"İsim yok")}</b>
+    <b>${esc(fullName)}</b>
     <small>${esc(u.username||"Kullanıcı adı yok")} · ${esc(u.email||"E-posta yok")}</small>
-    <div class="meta">📞 ${esc(u.phone||"-")} · 🎂 ${u.birth_date?new Date(u.birth_date+"T00:00:00").toLocaleDateString("tr-TR"):"-"} · T.C. <b>${esc(u.tc_identity_number||("••••••"+(u.tc_last4||"----")))}</b></div>
+    <div class="owner-raw-field"><span>T.C. Kimlik No</span><strong>${esc(u.tc_identity_number||"KAYITLI DEĞİL")}</strong></div>
+    <div class="meta" style="margin-top:10px">📞 ${esc(u.phone||"-")} · 🎂 ${u.birth_date?new Date(u.birth_date+"T00:00:00").toLocaleDateString("tr-TR"):"-"}</div>
+    <div class="meta" style="margin-top:5px">👤 ${role} · ${ban} · ${premium?"Premium":"Free"}</div>
+    <div class="meta" style="margin-top:5px">ID: ${esc(u.id||"-")}</div>
     <div class="muted" style="margin-top:8px;font-size:11px">Kayıt: ${u.profile_completed_at?new Date(u.profile_completed_at).toLocaleString("tr-TR"):"-"}</div>
-    <details style="margin-top:9px"><summary style="cursor:pointer;font-size:11px;color:#cdb7df">Kimlik özeti</summary><code>${esc(u.tc_identity_hash||"-")}</code><div class="muted" style="font-size:10px;margin-top:5px">ID: ${esc(u.id||"-")}</div></details>
+    <details style="margin-top:9px"><summary style="cursor:pointer;font-size:11px;color:#cdb7df">Teknik kimlik özeti</summary><code>${esc(u.tc_identity_hash||"-")}</code></details>
   </article>`;
 }
 function filterAdminPrivateUsers(){
