@@ -2038,9 +2038,9 @@ async function openOwnerProfile(userId){
   const grid=$("ownerProfileGrid");
   if(grid)grid.innerHTML='<div class="empty loading" style="grid-column:1/-1">Tam profil bilgileri yükleniyor...</div>';
   try{
-    const {data,error}=await sb.rpc("owner_get_private_profile",{p_user_id:userId});
-    if(error)throw error;
-    const u=Array.isArray(data)?data[0]:data;
+    // Özel kullanıcılar ekranında zaten Owner-only RPC ile yüklenmiş olan aynı kaydı kullan.
+    const rows=Array.isArray(window.__ownerPrivateRows)?window.__ownerPrivateRows:[];
+    const u=rows.find(r=>String(r.id)===String(userId));
     if(!u)throw new Error("PROFILE_NOT_FOUND");
     const fullName=[u.first_name,u.last_name].filter(Boolean).join(" ")||"İsim yok";
     $("ownerProfileTitle").textContent=fullName;
@@ -2063,13 +2063,14 @@ async function openOwnerProfile(userId){
       ["Hesap durumu",ban],
       ["Premium",premium?"Aktif":"Free"],
       ["Profil tamamlandı",u.profile_completed?"Evet":"Hayır"],
-      ["Kimlik doğrulaması",u.identity_verified?"Doğrulandı":"Doğrulanmadı"],
-      ["Kimlik doğrulama yöntemi",u.identity_verification_method||"-"],
-      ["Kimlik doğrulama zamanı",fmtTs(u.identity_verified_at)],
-      ["Telefon doğrulama zamanı","SMS doğrulaması şimdilik kapalı"],
+      ["Kimlik doğrulaması","SMS/kimlik doğrulaması geçici olarak kapalı"],
       ["Profil tamamlanma zamanı",fmtTs(u.profile_completed_at)],
       ["Hesap ID",u.id||"-"]
     ];
+    if(u.identity_verification_method||u.identity_verified_at){
+      fields.push(["Eski doğrulama yöntemi",u.identity_verification_method||"-"]);
+      fields.push(["Eski doğrulama zamanı",fmtTs(u.identity_verified_at)]);
+    }
     grid.innerHTML=fields.map(([label,val,rawTc])=>`
       <div class="owner-profile-field ${rawTc?"raw-tc":""}">
         <small>${esc(label)}</small><strong>${esc(val)}</strong>
@@ -2114,11 +2115,10 @@ function privateUserCard(u){
     <div class="owner-raw-field"><span>T.C. Kimlik No</span><strong>${u.tc_identity_number?esc(u.tc_identity_number):"KAYITLI DEĞİL — YENİDEN GİRİLMELİ"}</strong></div>
     <div class="meta" style="margin-top:10px">📞 ${esc(u.phone||"-")} · 🎂 ${u.birth_date?new Date(u.birth_date+"T00:00:00").toLocaleDateString("tr-TR"):"-"}</div>
     <div class="meta" style="margin-top:5px">👤 ${role} · ${ban} · ${premium?"Premium":"Free"}</div>
-    <div class="meta" style="margin-top:5px">📱 Telefon: kayıtlı · SMS doğrulaması şimdilik kapalı · 🪪 Kimlik alanları: ${u.identity_verified?"DOĞRULANDI":"EKSİK"}</div>
+    <div class="meta" style="margin-top:5px">📱 Telefon: kayıtlı · SMS doğrulaması şimdilik kapalı · 🪪 Kimlik doğrulaması: geçici olarak kapalı</div>
     <div class="meta" style="margin-top:5px">ID: ${esc(u.id||"-")}</div>
     <div class="admin-actions" style="margin-top:9px">
       <button class="btn mini primary" onclick='openOwnerProfile(${JSON.stringify(u.id)})'>Tam profili aç</button>
-      <button class="btn mini" onclick='ownerSetIdentityVerification(${JSON.stringify(u.id)},${u.identity_verified?"false":"true"})'>${u.identity_verified?"Kimlik doğrulamasını kaldır":"Kimliği doğrulandı olarak işaretle"}</button>
     </div>
     <div class="muted" style="margin-top:8px;font-size:11px">Kayıt: ${u.profile_completed_at?new Date(u.profile_completed_at).toLocaleString("tr-TR"):"-"}</div>
     <details style="margin-top:9px"><summary style="cursor:pointer;font-size:11px;color:#cdb7df">Teknik kimlik özeti</summary><code>${esc(u.tc_identity_hash||"-")}</code></details>
