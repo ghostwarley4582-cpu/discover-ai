@@ -368,10 +368,10 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
         <b>Zorunlu gerçek kişi doğrulaması:</b> Hesap, isim + soyisim + doğum tarihi + T.C. Kimlik No bilgileri doğrulanmadan aktifleşmez. Şimdilik SMS doğrulaması kapalıdır. T.C. numarası ve profil alanları sunucu tarafında doğrulanır; hesap otomatik olarak aktifleşir. Resmî nüfus eşleşmesi için ayrıca yetkili bir servis gerekir.
       </div>
       <div id="identityVerificationStatus" class="verify-box" style="margin-top:10px">
-        <div class="verify-row"><span><b>🪪 Kimlik doğrulama</b><br><small id="identityVerificationHint" class="muted">T.C. ve profil alanları sunucu tarafında kontrol edilir</small></span><span id="identityVerificationBadge" class="verify-status ok">Kontrole hazır</span></div>
+        <div class="verify-row"><span><b>🪪 T.C. Kimlik No kontrolü</b><br><small id="identityVerificationHint" class="muted">T.C. Kimlik No ve profil alanları sunucu tarafında kontrol edilir</small></span><span id="identityVerificationBadge" class="verify-status ok">Kontrole hazır</span></div>
       </div>
 
-      <button type="button" class="btn primary" id="pcSaveBtn" onclick="saveRequiredProfile()">✓ Bilgilerimi doğrula ve hesabı tamamla</button>
+      <button type="button" class="btn primary" id="pcSaveBtn" onclick="saveRequiredProfile()">✓ Bilgilerimi kontrol et ve hesabı tamamla</button>
       <div id="pcError" class="required-note" style="min-height:18px"></div>
     </div>
   </div>
@@ -1722,7 +1722,7 @@ async function sha256Hex(text){
   return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,"0")).join("");
 }
 async function activateProfileNow(payload){
-  const {data,error}=await sb.rpc("complete_profile_verified_v48",payload);
+  const {data,error}=await sb.rpc("complete_profile_verified_v50",payload);
   if(error)throw error;
   return data;
 }
@@ -1736,8 +1736,9 @@ function identityFriendlyError(code){
   if(c.includes("USERNAME_INVALID"))return "Kullanıcı adı geçersiz.";
   if(c.includes("PHONE_INVALID"))return "Geçerli bir Türkiye cep telefonu gir.";
   if(c.includes("BIRTH_DATE_INVALID"))return "Doğum tarihi geçersiz.";
-  if(c.includes("TC_NUMBER_INVALID")||c.includes("TC_HASH_MISMATCH"))return "T.C. Kimlik No geçersiz. 11 haneli numarayı kontrol et.";
-  return "Bilgiler gönderilemedi. Lütfen tekrar dene.";
+  if(c.includes("TC_NUMBER_INVALID")||c.includes("TC_HASH_MISMATCH"))return "Geçerli bir 11 haneli T.C. Kimlik No gir.";
+  if(c.includes("TC_ALREADY_REGISTERED"))return "Bu T.C. Kimlik No başka bir hesapta kayıtlı.";
+  return "Kayıt tamamlanamadı. Bilgileri kontrol edip tekrar dene.";
 }
 async function saveRequiredProfile(){
   if(!state.user)return;
@@ -1760,7 +1761,7 @@ async function saveRequiredProfile(){
   btn.disabled=true;btn.textContent="Doğrulanıyor…";err.textContent="";
   const badge=$("identityVerificationBadge"),hint=$("identityVerificationHint");
   if(badge){badge.textContent="Kontrol ediliyor…";badge.classList.remove("bad","ok");}
-  if(hint)hint.textContent="T.C. algoritması ve profil alanları sunucu tarafında kontrol ediliyor.";
+  if(hint)hint.textContent="T.C. Kimlik No ve profil alanları sunucu tarafında kontrol ediliyor.";
   try{
     const tcHash=await sha256Hex(tc);
     const result=await activateProfileNow({
@@ -1774,12 +1775,12 @@ async function saveRequiredProfile(){
     closeModal("profileCompletionModal");
     updateAuthUI();
     if(badge){badge.textContent="Doğrulandı";badge.classList.add("ok");}
-    if(hint)hint.textContent="Alan doğrulamaları başarılı. SMS doğrulaması geçici olarak kapalı.";
+    if(hint)hint.textContent="Bilgiler kaydedildi. SMS doğrulaması şu an devre dışı.";
     toast("Bilgilerin doğrulandı ve hesabın aktif.");
   }catch(e){
     console.error("IDENTITY SUBMIT",e);err.textContent=identityFriendlyError(e?.message||"");
     if(badge){badge.textContent="Kontrol başarısız";badge.classList.add("bad");}
-  }finally{btn.disabled=false;btn.textContent="✓ Bilgilerimi doğrula ve hesabı tamamla";}
+  }finally{btn.disabled=false;btn.textContent="✓ Bilgilerimi kontrol et ve hesabı tamamla";}
 }
 
 function canViewLiveLocations(){
