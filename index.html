@@ -55,7 +55,6 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
 /* Authentication gate: unauthenticated visitors may only see the login/register path. */
 body.auth-locked>main,body.auth-locked>footer{visibility:hidden;pointer-events:none;user-select:none}
 body.auth-locked{overflow:hidden}
-body.auth-loading #authAccessGate{display:none!important}
 body.auth-locked .navlinks .desktop{display:none}
 body.auth-locked #locationMini{display:none!important}
 #authAccessGate{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:22px;background:rgba(5,3,9,.97);backdrop-filter:blur(18px)}
@@ -255,24 +254,13 @@ body.auth-locked #locationMini{display:none!important}
 <button class="close" onclick="closeModal('authModal')">×</button><div class="eyebrow">ACCOUNT</div>
 <h2 id="authTitle">DISCOVER AI'a katıl</h2>
 <div class="form">
-<div id="regIdentityFields" class="join-only">
-<input id="authFirstName" placeholder="İsim">
-<input id="authLastName" placeholder="Soyisim">
-<input id="authUsername" placeholder="Kullanıcı adı">
-</div>
+<input id="authName" placeholder="Kullanıcı adı">
 <input id="authEmail" type="email" placeholder="E-posta">
-<div id="regBirthFields" class="join-only" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-<select id="authBirthDay"><option value="">Gün</option></select>
-<select id="authBirthMonth"><option value="">Ay</option></select>
-<select id="authBirthYear"><option value="">Yıl</option></select>
-</div>
-<input id="authPhone" class="join-only" placeholder="Telefon numarası" inputmode="tel">
-<input id="authTc" class="join-only" placeholder="T.C. Kimlik No" inputmode="numeric" maxlength="11">
 <input id="authPassword" type="password" placeholder="Şifre">
 <button class="btn primary" onclick="submitAuth()">Hesap oluştur</button>
 <button class="btn" onclick="switchAuth()">Giriş / Hesap oluştur</button>
 </div>
-<p class="muted" id="authHint">Kayıt sırasında isim, soyisim, kullanıcı adı, e-posta, doğum tarihi (gün/ay/yıl), telefon ve T.C. bilgileri alınır.</p>
+<p class="muted">E-posta doğrulaması Supabase Auth ayarlarına göre gerekebilir.</p>
 </div></div>
 
 <div id="profileModal" class="modal"><div class="modalbox">
@@ -1070,28 +1058,11 @@ function better(){
 
 function getActivity(id){return activities.find(x=>String(x.id)===String(id))}
 
-function populateBirthSelectors(){
-  const d=$("authBirthDay"),m=$("authBirthMonth"),y=$("authBirthYear");
-  if(!d||!m||!y||d.options.length>1)return;
-  for(let i=1;i<=31;i++)d.insertAdjacentHTML("beforeend",`<option value="${String(i).padStart(2,"0")}">${i}</option>`);
-  const months=["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
-  months.forEach((name,i)=>m.insertAdjacentHTML("beforeend",`<option value="${String(i+1).padStart(2,"0")}">${name}</option>`));
-  const now=new Date().getFullYear();
-  for(let i=now;i>=1900;i--)y.insertAdjacentHTML("beforeend",`<option value="${i}">${i}</option>`);
-}
-function setJoinFieldVisibility(join){
-  document.querySelectorAll(".join-only").forEach(el=>el.style.display=join?"":"none");
-  const hint=$("authHint");
-  if(hint)hint.textContent=join?"Kayıt sırasında isim, soyisim, kullanıcı adı, e-posta, doğum tarihi (gün/ay/yıl), telefon ve T.C. bilgileri alınır.":"E-posta ve şifre ile giriş yapabilirsin.";
-}
 async function openAuth(type="login"){
-  populateBirthSelectors();
-  const join=type!=="login";
-  $("authTitle").textContent=join?"DISCOVER AI'a katıl":"DISCOVER AI'a giriş";
-  document.querySelector("#authModal .btn.primary").textContent=join?"Hesap oluştur":"Giriş yap";
-  $("authModal").dataset.mode=join?"join":"login";
-  setJoinFieldVisibility(join);
-  openModal("authModal");
+  $("authTitle").textContent=type==="login"?"DISCOVER AI'a giriş":"DISCOVER AI'a katıl";
+  document.querySelector("#authModal .btn.primary").textContent=type==="login"?"Giriş yap":"Hesap oluştur";
+  $("authName").style.display=type==="login"?"none":"block";
+  $("authModal").dataset.mode=type;openModal("authModal");
 }
 function switchAuth(){openAuth($("authModal").dataset.mode==="login"?"join":"login")}
 
@@ -1193,65 +1164,53 @@ async function removeUserBan(id){
 async function renderAdminManagersIfVisible(){if($('adminPanelBody')&&document.querySelector('[data-admin-section="admins"].active'))await renderAdminAdmins($('adminPanelBody'))}
 
 async function submitAuth(){
-  const mode=$("authModal").dataset.mode||"join";
-  const email=$("authEmail").value.trim();
-  const password=$("authPassword").value;
+  const mode=$("authModal").dataset.mode||"join",name=$("authName").value.trim(),email=$("authEmail").value.trim(),password=$("authPassword").value;
   try{
     if(mode==="join"){
-      const first=$("authFirstName").value;
-      const last=$("authLastName").value;
-      const username=$("authUsername").value;
-      const phone=$("authPhone").value;
-      const tc=$("authTc").value;
-      const day=$("authBirthDay").value,month=$("authBirthMonth").value,year=$("authBirthYear").value;
-      const birth=(day&&month&&year)?`${year}-${month}-${day}`:null;
       const db=await checkDeviceBan(getDeviceId());
       if(db.active)return toast(db.banned_until?`Bu cihaz ${formatBanUntil(db.banned_until)} tarihine kadar banlı.`:"Bu cihaz süresiz banlandı. Yeni hesap oluşturamazsınız.");
-      const {data,error}=await sb.auth.signUp({email,password,options:{data:{full_name:`${first} ${last}`.trim(),username:username}}});
+      const {data,error}=await sb.auth.signUp({email,password,options:{data:{full_name:name,username:name||undefined}}});
       if(error)throw error;
-      if(data.session && data.user){
-        const {data:saveData,error:saveError}=await sb.rpc("save_profile_unvalidated_v57",{p_first_name:first,p_last_name:last,p_username:username,p_phone:phone,p_birth_date:birth,p_tc_identity_number:tc});
-        if(saveError)throw saveError;
-        state.profile={...(saveData?.profile||{}),email:data.user.email};
-        state.profileComplete=true;
-      }
-      toast(data.session?"Kayıt tamamlandı ve hesabın aktif.":"Kayıt tamamlandı. E-posta doğrulaması gerekiyorsa doğruladıktan sonra giriş yap.");
+      toast(data.session?"Kayıt ve giriş başarılı.":"Kayıt tamamlandı. E-posta doğrulaması gerekebilir.");
     }else{
       const db=await checkDeviceBan(getDeviceId());
       if(db.active)return toast(db.banned_until?`Bu cihaz ${formatBanUntil(db.banned_until)} tarihine kadar banlı.`:"Bu cihaz süresiz banlandı; giriş yapamazsınız.");
       const {error}=await sb.auth.signInWithPassword({email,password});
       if(error)throw error;toast("Giriş başarılı.");
     }
-    closeModal("authModal");
-    await syncUser();
-  }catch(e){console.error("AUTH",e);toast("İşlem başarısız: "+(e.message||"Bilinmeyen hata"))}
+    closeModal("authModal");await syncUser();
+  }catch(e){toast("İşlem başarısız: "+(e.message||"Bilinmeyen hata"))}
 }
 
 async function syncUser(){
   try{
-    const {data:{session}}=await sb.auth.getSession();
-    const user=session?.user||null;
+    const {data:{user}}=await sb.auth.getUser();
     state.user=user;
     if(!user){
       state.profile=null;state.favorites=[];state.routes=[];state.xp=0;state.profileComplete=false;
       updateAuthUI();updateLevels();return;
     }
-    const ok=await ensureRequiredLocation();
-    if(!ok)return;
+    if(!state.locationReady){
+      const ok=await ensureRequiredLocation();
+      if(!ok)return;
+    }else{
+      const ok=await ensureRequiredLocation();
+      if(!ok)return;
+    }
     let p=await sb.rpc("get_my_profile_private");
     if(p.error)throw p.error;
     let pdata=p.data||null;
     if(!pdata){
-      const username=(user.user_metadata?.username||user.user_metadata?.full_name||user.email?.split("@")[0]||"Kullanıcı").trim();
+      const username=(user.user_metadata?.username||user.user_metadata?.full_name||user.email?.split("@")[0]||"Kaşif").trim();
       const ins=await sb.from("profiles").insert({id:user.id,username,level:1,xp:0,device_id:getDeviceId()});
       if(ins.error)throw ins.error;
       p=await sb.rpc("get_my_profile_private");
       if(p.error)throw p.error;
       pdata=p.data||{};
     }else{
-      const metaUsername=(user.user_metadata?.username||"").trim();
+      const metaUsername=(user.user_metadata?.username||user.user_metadata?.full_name||"").trim();
       const currentUsername=(pdata.username||"").trim();
-      if(metaUsername && (!currentUsername || /^Kaşif(?:_[a-z0-9]+)?$/i.test(currentUsername)) && currentUsername!==metaUsername){
+      if(metaUsername && (!currentUsername || /^Kaşif_[a-z0-9]+$/i.test(currentUsername)) && currentUsername!==metaUsername){
         const upd=await sb.from("profiles").update({username:metaUsername}).eq("id",user.id);
         if(!upd.error)pdata={...pdata,username:metaUsername};
       }
@@ -1779,7 +1738,7 @@ function setPhoneVerificationStatus(ok,msg){
   el.classList.toggle("bad",false);
 }
 async function activateProfileNow(payload){
-  const {data,error}=await sb.rpc("save_profile_unvalidated_v57",payload);
+  const {data,error}=await sb.rpc("save_profile_unvalidated_v53",payload);
   if(error)throw error;
   return data;
 }
@@ -2079,10 +2038,30 @@ async function openOwnerProfile(userId){
   const grid=$("ownerProfileGrid");
   if(grid)grid.innerHTML='<div class="empty loading" style="grid-column:1/-1">Tam profil bilgileri yükleniyor...</div>';
   try{
-    // Özel kullanıcılar ekranında zaten Owner-only RPC ile yüklenmiş olan aynı kaydı kullan.
+    // Öncelik: Owner özel kullanıcı listesindeki kayıt.
     const rows=Array.isArray(window.__ownerPrivateRows)?window.__ownerPrivateRows:[];
-    const u=rows.find(r=>String(r.id)===String(userId));
+    let u=rows.find(r=>String(r.id)===String(userId))||null;
+
+    // Owner kendi profilini açıyorsa mevcut oturum profili güvenli yerel yedektir.
+    // Böylece liste RPC'si daha önce yüklenmemiş olsa bile "Tam profili aç" çalışır.
+    if(!u && String(userId)===String(state.user?.id)){
+      u={
+        ...(state.profile||{}),
+        id:state.user?.id,
+        email:state.user?.email||state.profile?.email||""
+      };
+    }
+
+    // Cache'te yoksa Owner-only RPC'den doğrudan çekmeyi dene.
+    if(!u){
+      const {data,error}=await sb.rpc("owner_get_private_profile",{p_user_id:userId});
+      if(!error){
+        u=Array.isArray(data)?data[0]:data;
+      }
+    }
+
     if(!u)throw new Error("PROFILE_NOT_FOUND");
+
     const fullName=[u.first_name,u.last_name].filter(Boolean).join(" ")||"İsim yok";
     $("ownerProfileTitle").textContent=fullName;
     $("ownerProfileSub").textContent=(u.username||"Kullanıcı adı yok")+" · Owner özel görünümü";
@@ -2091,11 +2070,12 @@ async function openOwnerProfile(userId){
     const role=u.admin_role==="owner"?"OWNER":u.admin_role==="admin"||u.is_admin?"ADMIN":"Kullanıcı";
     const premium=u.premium_until&&new Date(u.premium_until)>new Date();
     const ban=isProfileBanned(u)?(u.ban_scope==="device"?"CİHAZ BANLI":"HESAP BANLI"):"Aktif";
+
     const fields=[
       ["İsim",u.first_name||"-"],
       ["Soyisim",u.last_name||"-"],
       ["Kullanıcı adı",u.username||"-"],
-      ["E-posta",u.email||"-"],
+      ["E-posta",u.email||state.user?.email||"-"],
       ["Telefon",u.phone||"-"],
       ["Doğum tarihi",fmtDate(u.birth_date)],
       ["T.C. Kimlik No",u.tc_identity_number||"KAYITLI DEĞİL",true],
@@ -2108,16 +2088,19 @@ async function openOwnerProfile(userId){
       ["Profil tamamlanma zamanı",fmtTs(u.profile_completed_at)],
       ["Hesap ID",u.id||"-"]
     ];
+
     if(u.identity_verification_method||u.identity_verified_at){
       fields.push(["Eski doğrulama yöntemi",u.identity_verification_method||"-"]);
       fields.push(["Eski doğrulama zamanı",fmtTs(u.identity_verified_at)]);
     }
+
     grid.innerHTML=fields.map(([label,val,rawTc])=>`
       <div class="owner-profile-field ${rawTc?"raw-tc":""}">
         <small>${esc(label)}</small><strong>${esc(val)}</strong>
       </div>`).join("");
   }catch(e){
-    if(grid)grid.innerHTML='<div class="empty" style="grid-column:1/-1">Profil bilgileri yüklenemedi: '+esc(e.message||"Sunucu hatası")+'</div>';
+    console.error("OWNER PROFILE",e);
+    if(grid)grid.innerHTML='<div class="empty" style="grid-column:1/-1">Profil bilgileri yüklenemedi. Owner profil verisi bulunamadı veya okunamadı.</div>';
   }
 }
 
@@ -2170,15 +2153,8 @@ function filterAdminPrivateUsers(){
   document.querySelectorAll("#privateUserList [data-private-search]").forEach(el=>el.style.display=!q||el.dataset.privateSearch.includes(q)?"block":"none");
 }
 
-async function ownerSetIdentityVerification(id,verified){
-  if(!isOwner())return toast("Bu işlem yalnızca Owner'a açıktır.");
-  const method=verified?(prompt("Doğrulama yöntemi (ör. resmi belge / yüz yüze kontrol):","manual_owner_review")||"").trim():"manual_owner_review";
-  if(verified && !method)return;
-  const note=verified?((prompt("Not (isteğe bağlı):","")||"").trim()):"";
-  const {data,error}=await sb.rpc("owner_set_identity_verification",{p_target_user_id:id,p_verified:verified,p_method:method||"manual_owner_review",p_note:note||null});
-  if(error)return toast("Doğrulama durumu güncellenemedi: "+(error.message||"Sunucu hatası"));
-  toast(verified?"Kimlik doğrulaması Owner tarafından işaretlendi.":"Kimlik doğrulaması kaldırıldı.");
-  await renderAdminPrivateUsers($("adminPanelBody"));
+async function ownerSetIdentityVerification(){
+  toast("Manuel kimlik doğrulaması devre dışı.");
 }
 
 function adminLogCategory(action){
@@ -2308,12 +2284,9 @@ async function saveSiteSettings(){
 ["authModal","profileModal","ownerProfileModal","routeModal","reportModal","banModal","adminModal"].forEach(id=>$(id).addEventListener("click",e=>{if(id==="adminModal"&&document.querySelector("#banModal.open"))return;if(e.target.classList.contains("modal"))closeModal(id)}));
 
 (async()=>{
-  document.body.classList.add("auth-loading");
   updateAuthUI();updateLevels();
   sb.auth.onAuthStateChange(()=>setTimeout(syncUser,0));
   await syncUser();
-  document.body.classList.remove("auth-loading");
-  updateAuthUI();
   if(state.user && state.locationReady && state.aiSettings) recommend(true);
 })();
 </script>
