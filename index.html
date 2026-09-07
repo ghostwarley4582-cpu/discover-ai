@@ -174,8 +174,10 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
     <button class="btn admin-nav" data-admin-section="users" onclick="loadAdminSection('users')">👥 Kullanıcılar</button>
     <button class="btn admin-nav" data-admin-section="reports" onclick="loadAdminSection('reports')">🚨 Moderasyon</button>
     <button class="btn admin-nav" data-admin-section="premium" onclick="loadAdminSection('premium')">💎 Premium</button>
-    <button class="btn admin-nav" data-admin-section="ai" onclick="loadAdminSection('ai')">🧠 AI Motoru</button>
-    <button class="btn admin-nav" data-admin-section="settings" onclick="loadAdminSection('settings')">⚙️ Sistem</button>
+    <button class="btn admin-nav owner-only" data-admin-section="admins" onclick="loadAdminSection('admins')">🛡️ Admin Yönetimi</button>
+    <button class="btn admin-nav owner-only" data-admin-section="logs" onclick="loadAdminSection('logs')">🔐 Admin Logları</button>
+    <button class="btn admin-nav owner-only" data-admin-section="ai" onclick="loadAdminSection('ai')">🧠 AI Motoru</button>
+    <button class="btn admin-nav owner-only" data-admin-section="settings" onclick="loadAdminSection('settings')">⚙️ Sistem</button>
   </aside>
 
   <section class="admin-content">
@@ -389,7 +391,7 @@ function openProfile(){
   $("profileName").textContent=state.profile?.username||"Kaşif";
   $("profileEmail").textContent=state.user.email||"";
   $("profileLevel").textContent="Seviye "+(state.profile?.level||1);
-  $("adminEntry").style.display=state.profile?.is_admin===true?"block":"none";
+  $("adminEntry").style.display=isAdmin()?"block":"none";
   $("profileXP").textContent=state.xp;$("profileFav").textContent=state.favorites.length;$("profileRoutes").textContent=state.routes.length;
   openModal("profileModal");
 }
@@ -471,12 +473,15 @@ function subscribe(plan){
   toast(plan+" Premium · ₺"+prices[plan].toLocaleString("tr-TR")+". Ödeme altyapısı bağlandığında bu plan otomatik aktifleşecek.");
 }
 
-function isAdmin(){return !!state.user && state.profile?.is_admin===true}
+function adminRole(){return state.profile?.admin_role|| (state.profile?.is_admin===true?"admin":null)}
+function isAdmin(){return !!state.user && (adminRole()==="admin"||adminRole()==="owner")}
+function isOwner(){return !!state.user && adminRole()==="owner"}
 
 async function openAdmin(){
   if(!state.user)return openAuth("login");
   if(!isAdmin()){toast("Bu alana erişim yetkiniz yok.");return}
   openModal("adminModal");
+  applyAdminNavVisibility();
   await refreshAdminStats();
   await loadAdminSection("overview");
 }
@@ -515,16 +520,21 @@ function setAdminSectionActive(section){
   document.querySelectorAll(".admin-nav").forEach(x=>x.classList.toggle("active",x.dataset.adminSection===section));
 }
 
+function applyAdminNavVisibility(){document.querySelectorAll(".owner-only").forEach(x=>x.style.display=isOwner()?"block":"none")}
+
 async function loadAdminSection(section){
   if(!isAdmin())return;
   setAdminSectionActive(section);
   const body=$("adminPanelBody");
   body.innerHTML='<div class="empty loading">Yükleniyor...</div>';
+  if(["admins","logs","ai","settings"].includes(section)&&!isOwner()){toast("Bu bölüm yalnızca Owner'a açıktır.");return loadAdminSection("overview")}
   if(section==="overview")return renderAdminOverview(body);
   if(section==="activities")return renderAdminActivities(body);
   if(section==="users")return renderAdminUsers(body);
   if(section==="reports")return renderAdminReports(body);
   if(section==="premium")return renderAdminPremium(body);
+  if(section==="admins")return renderAdminAdmins(body);
+  if(section==="logs")return renderAdminLogs(body);
   if(section==="ai")return renderAdminAI(body);
   if(section==="settings")return renderAdminSettings(body);
 }
@@ -548,7 +558,7 @@ async function renderAdminOverview(body){
     <div class="admin-card" style="margin-top:12px">
       <h3 style="margin-top:0">Son kullanıcılar</h3>
       <div class="admin-list">${(users.data||[]).map(u=>`
-        <div class="admin-item"><div><b>${esc(u.username||"Kaşif")}</b><small>Seviye ${Number(u.level||1)} · ${Number(u.xp||0)} XP · ${u.is_admin?"Yönetici":"Kullanıcı"}</small></div>
+        <div class="admin-item"><div><b>${esc(u.username||"Kaşif")}</b><small>Seviye ${Number(u.level||1)} · ${Number(u.xp||0)} XP · ${u.admin_role==="owner"?"OWNER":u.admin_role==="admin"||u.is_admin?"ADMIN":"Kullanıcı"}</small></div>
         <span class="badge ${u.premium_until&&new Date(u.premium_until)>new Date()?"good":""}">${u.premium_until&&new Date(u.premium_until)>new Date()?"Premium":"Free"}</span></div>`).join("")||'<div class="empty">Kullanıcı bulunamadı.</div>'}</div>
     </div>`;
 }
@@ -622,7 +632,7 @@ async function deleteActivity(id){
 }
 
 async function renderAdminUsers(body){
-  const {data,error}=await sb.from("profiles").select("id,username,level,xp,is_admin,premium_plan,premium_until,is_banned").order("username").limit(200);
+  const {data,error}=await sb.from("profiles").select("id,username,level,xp,is_admin,admin_role,premium_plan,premium_until,is_banned").order("username").limit(200);
   if(error){body.innerHTML='<div class="empty">Kullanıcılar yüklenemedi: '+esc(error.message)+'</div>';return}
   body.innerHTML=`
     <div class="admin-toolbar"><input id="userSearch" placeholder="Kullanıcı ara..." oninput="filterAdminList('userSearch','userAdminList')"></div>
@@ -630,16 +640,21 @@ async function renderAdminUsers(body){
 }
 function adminUserRow(u){
   const premium=u.premium_until&&new Date(u.premium_until)>new Date();
+  const role=u.admin_role|| (u.is_admin?"admin":null);
+  const roleLabel=role==="owner"?"OWNER":role==="admin"?"ADMIN":"Kullanıcı";
+  const canOps=isOwner()?true:(adminRole()==="admin" && !role);
+  const canBan=canOps;
   return `<div class="admin-item" data-search="${esc(normalize(u.username||""))}">
-    <div><b>${esc(u.username||"Kaşif")}</b><small>Seviye ${Number(u.level||1)} · ${Number(u.xp||0)} XP · ${u.is_admin?"Yönetici":"Kullanıcı"} · ${premium?"Premium":"Free"}</small></div>
+    <div><b>${esc(u.username||"Kaşif")}</b><small>Seviye ${Number(u.level||1)} · ${Number(u.xp||0)} XP · ${roleLabel} · ${premium?"Premium":"Free"}${u.is_banned?" · ENGELLİ":""}</small></div>
     <div class="admin-actions">
-      <button class="btn mini" onclick='editUserStats(${JSON.stringify(u.id)},${Number(u.level||1)},${Number(u.xp||0)})'>XP/Seviye</button>
-      <button class="btn mini" onclick='toggleUserPremium(${JSON.stringify(u.id)},${premium})'>${premium?"Premium kaldır":"Premium ver"}</button>
-      ${u.id!==state.user.id?`<button class="btn mini" onclick='toggleAdminRole(${JSON.stringify(u.id)},${u.is_admin!==true})'>${u.is_admin?"Adminliği kaldır":"Admin yap"}</button>`:""}
-      ${u.id!==state.user.id?`<button class="btn mini" onclick='toggleUserBan(${JSON.stringify(u.id)},${u.is_banned!==true})'>${u.is_banned?"Yasağı kaldır":"Engelle"}</button>`:""}
+      ${canOps?`<button class="btn mini" onclick='editUserStats(${JSON.stringify(u.id)},${Number(u.level||1)},${Number(u.xp||0)})'>XP/Seviye</button>`:""}
+      ${canOps?`<button class="btn mini" onclick='toggleUserPremium(${JSON.stringify(u.id)},${premium})'>${premium?"Premium kaldır":"Premium ver"}</button>`:""}
+      ${isOwner()&&u.id!==state.user.id?`<button class="btn mini" onclick='setUserRolePrompt(${JSON.stringify(u.id)},${JSON.stringify(role||"user")})'>Rol</button>`:""}
+      ${canBan?`<button class="btn mini" onclick='toggleUserBan(${JSON.stringify(u.id)},${u.is_banned!==true})'>${u.is_banned?"Yasağı kaldır":"Engelle"}</button>`:""}
     </div>
   </div>`;
 }
+
 async function callAdminRpc(fn,args){
   if(!isAdmin()){toast("Bu işlem için yönetici yetkisi gerekli.");return null}
   try{
@@ -651,21 +666,26 @@ async function callAdminRpc(fn,args){
   }
 }
 async function editUserStats(id,level,xp){
+  if(!isOwner() && adminRole()!=="admin")return toast("Bu işlem için yetkiniz yok.");
   const nl=prompt("Yeni seviye (1-10):",level);if(nl===null)return;
   const nx=prompt("Yeni XP:",xp);if(nx===null)return;
   const ok=await callAdminRpc("admin_set_user_stats",{target_user_id:id,new_level:Math.max(1,Math.min(10,Number(nl)||1)),new_xp:Math.max(0,Number(nx)||0)});
   if(ok===null)return;
   toast("Kullanıcı XP/seviye güncellendi.");await renderAdminUsers($("adminPanelBody"));await refreshAdminStats();
 }
-async function toggleAdminRole(id,makeAdmin){
-  if(!isAdmin())return;
-  if(id===state.user.id)return toast("Kendi admin yetkini buradan değiştiremezsin.");
-  const ok=await callAdminRpc("admin_set_admin_role",{target_user_id:id,make_admin:makeAdmin});
+async function setUserRolePrompt(id,current){
+  if(!isOwner())return toast("Bu işlem yalnızca Owner içindir.");
+  const role=prompt("Rol: user / admin / owner",current||"user");if(role===null)return;
+  const r=role.trim().toLowerCase();
+  if(!["user","admin","owner"].includes(r))return toast("Geçersiz rol.");
+  const ok=await callAdminRpc("admin_set_user_role",{target_user_id:id,new_role:r});
   if(ok===null)return;
-  toast(makeAdmin?"Yönetici yetkisi verildi.":"Yönetici yetkisi kaldırıldı.");await refreshAdminStats();await renderAdminUsers($("adminPanelBody"));
+  toast(r==="user"?"Kullanıcı rolü verildi.":r==="admin"?"Admin yetkisi verildi.":"Owner yetkisi verildi.");
+  await renderAdminUsers($("adminPanelBody"));
 }
+
 async function toggleUserPremium(id,isPremium){
-  if(!isAdmin())return;
+  if(!isOwner() && adminRole()!=="admin")return;
   if(isPremium){
     const ok=await callAdminRpc("admin_set_user_premium",{target_user_id:id,plan:null,duration_days:0});
     if(ok===null)return;
@@ -683,6 +703,7 @@ async function toggleUserPremium(id,isPremium){
   await refreshAdminStats();await renderAdminUsers($("adminPanelBody"));
 }
 async function toggleUserBan(id,ban){
+  if(!isOwner() && adminRole()!=="admin")return;
   const ok=await callAdminRpc("admin_set_user_ban",{target_user_id:id,ban_user:ban});
   if(ok===null)return;
   toast(ban?"Kullanıcı engellendi.":"Kullanıcının engeli kaldırıldı.");await renderAdminUsers($("adminPanelBody"));
@@ -735,7 +756,21 @@ async function renderAdminPremium(body){
     <div class="admin-list">${(data||[]).map(u=>`<div class="admin-item"><div><b>${esc(u.username||"Kaşif")}</b><small>${esc(u.premium_plan||"Premium")} · ${new Date(u.premium_until).toLocaleString("tr-TR")}</small></div><button class="btn mini" onclick="toggleUserPremium(${JSON.stringify(u.id)},true)">Premium kaldır</button></div>`).join("")||'<div class="empty">Premium kullanıcı yok.</div>'}</div></div>`;
 }
 
+async function renderAdminAdmins(body){
+  if(!isOwner())return;
+  const {data,error}=await sb.from("profiles").select("id,username,level,xp,is_admin,admin_role,is_banned,premium_plan,premium_until").eq("admin_role","admin").order("username");
+  if(error){body.innerHTML='<div class="empty">Adminler yüklenemedi: '+esc(error.message)+'</div>';return}
+  body.innerHTML=`<div class="admin-card"><h3 style="margin-top:0">Admin Yönetimi</h3><p class="muted">Yalnızca Owner rolü admin atayabilir, kaldırabilir ve adminleri engelleyebilir.</p><button class="btn primary" onclick="loadAdminSection('users')">Kullanıcılar üzerinden rol yönet</button><div class="admin-list" style="margin-top:12px">${(data||[]).map(u=>`<div class="admin-item"><div><b>${esc(u.username||"Kaşif")}</b><small>ADMIN · ${u.is_banned?"Engelli":"Aktif"}</small></div><div class="admin-actions"><button class="btn mini" onclick='setUserRolePrompt(${JSON.stringify(u.id)},"admin")'>Rol değiştir</button><button class="btn mini" onclick='toggleUserBan(${JSON.stringify(u.id)},${u.is_banned!==true})'>${u.is_banned?"Yasağı kaldır":"Engelle"}</button></div></div>`).join("")||'<div class="empty">Admin yok.</div>'}</div></div>`;
+}
+async function renderAdminLogs(body){
+  if(!isOwner())return;
+  const {data,error}=await sb.from("admin_audit_logs").select("id,actor_email,action,target_email,details,created_at").order("created_at",{ascending:false}).limit(300);
+  if(error){body.innerHTML='<div class="empty">Admin logları yüklenemedi: '+esc(error.message)+'</div>';return}
+  body.innerHTML=`<div class="admin-card"><h3 style="margin-top:0">Gizli Admin Logları</h3><p class="muted">Bu ekranı yalnızca Owner görebilir.</p><div class="admin-list">${(data||[]).map(r=>`<div class="admin-item" style="align-items:flex-start"><div><b>${esc(r.action||"ADMIN_ACTION")}</b><small>${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""} · ${esc(r.actor_email||"")} ${r.target_email?"→ "+esc(r.target_email):""}</small><div class="muted" style="margin-top:7px">${esc(r.details||"")}</div></div></div>`).join("")||'<div class="empty">Henüz log yok.</div>'}</div></div>`;
+}
+
 async function renderAdminAI(body){
+  if(!isOwner())return toast("Bu bölüm yalnızca Owner içindir.");
   const {data,error}=await sb.from("ai_settings").select("id,budget_weight,time_weight,mood_weight,mode_weight,rating_weight,distance_weight").eq("id",1).maybeSingle();
   if(error){body.innerHTML='<div class="empty">AI ayarları okunamadı: '+esc(error.message)+'</div>';return}
   const x=data||{id:1,budget_weight:28,time_weight:18,mood_weight:25,mode_weight:10,rating_weight:14,distance_weight:5};
@@ -748,15 +783,17 @@ async function renderAdminAI(body){
     </div></div>`;
 }
 async function saveAISettings(){
+  if(!isOwner())return toast("Bu işlem yalnızca Owner içindir.");
   const payload={id:1,budget_weight:Number($("ai_budget").value),time_weight:Number($("ai_time").value),mood_weight:Number($("ai_mood").value),mode_weight:Number($("ai_mode").value),rating_weight:Number($("ai_rating").value),distance_weight:Number($("ai_distance").value)};
-  const {error}=await sb.from("ai_settings").upsert(payload,{onConflict:"id"});
-  if(error)return toast("AI ayarları kaydedilemedi: "+error.message);
+  const result=await callAdminRpc("owner_save_ai_settings",payload);
+  if(result===null)return;
   state.aiSettings=payload;
   toast("AI ayarları kaydedildi.");
   recommend(true);
 }
 
 async function renderAdminSettings(body){
+  if(!isOwner())return toast("Bu bölüm yalnızca Owner içindir.");
   const {data,error}=await sb.from("site_settings").select("key,value").order("key");
   if(error){body.innerHTML='<div class="empty">Sistem ayarları okunamadı: '+esc(error.message)+'</div>';return}
   const map=Object.fromEntries((data||[]).map(x=>[x.key,x.value]));
@@ -771,14 +808,15 @@ async function renderAdminSettings(body){
     </div></div>`;
 }
 async function saveSiteSettings(){
+  if(!isOwner())return toast("Bu işlem yalnızca Owner içindir.");
   const items=[
     {key:"premium_weekly",value:Number($("set_weekly").value)},
     {key:"premium_monthly",value:Number($("set_monthly").value)},
     {key:"premium_yearly",value:Number($("set_yearly").value)},
     {key:"maintenance",value:$("set_maintenance").value==="true"}
   ];
-  const {error}=await sb.from("site_settings").upsert(items,{onConflict:"key"});
-  if(error)return toast("Sistem ayarları kaydedilemedi: "+error.message);
+  const result=await callAdminRpc("owner_save_site_settings",{settings:items});
+  if(result===null)return;
   state.siteSettings=Object.fromEntries(items.map(x=>[x.key,x.value]));
   updatePublicPrices();
   toast("Sistem ayarları kaydedildi.");
