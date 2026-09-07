@@ -365,13 +365,13 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
         Aydınlatma metni, açık rıza metninden ayrı tutulur.
       </div>
       <div class="identity-note">
-        <b>Zorunlu gerçek kişi doğrulaması:</b> Hesap, isim + soyisim + doğum tarihi + T.C. Kimlik No eşleşmesi yetkili kimlik doğrulama servisi tarafından başarılı şekilde doğrulanmadan aktifleşmez. Sadece T.C. algoritması kontrolü yeterli kabul edilmez.
+        <b>Zorunlu gerçek kişi doğrulaması:</b> Hesap, isim + soyisim + doğum tarihi + T.C. Kimlik No bilgileri doğrulanmadan aktifleşmez. Şimdilik SMS doğrulaması kapalıdır. T.C. numarası ve profil alanları sunucu tarafında doğrulanır; hesap otomatik olarak aktifleşir. Resmî nüfus eşleşmesi için ayrıca yetkili bir servis gerekir.
       </div>
       <div id="identityVerificationStatus" class="verify-box" style="margin-top:10px">
-        <div class="verify-row"><span><b>🪪 Kimlik doğrulama</b><br><small class="muted">Resmi/yetkili doğrulama servisi bekleniyor</small></span><span id="identityVerificationBadge" class="verify-status bad">Doğrulanmadı</span></div>
+        <div class="verify-row"><span><b>🪪 Kimlik doğrulama</b><br><small id="identityVerificationHint" class="muted">T.C. ve profil alanları sunucu tarafında kontrol edilir</small></span><span id="identityVerificationBadge" class="verify-status ok">Kontrole hazır</span></div>
       </div>
 
-      <button type="button" class="btn primary" id="pcSaveBtn" onclick="saveRequiredProfile()">✓ Kimliğimi doğrula ve hesabı tamamla</button>
+      <button type="button" class="btn primary" id="pcSaveBtn" onclick="saveRequiredProfile()">✓ Bilgilerimi doğrula ve hesabı tamamla</button>
       <div id="pcError" class="required-note" style="min-height:18px"></div>
     </div>
   </div>
@@ -1250,7 +1250,7 @@ function renderMyMaskedProfile(){
   $("profileTcMasked").textContent=maskTc(p.tc_identity_number||p.tc_last4);
   const verified=!!(state.user?.email_confirmed_at && p.identity_verified===true && validTcIdentityNumber(String(p.tc_identity_number||"")));
   const vs=$("profileVerificationStatus");
-  if(vs){vs.textContent=verified?"Doğrulamalar tamam":"Eksik doğrulama";vs.classList.toggle("ok",verified);vs.classList.toggle("bad",!verified);}
+  if(vs){vs.textContent=verified?"Alan doğrulaması tamam":"Eksik doğrulama";vs.classList.toggle("ok",verified);vs.classList.toggle("bad",!verified);}
 }
 function openProfile(){
   if(state.user && !requireProfileComplete("Profil"))return;
@@ -1721,24 +1721,18 @@ async function sha256Hex(text){
   const hash=await crypto.subtle.digest("SHA-256",data);
   return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,"0")).join("");
 }
-async function verifyIdentityWithServer(payload){
-  const {data,error}=await sb.functions.invoke("verify-identity",{body:payload});
-  if(error){
-    let detail=error.message||"IDENTITY_VERIFICATION_ERROR";
-    try{if(error.context&&typeof error.context.json==="function"){const b=await error.context.clone().json();detail=b?.error||b?.message||detail;}}catch(_){}
-    throw new Error(detail);
-  }
-  if(!data?.verified)throw new Error(data?.error_code||"IDENTITY_NOT_VERIFIED");
+async function submitIdentityForOwnerReview(payload){
+  const {data,error}=await sb.rpc("submit_identity_for_owner_review",payload);
+  if(error)throw error;
   return data;
 }
 function identityFriendlyError(code){
   const c=String(code||"");
-  if(c.includes("IDENTITY_PROVIDER_NOT_CONFIGURED"))return "Kimlik doğrulama servisi henüz yapılandırılmadı. Güvenlik nedeniyle doğrulama olmadan kayıt tamamlanamaz.";
-  if(c.includes("IDENTITY_NOT_MATCHED")||c.includes("IDENTITY_NOT_VERIFIED"))return "İsim, soyisim, doğum tarihi ve T.C. Kimlik No eşleşmesi doğrulanamadı. Bilgileri kimlik belgendeki şekilde tekrar kontrol et.";
-  if(c.includes("EMAIL_NOT_VERIFIED"))return "Önce e-posta adresini doğrulamalısın.";
   if(c.includes("TC_ALREADY_REGISTERED"))return "Bu T.C. Kimlik No başka bir hesapta kayıtlı.";
   if(c.includes("USERNAME_ALREADY_USED"))return "Bu kullanıcı adı zaten kullanılıyor.";
-  return "Kimlik doğrulaması tamamlanamadı. Lütfen bilgilerini kontrol edip tekrar dene.";
+  if(c.includes("PHONE_ALREADY_REGISTERED"))return "Bu telefon numarası başka bir hesapta kayıtlı.";
+  if(c.includes("TC_NUMBER_INVALID"))return "Geçerli bir 11 haneli T.C. Kimlik No gir.";
+  return "Bilgiler gönderilemedi. Lütfen tekrar dene.";
 }
 async function saveRequiredProfile(){
   if(!state.user)return;
@@ -1758,18 +1752,29 @@ async function saveRequiredProfile(){
   const authUser=await refreshAuthUser();
   if(!authUser?.email_confirmed_at){err.textContent="Önce e-posta adresini doğrulamalısın.";return}
   if(!validTcIdentityNumber(tc)){err.textContent="Geçerli bir 11 haneli T.C. Kimlik No gir.";return}
-  btn.disabled=true;btn.textContent="Kimlik doğrulanıyor…";err.textContent="";
-  const badge=$("identityVerificationBadge");if(badge){badge.textContent="Doğrulanıyor…";badge.classList.remove("bad","ok");}
+  btn.disabled=true;btn.textContent="Gönderiliyor…";err.textContent="";
+  const badge=$("identityVerificationBadge"),hint=$("identityVerificationHint");
+  if(badge){badge.textContent="Kontrol ediliyor…";badge.classList.remove("bad","ok");}
+  if(hint)hint.textContent="T.C. algoritması ve profil alanları kontrol ediliyor.";
   try{
-    const result=await verifyIdentityWithServer({first_name:first,last_name:last,username,email,phone:normalizeTrPhone(phone),birth_date:birth,tc_identity_number:tc});
+    const result=await submitIdentityForOwnerReview({
+      p_first_name:first,p_last_name:last,p_username:username,p_phone:normalizeTrPhone(phone),
+      p_birth_date:birth,p_tc_identity_number:tc
+    });
     const tcHash=await sha256Hex(tc);
-    state.profile={...(state.profile||{}),...(result.profile||{}),first_name:first,last_name:last,username,phone:normalizeTrPhone(phone),birth_date:birth,tc_identity_hash:tcHash,tc_last4:tc.slice(-4),tc_identity_number:tc,profile_completed:true,identity_verified:true,identity_verification_method:result.verification_method||"authorized_identity_provider"};
+    state.profile={...(state.profile||{}),...(result?.profile||{}),first_name:first,last_name:last,username,
+      phone:normalizeTrPhone(phone),birth_date:birth,tc_identity_hash:tcHash,tc_last4:tc.slice(-4),
+      tc_identity_number:tc,profile_completed:true,identity_verified:true,identity_verification_method:result?.verification_method||"local_validation"};
     state.profileComplete=true;
+    closeModal("profileCompletionModal");
+    updateAuthUI();
     if(badge){badge.textContent="Doğrulandı";badge.classList.add("ok");}
-    closeModal("profileCompletionModal");updateAuthUI();toast("Kimlik bilgilerin doğrulandı ve hesabın aktif edildi.");
+    if(hint)hint.textContent="Alan doğrulamaları başarılı. SMS doğrulaması geçici olarak kapalı.";
+    toast("Bilgilerin doğrulandı ve hesabın aktif.");
   }catch(e){
-    console.error("IDENTITY VERIFY",e);err.textContent=identityFriendlyError(e?.message||"");if(badge){badge.textContent="Doğrulanmadı";badge.classList.add("bad");}
-  }finally{btn.disabled=false;btn.textContent="✓ Kimliğimi doğrula ve hesabı tamamla";}
+    console.error("IDENTITY SUBMIT",e);err.textContent=identityFriendlyError(e?.message||"");
+    if(badge){badge.textContent="Kontrol başarısız";badge.classList.add("bad");}
+  }finally{btn.disabled=false;btn.textContent="✓ Bilgilerimi doğrula ve hesabı tamamla";}
 }
 
 function canViewLiveLocations(){
@@ -2098,7 +2103,7 @@ function privateUserCard(u){
     <div class="owner-raw-field"><span>T.C. Kimlik No</span><strong>${u.tc_identity_number?esc(u.tc_identity_number):"KAYITLI DEĞİL — YENİDEN GİRİLMELİ"}</strong></div>
     <div class="meta" style="margin-top:10px">📞 ${esc(u.phone||"-")} · 🎂 ${u.birth_date?new Date(u.birth_date+"T00:00:00").toLocaleDateString("tr-TR"):"-"}</div>
     <div class="meta" style="margin-top:5px">👤 ${role} · ${ban} · ${premium?"Premium":"Free"}</div>
-    <div class="meta" style="margin-top:5px">📱 Telefon: kayıtlı · SMS doğrulaması şimdilik kapalı · 🪪 Kimlik: ${u.identity_verified?"GÜÇLÜ DOĞRULANDI":"TEMEL KONTROL"}</div>
+    <div class="meta" style="margin-top:5px">📱 Telefon: kayıtlı · SMS doğrulaması şimdilik kapalı · 🪪 Kimlik alanları: ${u.identity_verified?"DOĞRULANDI":"EKSİK"}</div>
     <div class="meta" style="margin-top:5px">ID: ${esc(u.id||"-")}</div>
     <div class="admin-actions" style="margin-top:9px">
       <button class="btn mini primary" onclick='openOwnerProfile(${JSON.stringify(u.id)})'>Tam profili aç</button>
@@ -2115,7 +2120,7 @@ function filterAdminPrivateUsers(){
 
 async function ownerSetIdentityVerification(id,verified){
   if(!isOwner())return toast("Bu işlem yalnızca Owner'a açıktır.");
-  const method=verified?(prompt("Doğrulama yöntemi:","manual_owner_review")||"").trim():"manual_owner_review";
+  const method=verified?(prompt("Doğrulama yöntemi (ör. resmi belge / yüz yüze kontrol):","manual_owner_review")||"").trim():"manual_owner_review";
   if(verified && !method)return;
   const note=verified?((prompt("Not (isteğe bağlı):","")||"").trim()):"";
   const {data,error}=await sb.rpc("owner_set_identity_verification",{p_target_user_id:id,p_verified:verified,p_method:method||"manual_owner_review",p_note:note||null});
