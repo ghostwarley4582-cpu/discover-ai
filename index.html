@@ -642,7 +642,9 @@ function adminUserRow(u){
   const premium=u.premium_until&&new Date(u.premium_until)>new Date();
   const role=u.admin_role|| (u.is_admin?"admin":null);
   const roleLabel=role==="owner"?"OWNER":role==="admin"?"ADMIN":"Kullanıcı";
-  const canOps=isOwner()?true:(adminRole()==="admin" && !role);
+  // Adminler kendi hesapları ve diğer adminler dahil tüm operasyonel alanlara müdahale edebilir.
+  // Owner hedefi ise Admin için tamamen kilitlidir. Owner her hedefte tam yetkilidir.
+  const canOps=isOwner() || (adminRole()==="admin" && role!=="owner");
   const canBan=canOps;
   return `<div class="admin-item" data-search="${esc(normalize(u.username||""))}">
     <div><b>${esc(u.username||"Kaşif")}</b><small>Seviye ${Number(u.level||1)} · ${Number(u.xp||0)} XP · ${roleLabel} · ${premium?"Premium":"Free"}${u.is_banned?" · ENGELLİ":""}</small></div>
@@ -749,11 +751,15 @@ async function deleteReport(id){
 }
 
 async function renderAdminPremium(body){
-  const {data,error}=await sb.from("profiles").select("id,username,premium_plan,premium_until").not("premium_until","is",null).gt("premium_until",new Date().toISOString()).order("premium_until",{ascending:false}).limit(200);
+  const {data,error}=await sb.from("profiles").select("id,username,admin_role,is_admin,premium_plan,premium_until").not("premium_until","is",null).gt("premium_until",new Date().toISOString()).order("premium_until",{ascending:false}).limit(200);
   if(error){body.innerHTML='<div class="empty">Premium verileri yüklenemedi: '+esc(error.message)+'</div>';return}
   body.innerHTML=`
     <div class="admin-card"><h3 style="margin-top:0">Premium kullanıcılar</h3><p class="muted">Süre dolduğunda hesap otomatik olarak Free kabul edilir.</p>
-    <div class="admin-list">${(data||[]).map(u=>`<div class="admin-item"><div><b>${esc(u.username||"Kaşif")}</b><small>${esc(u.premium_plan||"Premium")} · ${new Date(u.premium_until).toLocaleString("tr-TR")}</small></div><button class="btn mini" onclick="toggleUserPremium(${JSON.stringify(u.id)},true)">Premium kaldır</button></div>`).join("")||'<div class="empty">Premium kullanıcı yok.</div>'}</div></div>`;
+    <div class="admin-list">${(data||[]).map(u=>{
+      const role=u.admin_role || (u.is_admin ? "admin" : null);
+      const canManage=isOwner() || (adminRole()==="admin" && role!=="owner");
+      return `<div class="admin-item"><div><b>${esc(u.username||"Kaşif")}</b><small>${role==="owner"?"OWNER · ":role==="admin"?"ADMIN · ":""}${esc(u.premium_plan||"Premium")} · ${new Date(u.premium_until).toLocaleString("tr-TR")}</small></div>${canManage?`<button class="btn mini" onclick='toggleUserPremium(${JSON.stringify(u.id)},true)'>Premium kaldır</button>`:`<span class="muted">Owner korumalı</span>`}</div>`;
+    }).join("")||'<div class="empty">Premium kullanıcı yok.</div>'}</div></div>`;
 }
 
 async function renderAdminAdmins(body){
