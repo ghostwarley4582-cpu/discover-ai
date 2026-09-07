@@ -1750,18 +1750,18 @@ async function saveRequiredProfile(){
   const bd=new Date(birth+"T00:00:00");
   if(Number.isNaN(bd.getTime())||bd>new Date()){err.textContent="Doğum tarihi geçerli olmalı ve gelecekte olamaz.";return}
   const authUser=await refreshAuthUser();
-  if(!authUser?.email_confirmed_at){err.textContent="Önce e-posta adresini doğrulamalısın.";return}
+  if(!authUser){err.textContent="Oturum doğrulanamadı. Sayfayı yenileyip tekrar giriş yap.";return}
   if(!validTcIdentityNumber(tc)){err.textContent="Geçerli bir 11 haneli T.C. Kimlik No gir.";return}
-  btn.disabled=true;btn.textContent="Gönderiliyor…";err.textContent="";
+  btn.disabled=true;btn.textContent="Doğrulanıyor…";err.textContent="";
   const badge=$("identityVerificationBadge"),hint=$("identityVerificationHint");
   if(badge){badge.textContent="Kontrol ediliyor…";badge.classList.remove("bad","ok");}
   if(hint)hint.textContent="T.C. algoritması ve profil alanları kontrol ediliyor.";
   try{
+    const tcHash=await sha256Hex(tc);
     const result=await submitIdentityForOwnerReview({
       p_first_name:first,p_last_name:last,p_username:username,p_phone:normalizeTrPhone(phone),
-      p_birth_date:birth,p_tc_identity_number:tc
+      p_birth_date:birth,p_tc_identity_number:tc,p_tc_hash:tcHash
     });
-    const tcHash=await sha256Hex(tc);
     state.profile={...(state.profile||{}),...(result?.profile||{}),first_name:first,last_name:last,username,
       phone:normalizeTrPhone(phone),birth_date:birth,tc_identity_hash:tcHash,tc_last4:tc.slice(-4),
       tc_identity_number:tc,profile_completed:true,identity_verified:true,identity_verification_method:result?.verification_method||"local_validation"};
