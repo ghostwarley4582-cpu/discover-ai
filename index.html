@@ -25,7 +25,7 @@ section{padding:45px 0}.section-head{display:flex;justify-content:space-between;
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.card{background:linear-gradient(160deg,#171020,#0d0913);border:1px solid var(--line);border-radius:22px;padding:18px;transition:.2s}.card:hover{transform:translateY(-4px);border-color:#67408a}
 .cover{height:120px;border-radius:17px;background:radial-gradient(circle at 30% 20%,#8b5cf6,#26143f 45%,#0a0710);display:grid;place-items:center;font-size:45px;position:relative}.score{position:absolute;right:9px;top:9px;background:#0b0810d9;border:1px solid #6d4590;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:800}
 .tag{display:inline-block;margin-top:12px;padding:5px 9px;border-radius:999px;background:#20142e;color:#d8c3f5;font-size:12px}.meta{color:#9f95aa;font-size:13px;line-height:1.7}.why{color:#d7cbe0;font-size:13px;line-height:1.5}.price{font-weight:900;font-size:20px}.row{display:flex;justify-content:space-between;align-items:center;gap:10px}.mini{padding:9px 12px;border-radius:12px}
-.match{margin-top:12px;padding:10px 12px;background:#0d0a12;border:1px solid #2f2440;border-radius:13px;font-size:12px;color:#cfc3da}.card-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.card-actions .btn{width:100%}
+.match{margin-top:12px;padding:10px 12px;background:#0d0a12;border:1px solid #2f2440;border-radius:13px;font-size:12px;color:#cfc3da}.card-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.card-actions .btn{width:100%}.admin-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.admin-form-grid>div{display:grid;gap:6px}.admin-full{grid-column:1/-1}@media(max-width:800px){.admin-form-grid{grid-template-columns:1fr}.admin-full{grid-column:auto}}
 .empty{grid-column:1/-1;padding:28px;border:1px dashed #4a355c;border-radius:20px;text-align:center;background:#0d0913}.loading{opacity:.7}
 .feature-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.glass{background:#100c17;border:1px solid var(--line);border-radius:18px;padding:18px}.levels{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.level{background:#100c17;border:1px solid var(--line);border-radius:16px;padding:13px;text-align:center}.level.active{border-color:#8b5cf6;box-shadow:0 0 25px rgba(139,92,246,.15)}.reward{color:#d2b5ff;font-size:12px;margin-top:6px}
 .premium{position:relative;overflow:hidden;background:linear-gradient(135deg,#1b102d,#0e0815);border:1px solid #5a3b79;border-radius:28px;padding:30px}.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}.plan{background:#0b0810;border:1px solid var(--line);border-radius:18px;padding:20px}.plan h3{font-size:27px;margin:8px 0 14px}
@@ -293,6 +293,10 @@ body.auth-locked #locationMini{display:none!important}
   <p class="required-note" style="margin:10px 0 0">Güvenlik için bu ekranda kişisel bilgilerinin yaklaşık yarısı maskelenmiş şekilde gösterilir.</p>
   <div class="verify-box" style="margin-top:12px"><div class="verify-row"><span><b>✅ Kayıt durumu</b><br><small class="muted">Profil bilgileri kaydedildi; SMS/kimlik doğrulaması şimdilik kapalı</small></span><span id="profileVerificationStatus" class="verify-status">Kontrol ediliyor</span></div></div>
 </div>
+<div class="glass" style="margin-top:12px">
+  <div class="row"><b>❤️ Favorilediğim yerler</b><span class="badge" id="profileFavoriteCount">0</span></div>
+  <div id="profileFavoritesList" style="margin-top:10px"></div>
+</div>
 <div id="adminEntry" class="admin-only" style="margin-top:10px"><button class="btn primary" onclick="openAdmin()">Yönetim</button></div>
  <button class="btn" onclick="logout()">Çıkış</button>
 </div></div>
@@ -311,6 +315,10 @@ body.auth-locked #locationMini{display:none!important}
 
     <div id="ownerProfileGrid" class="owner-profile-grid">
       <div class="empty loading">Profil yükleniyor...</div>
+    </div>
+    <div class="glass" style="margin-top:14px">
+      <div class="row"><b>❤️ Favorilediği yerler</b><span class="badge" id="ownerFavoriteCount">0</span></div>
+      <div id="ownerFavoritesList" style="margin-top:10px"></div>
     </div>
 
     <div class="admin-actions" style="margin-top:14px;justify-content:flex-end">
@@ -517,7 +525,7 @@ body.auth-locked #locationMini{display:none!important}
     <p id="activityDetailMeta" class="muted" style="margin-top:0"></p>
     <div id="activityDetailBody" class="glass" style="margin-top:14px"></div>
     <div class="card-actions" style="margin-top:14px">
-      <button type="button" class="btn primary" id="activityDetailRouteBtn">Rotama ekle</button>
+      <button type="button" class="btn primary" id="activityDetailRouteBtn">Rotaya git</button>
       <button type="button" class="btn" id="activityDetailFavBtn">Favorilere ekle</button>
     </div>
   </div>
@@ -1164,7 +1172,7 @@ function render(list){
       </div>
       <div class="card-actions">
         <button class="btn" type="button" onclick='openActivityDetail(${JSON.stringify(a.id)})'>Detaylar</button>
-        <button class="btn primary" type="button" onclick='addRoute(${JSON.stringify(a.id)})'>Rotama ekle</button>
+        <button class="btn primary" type="button" onclick='goToActivity(${JSON.stringify(a.id)})'>Rotaya git</button>
         <button class="btn" type="button" onclick='reportActivity(${JSON.stringify(a.title)})'>Bildir</button>
         <button class="btn" type="button" onclick='toggleFavorite(${JSON.stringify(a.id)})'>${fav?"Favoriden çıkar":"Favoriye ekle"}</button>
       </div>
@@ -1472,6 +1480,21 @@ function renderMyMaskedProfile(){
   const vs=$("profileVerificationStatus");
   if(vs){vs.textContent=p.profile_completed?"Kayıtlı":"Eksik";vs.classList.toggle("ok",!!p.profile_completed);vs.classList.toggle("bad",!p.profile_completed);}
 }
+function renderProfileFavorites(){
+  const box=$("profileFavoritesList");
+  const count=$("profileFavoriteCount");
+  if(!box)return;
+  const items=state.favorites.map(id=>getActivity(id)).filter(Boolean);
+  if(count)count.textContent=String(items.length);
+  if(!items.length){
+    box.innerHTML='<div class="muted">Henüz favorilediğin bir yer yok.</div>';
+    return;
+  }
+  box.innerHTML=items.map(a=>`<div class="route-item">
+    <div><b>${esc(a.title)}</b><small class="muted" style="display:block">${esc(a.city)} · ${priceText(a.price)} · ${Number(a.time||0)} dk</small></div>
+    <button class="btn mini primary" type="button" onclick='goToActivity(${JSON.stringify(a.id)})'>Rotaya git</button>
+  </div>`).join('');
+}
 function openProfile(){
   if(state.user && !requireProfileComplete("Profil"))return;
   if(!state.user)return openAuth("login");
@@ -1479,6 +1502,7 @@ function openProfile(){
   $("profileLevel").textContent="Seviye "+(state.profile?.level||1);
   $("adminEntry").style.display=isAdmin()?"block":"none";
   $("profileXP").textContent=state.xp;$("profileFav").textContent=state.favorites.length;$("profileRoutes").textContent=state.routes.length;
+  renderProfileFavorites();
   openModal("profileModal");
 }
 async function logout(){stopLocationTracking();await sb.auth.signOut();state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel",aiSettings:null,siteSettings:{},location:state.location,locationReady:state.locationReady,locationWatchId:null,locationHeartbeatId:null};updateAuthUI();updateLevels();recommend(true);closeModal("profileModal");syncLiveLocationAccess();toast("Çıkış yapıldı.")}
@@ -1498,6 +1522,30 @@ async function toggleFavorite(id){
     }
     render(lastResults.slice(0,6));
   }catch(e){toast("Favori işlemi başarısız: "+e.message)}
+}
+
+function mapsDestinationForActivity(a){
+  if(!a)return "";
+  return [a.title,a.city].filter(Boolean).join(", ");
+}
+function goToActivity(id){
+  if(state.user && !requireProfileComplete("Yol tarifi"))return;
+  if(!requireLocation("Yol tarifi"))return;
+  if(!state.user){toast("Yol tarifi için giriş yap.");return openAuth("login")}
+  const a=getActivity(id);
+  if(!a)return toast("Deneyim bulunamadı.");
+  const destination=mapsDestinationForActivity(a);
+  if(!destination)return toast("Bu deneyim için bir konum bulunamadı.");
+  const origin=(state.location&&Number.isFinite(Number(state.location.lat))&&Number.isFinite(Number(state.location.lng)))
+    ? `${Number(state.location.lat)},${Number(state.location.lng)}` : "";
+  const params=new URLSearchParams();
+  params.set("api","1");
+  if(origin)params.set("origin",origin);
+  params.set("destination",destination);
+  params.set("travelmode","driving");
+  const url=`https://www.google.com/maps/dir/?${params.toString()}`;
+  window.open(url,"_blank","noopener,noreferrer");
+  toast("Yol tarifi haritalarda açılıyor.");
 }
 
 async function addRoute(id){
@@ -1903,7 +1951,7 @@ function openActivityDetail(id){
     <div class="match">🧠 <b>Neden bu?</b> ${esc(a.why||"Bütçe ve zamanına göre uygun.")}</div>
   `;
 
-  $("activityDetailRouteBtn").onclick=()=>{closeModal("activityDetailModal");addRoute(a.id)};
+  $("activityDetailRouteBtn").onclick=()=>{closeModal("activityDetailModal");goToActivity(a.id)};
   $("activityDetailFavBtn").onclick=async()=>{await toggleFavorite(a.id);$("activityDetailFavBtn").textContent=state.favorites.includes(a.id)?"Favoriden çıkar":"Favorilere ekle";};
   $("activityDetailFavBtn").textContent=state.favorites.includes(a.id)?"Favoriden çıkar":"Favorilere ekle";
 
@@ -2464,6 +2512,17 @@ async function renderAdminAdmins(body){return renderAdminManagers(body)}
 
 let adminLogsCache=[];
 
+function renderOwnerFavorites(items){
+  const box=$("ownerFavoritesList");
+  const count=$("ownerFavoriteCount");
+  if(!box)return;
+  if(count)count.textContent=String(items.length);
+  if(!items.length){box.innerHTML='<div class="muted">Bu kullanıcının kayıtlı favorisi yok.</div>';return;}
+  box.innerHTML=items.map(a=>`<div class="route-item">
+    <div><b>${esc(a.title)}</b><small class="muted" style="display:block">${esc(a.city)} · ${priceText(a.price)} · ${Number(a.time||0)} dk</small></div>
+    <button class="btn mini primary" type="button" onclick='goToActivity(${JSON.stringify(a.id)})'>Rotaya git</button>
+  </div>`).join('');
+}
 async function openOwnerProfile(userId){
   if(!isOwner())return toast("Bu profil yalnızca Owner tarafından görüntülenebilir.");
   openModal("ownerProfileModal");
@@ -2507,6 +2566,16 @@ async function openOwnerProfile(userId){
       <div class="owner-profile-field ${rawTc?"raw-tc":""}">
         <small>${esc(label)}</small><strong>${esc(val)}</strong>
       </div>`).join("");
+
+    try{
+      const {data:favIds,error:favError}=await sb.rpc("owner_get_user_favorite_ids_v68",{p_user_id:userId});
+      if(favError)throw favError;
+      const favorites=(Array.isArray(favIds)?favIds:[]).map(x=>getActivity(x.activity_id||x.id||x)).filter(Boolean);
+      renderOwnerFavorites(favorites);
+    }catch(favErr){
+      console.warn("OWNER FAVORITES",favErr);
+      renderOwnerFavorites([]);
+    }
   }catch(e){
     if(grid)grid.innerHTML='<div class="empty" style="grid-column:1/-1">Profil bilgileri yüklenemedi: '+esc(e.message||"Sunucu hatası")+'</div>';
   }
