@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#09060d">
 <meta name="description" content="DISCOVER AI — bütçene, zamanına ve moduna göre kişisel deneyimler keşfet.">
-<title>DISCOVER AI — Kişisel Deneyim Motoru · V16</title>
+<title>DISCOVER AI — Kişisel Deneyim Motoru · V36</title>
 <style>
 :root{--bg:#08060d;--panel:#100b18;--panel2:#151020;--text:#f7f3ff;--muted:#aaa0b7;--purple:#8b5cf6;--purple2:#c084fc;--line:#2a2139;--green:#69e7b7;--danger:#ff6b8a}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 70% 5%,#261343 0,#10091a 34%,#08060d 75%);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
@@ -73,11 +73,20 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
 
 #profileCompletionModal .modalbox{width:min(720px,100%)}
 .required-note{font-size:12px;color:var(--muted);line-height:1.5}
+
+.kvkk-link{font-size:11px;color:#bda8d8;text-decoration:underline;text-underline-offset:3px;opacity:.85;cursor:pointer;background:none;border:0;padding:0}
+.kvkk-link:hover{color:#fff;opacity:1}
+.kvkk-modal .modalbox{width:min(820px,100%);max-height:88vh}
+.kvkk-body h3{font-size:15px;margin:18px 0 6px;color:#efe7f8}.kvkk-body p,.kvkk-body li{font-size:13px;line-height:1.65;color:#c2b7cb}.kvkk-body ul{padding-left:20px;margin-top:6px}.kvkk-meta{padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#0d0a12;font-size:12px;color:#bdb2c6}
+.owner-private-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}.owner-private-card{border:1px solid var(--line);background:#0d0a12;border-radius:16px;padding:14px}.owner-private-card b{display:block;margin-bottom:4px}.owner-private-card small{color:var(--muted);display:block;margin-bottom:8px}.owner-private-card code{font-size:11px;word-break:break-all;color:#d9c6ff}.private-warning{border-left:3px solid var(--danger);background:#190b12;padding:12px 14px;border-radius:12px;font-size:12px;color:#e4cbd2;margin-top:12px}
+@media(max-width:800px){.owner-private-grid{grid-template-columns:1fr}}
 .tc-wrap{position:relative}
 .tc-wrap input{padding-right:76px}
 .tc-count{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted)}
 .profile-lock{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid #49325f;border-radius:14px;background:#0d0913}
 .profile-lock strong{display:block;margin-bottom:4px}
+.profile-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.profile-info-grid>div{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#0d0a12}.profile-info-grid small{display:block;color:var(--muted);font-size:11px;margin-bottom:4px}.profile-info-grid strong{display:block;font-size:13px;word-break:break-word}.profile-info-grid .admin-full{grid-column:1/-1}
+@media(max-width:800px){.profile-info-grid{grid-template-columns:1fr}.profile-info-grid .admin-full{grid-column:auto}}
 
 </style>
 
@@ -199,7 +208,7 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
 
 </main>
 
-<footer><div class="wrap">DISCOVER AI · Kişisel deneyimleri daha akıllı keşfet.</div></footer>
+<footer><div class="wrap" style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap"><span>DISCOVER AI · Kişisel deneyimleri daha akıllı keşfet.</span><button type="button" class="kvkk-link" onclick="openModal('kvkkModal')">KVKK Aydınlatma Metni</button></div></footer>
 
 <div id="authModal" class="modal"><div class="modalbox">
 <button class="close" onclick="closeModal('authModal')">×</button><div class="eyebrow">ACCOUNT</div>
@@ -218,6 +227,19 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
 <button class="close" onclick="closeModal('profileModal')">×</button><div class="eyebrow">PROFILE</div>
 <h2 id="profileName">Kaşif</h2><p id="profileEmail" class="muted"></p>
 <div class="glass"><b id="profileLevel">Seviye 1</b><p>XP: <span id="profileXP">0</span></p><p>Favoriler: <span id="profileFav">0</span></p><p>Rotalar: <span id="profileRoutes">0</span></p></div>
+<div class="glass" style="margin-top:12px">
+  <b>🔐 Kişisel bilgilerim</b>
+  <div class="profile-info-grid" style="margin-top:10px">
+    <div><small>İsim</small><strong id="profileFirstNameMasked">-</strong></div>
+    <div><small>Soyisim</small><strong id="profileLastNameMasked">-</strong></div>
+    <div><small>Kullanıcı adı</small><strong id="profileUsernameMasked">-</strong></div>
+    <div><small>E-posta</small><strong id="profileEmailMasked">-</strong></div>
+    <div><small>Telefon</small><strong id="profilePhoneMasked">-</strong></div>
+    <div><small>Doğum tarihi</small><strong id="profileBirthMasked">-</strong></div>
+    <div class="admin-full"><small>T.C. Kimlik No</small><strong id="profileTcMasked">-</strong></div>
+  </div>
+  <p class="required-note" style="margin:10px 0 0">Güvenlik için bu ekranda kişisel bilgilerinin yaklaşık yarısı maskelenmiş şekilde gösterilir.</p>
+</div>
 <div id="adminEntry" class="admin-only" style="margin-top:10px"><button class="btn primary" onclick="openAdmin()">Yönetim</button></div>
  <button class="btn" onclick="logout()">Çıkış</button>
 </div></div>
@@ -267,7 +289,7 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
         <strong>Zorunlu profil doğrulaması</strong>
         <span class="required-note">
           Bilgilerin hesap güvenliği ve hizmetin kişiselleştirilmesi için alınır.
-          T.C. kimlik numarası düz metin olarak saklanmaz; sistemde kimlik doğrulama özeti tutulur.
+          T.C. kimlik numarası yalnızca yetkili Owner ekranında tam olarak görüntülenebilir; normal kullanıcı ekranında maskeli gösterilir.
         </span>
       </div>
     </div>
@@ -293,21 +315,56 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
         </div>
       </div>
 
-      <label class="required-note">
-        <input id="pcKvkkRead" type="checkbox">
-        KVKK Aydınlatma Metni'ni okudum.
-      </label>
-
-      <label class="required-note">
-        <input id="pcPrivacyAccept" type="checkbox">
-        Profil bilgilerimin hesap hizmetleri kapsamında işlenmesini kabul ediyorum.
-      </label>
+      <div class="required-note">
+        Kişisel verilerin işlenmesine ilişkin ayrıntılar için <button type="button" class="kvkk-link" onclick="openModal('kvkkModal')">KVKK Aydınlatma Metni</button>'i inceleyebilirsin.
+        Aydınlatma metni, açık rıza metninden ayrı tutulur.
+      </div>
 
       <button type="button" class="btn primary" id="pcSaveBtn" onclick="saveRequiredProfile()">✓ Bilgileri kaydet ve devam et</button>
       <div id="pcError" class="required-note" style="min-height:18px"></div>
     </div>
   </div>
 </div>
+<div id="kvkkModal" class="modal kvkk-modal">
+  <div class="modalbox">
+    <button class="close" type="button" onclick="closeModal('kvkkModal')">×</button>
+    <div class="eyebrow">GİZLİLİK</div>
+    <h2 style="margin:14px 0 8px">KVKK Aydınlatma Metni</h2>
+    <div class="kvkk-meta">
+      <b>Veri Sorumlusu:</b> DISCOVER AI'nin hukuken işletmecisi / veri sorumlusu.
+      <br><span style="color:#8f8398">Yayımlamadan önce bu alana gerçek kişi/şirket unvanı, açık adres ve iletişim bilgisi eklenmelidir.</span>
+    </div>
+    <div class="kvkk-body">
+      <h3>1. Amaç</h3>
+      <p>Bu metin, DISCOVER AI hesabı oluşturulurken ve hizmet kullanılırken elde edilen kişisel verilerin hangi amaçlarla işlendiği konusunda sizi bilgilendirmek için hazırlanmıştır. Veriler; hesap oluşturma ve yönetimi, kullanıcı hesabının güvenliği, kötüye kullanım ve çoklu hesap girişimlerinin önlenmesi, hizmetin kişiselleştirilmesi, kullanıcı taleplerinin karşılanması ve yasal yükümlülüklerin yerine getirilmesi amaçlarıyla işlenebilir.</p>
+
+      <h3>2. İşlenen kişisel veriler</h3>
+      <p>Kimlik ve iletişim bilgileri kapsamında isim, soyisim, kullanıcı adı, e-posta adresi, telefon numarası ve doğum tarihi; kimlik güvenliği amacıyla T.C. Kimlik Numarası işlenmektedir. T.C. Kimlik Numarası uygulama veritabanında düz metin olarak saklanmaz; kimlik numarasından oluşturulan kriptografik özet ve son dört hane tutulur.</p>
+
+      <h3>3. Toplama yöntemi</h3>
+      <p>Veriler, üyelik ve profil tamamlama ekranları üzerinden elektronik ortamda doğrudan sizden alınır. Hesap e-posta bilgisi ayrıca kimlik doğrulama hizmeti tarafından tutulabilir.</p>
+
+      <h3>4. Hukuki sebep</h3>
+      <p>Kişisel veriler, somut işleme faaliyetine göre 6698 sayılı Kanun'un 5. maddesinde öngörülen hukuki şartlardan uygulanabilir olanlara dayanılarak işlenir. İşleme açık rızaya dayanıyorsa ayrıca ve ayrı bir açık rıza süreci uygulanır. Aydınlatma metni tek başına rıza anlamına gelmez.</p>
+
+      <h3>5. Aktarım</h3>
+      <p>Veriler, hizmetin teknik olarak sunulması, bilgi teknolojileri altyapısının işletilmesi, güvenlik ve yasal yükümlülüklerin yerine getirilmesi için gerekli olduğu ölçüde; yetkili hizmet sağlayıcılar, teknik altyapı sağlayıcıları ve kanunen yetkili kişi/kurumlarla, ilgili mevzuatta öngörülen şartlara uygun olarak paylaşılabilir. Yurt dışına veri aktarımı söz konusu olduğunda 6698 sayılı Kanun'un 9. maddesindeki güncel şartlar uygulanır.</p>
+
+      <h3>6. Saklama süresi</h3>
+      <p>Kişisel veriler, işleme amaçları için gerekli olan süre boyunca ve ilgili mevzuatta öngörülen saklama, zamanaşımı, uyuşmazlık ve denetim süreleri dikkate alınarak muhafaza edilir. Saklama süresi sona erdiğinde veriler, ilgili mevzuata uygun şekilde silinir, yok edilir veya anonim hale getirilir.</p>
+
+      <h3>7. Güvenlik</h3>
+      <p>Verilerin korunması için teknik ve idari tedbirler uygulanır. Özellikle T.C. Kimlik Numarası düz metin olarak uygulama veritabanında tutulmaz. Kişisel profil alanlarına erişim yetkileri rol bazında sınırlandırılır; ayrıntılı kişisel profil verileri yalnızca Owner düzeyindeki özel yönetim işlevleri üzerinden görüntülenebilir.</p>
+
+      <h3>8. KVKK kapsamındaki haklarınız</h3>
+      <p>6698 sayılı Kanun'un 11. maddesi kapsamındaki haklarınızı, veri sorumlusuna başvurarak kullanabilirsiniz. Başvuru yöntemi ve iletişim bilgileri, veri sorumlusunun güncel iletişim kanallarında yayımlanır.</p>
+
+      <h3>9. Güncelleme</h3>
+      <p>Bu metin, veri işleme faaliyetlerinde veya mevzuatta değişiklik olması halinde güncellenebilir. Güncel metin site üzerinde yayımlandığı tarih itibarıyla geçerlidir.</p>
+    </div>
+  </div>
+</div>
+
 <div id="aiAssistantModal" class="modal">
   <div class="modalbox" style="width:min(760px,100%);max-height:92vh">
     <button class="close" type="button" onclick="closeModal('aiAssistantModal')">×</button>
@@ -350,6 +407,7 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
     <button class="btn admin-nav" data-admin-section="banned" onclick="loadAdminSection('banned')">⛔ Engellenen Kullanıcılar</button>
     <button class="btn admin-nav" data-admin-section="locations" onclick="loadAdminSection('locations')">📍 Canlı Konumlar</button>
     <button class="btn admin-nav" data-admin-section="admins" onclick="loadAdminSection('admins')">🛡️ Yöneticiler</button>
+    <button class="btn admin-nav owner-only" data-admin-section="private-users" onclick="loadAdminSection('private-users')">🔒 Özel Kullanıcı Verileri</button>
     <button class="btn admin-nav owner-only" data-admin-section="logs" onclick="loadAdminSection('logs')">🔐 Admin Logları</button>
     <button class="btn admin-nav owner-only" data-admin-section="ai" onclick="loadAdminSection('ai')">🧠 AI Motoru</button>
     <button class="btn admin-nav owner-only" data-admin-section="settings" onclick="loadAdminSection('settings')">⚙️ Sistem</button>
@@ -1053,22 +1111,26 @@ async function syncUser(){
     }
     const {data:{user}}=await sb.auth.getUser();state.user=user;
     if(!user){state.profile=null;state.favorites=[];state.routes=[];state.xp=0;updateAuthUI();updateLevels();return}
-    let p=await sb.from("profiles").select("*").eq("id",user.id).maybeSingle();
+    let p=await sb.rpc("get_my_profile_private");
     if(p.error)throw p.error;
-    if(!p.data){
+    let pdata=p.data||null;
+    if(!pdata){
       const username=(user.user_metadata?.username||user.user_metadata?.full_name||user.email?.split("@")[0]||"Kaşif").trim();
-      const ins=await sb.from("profiles").insert({id:user.id,username,level:1,xp:0,device_id:getDeviceId()}).select().single();
-      if(ins.error)throw ins.error;p=ins;
+      const ins=await sb.from("profiles").insert({id:user.id,username,level:1,xp:0,device_id:getDeviceId()});
+      if(ins.error)throw ins.error;
+      p=await sb.rpc("get_my_profile_private");
+      if(p.error)throw p.error;
+      pdata=p.data||{};
     }else{
       const metaUsername=(user.user_metadata?.username||user.user_metadata?.full_name||"").trim();
-      const currentUsername=(p.data.username||"").trim();
+      const currentUsername=(pdata.username||"").trim();
       if(metaUsername && (!currentUsername || /^Kaşif_[a-z0-9]+$/i.test(currentUsername)) && currentUsername!==metaUsername){
-        const upd=await sb.from("profiles").update({username:metaUsername}).eq("id",user.id).select().single();
-        if(!upd.error && upd.data)p=upd;
+        const upd=await sb.from("profiles").update({username:metaUsername}).eq("id",user.id);
+        if(!upd.error)pdata={...pdata,username:metaUsername};
       }
     }
-    if(p.data.device_id!==getDeviceId()){const d=await sb.rpc("register_device_id",{p_device_id:getDeviceId()});if(!d.error)p.data.device_id=getDeviceId();}
-    state.profile=p.data;state.xp=Number(p.data.xp||0);state.profileComplete=isProfileComplete(p.data);state.premium=!!(p.data.premium_until&&new Date(p.data.premium_until)>new Date());
+    if(pdata.device_id!==getDeviceId()){const d=await sb.rpc("register_device_id",{p_device_id:getDeviceId()});if(!d.error)pdata.device_id=getDeviceId();}
+    state.profile=pdata;state.xp=Number(pdata.xp||0);state.profileComplete=isProfileComplete(pdata);state.premium=!!(pdata.premium_until&&new Date(pdata.premium_until)>new Date());
     state.premium=!!(p.data.premium_until && new Date(p.data.premium_until)>new Date());
     const accountBanActive=isProfileBanned(p.data)&&p.data.ban_scope!=="device";
     const deviceBan=await checkDeviceBan(getDeviceId());
@@ -1093,11 +1155,52 @@ function updateAuthUI(){
   $("joinBtn").textContent=logged?"Çıkış":"Katıl";
   $("joinBtn").onclick=logged?()=>logout():()=>openAuth("join");
 }
+function maskHalf(value,keep="ends"){
+  const s=String(value??"");if(!s)return "-";
+  if(s.length<=2)return s[0]+"*";
+  const hide=Math.max(1,Math.ceil(s.length/2));
+  if(keep==="end")return "*".repeat(hide)+s.slice(hide);
+  if(keep==="start")return s.slice(0,s.length-hide)+"*".repeat(hide);
+  const left=Math.floor((s.length-hide)/2),right=s.length-hide-left;
+  return s.slice(0,left)+"*".repeat(hide)+s.slice(s.length-right);
+}
+function maskEmail(value){
+  const s=String(value||"");const at=s.indexOf("@");if(at<2)return s?"*".repeat(Math.min(3,s.length)):"-";
+  const local=s.slice(0,at),domain=s.slice(at+1);
+  return local[0]+"*".repeat(Math.max(1,Math.ceil(local.length/2)))+"@"+maskHalf(domain,"start");
+}
+function maskPhone(value){
+  const s=String(value||"");if(!s)return "-";
+  const digits=s.replace(/\D/g,"");if(digits.length<4)return maskHalf(s);
+  const visible=Math.ceil(digits.length/2);const out="*".repeat(digits.length-visible)+digits.slice(-visible);
+  return (s.match(/^\+90/) ? "+90 " : "") + out;
+}
+function maskBirthDate(value){
+  const s=String(value||"");if(!s)return "-";
+  const parts=s.split("-");if(parts.length===3)return parts[0].slice(0,2)+"**-**-"+parts[2];
+  return maskHalf(s);
+}
+function maskTc(value){
+  const s=String(value||"");if(s.length===11)return "******"+s.slice(6);
+  const last4=String(state.profile?.tc_last4||"");
+  return last4.length===4?"******"+last4:"-";
+}
+function renderMyMaskedProfile(){
+  const p=state.profile||{};
+  $("profileName").textContent=p.username||"Kaşif";
+  $("profileEmail").textContent=state.user?.email||"";
+  $("profileFirstNameMasked").textContent=maskHalf(p.first_name,"end");
+  $("profileLastNameMasked").textContent=maskHalf(p.last_name,"end");
+  $("profileUsernameMasked").textContent=maskHalf(p.username,"end");
+  $("profileEmailMasked").textContent=maskEmail(state.user?.email||p.email);
+  $("profilePhoneMasked").textContent=maskPhone(p.phone);
+  $("profileBirthMasked").textContent=maskBirthDate(p.birth_date);
+  $("profileTcMasked").textContent=maskTc(p.tc_identity_number||p.tc_last4);
+}
 function openProfile(){
   if(state.user && !requireProfileComplete("Profil"))return;
   if(!state.user)return openAuth("login");
-  $("profileName").textContent=state.profile?.username||"Kaşif";
-  $("profileEmail").textContent=state.user.email||"";
+  renderMyMaskedProfile();
   $("profileLevel").textContent="Seviye "+(state.profile?.level||1);
   $("adminEntry").style.display=isAdmin()?"block":"none";
   $("profileXP").textContent=state.xp;$("profileFav").textContent=state.favorites.length;$("profileRoutes").textContent=state.routes.length;
@@ -1257,7 +1360,7 @@ async function loadAdminSection(section){
   setAdminSectionActive(section);
   const body=$("adminPanelBody");
   body.innerHTML='<div class="empty loading">Yükleniyor...</div>';
-  if(["logs","ai","settings"].includes(section)&&!isOwner()){toast("Bu bölüm yalnızca Owner'a açıktır.");return loadAdminSection("overview")}
+  if(["private-users","logs","ai","settings"].includes(section)&&!isOwner()){toast("Bu bölüm yalnızca Owner'a açıktır.");return loadAdminSection("overview")}
   if(section==="overview")return renderAdminOverview(body);
   if(section==="activities")return renderAdminActivities(body);
   if(section==="users")return renderAdminUsers(body);
@@ -1268,6 +1371,7 @@ async function loadAdminSection(section){
     return renderAdminLocations(body);
   }
   if(section==="admins")return renderAdminAdmins(body);
+  if(section==="private-users")return renderAdminPrivateUsers(body);
   if(section==="logs")return renderAdminLogs(body);
   if(section==="ai")return renderAdminAI(body);
   if(section==="settings")return renderAdminSettings(body);
@@ -1521,8 +1625,6 @@ function openProfileCompletion(){
   $("pcBirthDate").value=state.profile?.birth_date||"";
   $("pcTc").value="";
   $("pcTcCount").textContent="0/11";
-  $("pcKvkkRead").checked=false;
-  $("pcPrivacyAccept").checked=false;
   $("pcError").textContent="";
   openModal("profileCompletionModal");
 }
@@ -1557,10 +1659,6 @@ async function saveRequiredProfile(){
     err.textContent="Geçerli bir 11 haneli T.C. Kimlik No gir.";
     return;
   }
-  if(!$("pcKvkkRead").checked||!$("pcPrivacyAccept").checked){
-    err.textContent="Devam etmek için bilgilendirme ve veri işleme onaylarını ayrı ayrı tamamla.";
-    return;
-  }
   btn.disabled=true;btn.textContent="Kaydediliyor…";err.textContent="";
   try{
     const tcHash=await sha256Hex(tc);
@@ -1571,12 +1669,13 @@ async function saveRequiredProfile(){
       p_phone:phone,
       p_birth_date:birth,
       p_tc_hash:tcHash,
-      p_tc_last4:tc.slice(-4)
+      p_tc_last4:tc.slice(-4),
+      p_tc_identity_number:tc
     });
     if(error)throw error;
     state.profile={...(state.profile||{}),...(data?.profile||{}),
       first_name:first,last_name:last,username,phone,birth_date:birth,
-      tc_identity_hash:tcHash,tc_last4:tc.slice(-4),profile_completed:true
+      tc_identity_hash:tcHash,tc_last4:tc.slice(-4),tc_identity_number:tc,profile_completed:true
     };
     state.profileComplete=true;
     $("pcError").textContent="";
@@ -1833,6 +1932,44 @@ function managerRow(u){
 async function renderAdminAdmins(body){return renderAdminManagers(body)}
 
 let adminLogsCache=[];
+async function renderAdminPrivateUsers(body){
+  if(!isOwner()){toast("Bu bölüm yalnızca Owner'a açıktır.");return;}
+  body.innerHTML='<div class="empty loading">Özel kullanıcı verileri yükleniyor...</div>';
+  try{
+    const {data,error}=await sb.rpc("owner_get_private_profiles");
+    if(error)throw error;
+    const rows=Array.isArray(data)?data:[];
+    body.innerHTML=`<div class="admin-card">
+      <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
+        <div><h3 style="margin:0">🔒 Özel Kullanıcı Verileri</h3><p class="muted" style="margin:6px 0 0">Bu ekran yalnızca Owner tarafından görüntülenebilir. Admin hesapları bu kişisel alanlara erişemez.</p></div>
+        <span class="badge">${rows.length} kayıt</span>
+      </div>
+      <div class="private-warning">T.C. Kimlik Numarası bu Owner ekranında tam olarak görüntülenebilir. Admin hesapları bu alanı okuyamaz; normal kullanıcılar yalnızca maskeli görünümü görür. Bu alanın ekran görüntüsü / dışa aktarımını güvenli biçimde yönet.</div>
+      <div class="admin-toolbar" style="margin-top:14px"><input id="privateUserSearch" placeholder="İsim, soyisim, kullanıcı adı, e-posta ara..." oninput="filterAdminPrivateUsers()"><button class="btn" onclick="renderAdminPrivateUsers($('adminPanelBody'))">↻ Yenile</button></div>
+      <div id="privateUserList" class="owner-private-grid">
+        ${rows.map(privateUserCard).join("")||'<div class="empty">Kayıt bulunamadı.</div>'}
+      </div>
+    </div>`;
+    window.__ownerPrivateRows=rows;
+  }catch(e){
+    body.innerHTML='<div class="empty">Özel kullanıcı verileri yüklenemedi: '+esc(e.message||"Sunucu hatası")+'</div>';
+  }
+}
+function privateUserCard(u){
+  const hay=normalize([u.first_name,u.last_name,u.username,u.email,u.phone,u.tc_last4].join(" "));
+  return `<article class="owner-private-card" data-private-search="${esc(hay)}">
+    <b>${esc([u.first_name,u.last_name].filter(Boolean).join(" ")||"İsim yok")}</b>
+    <small>${esc(u.username||"Kullanıcı adı yok")} · ${esc(u.email||"E-posta yok")}</small>
+    <div class="meta">📞 ${esc(u.phone||"-")} · 🎂 ${u.birth_date?new Date(u.birth_date+"T00:00:00").toLocaleDateString("tr-TR"):"-"} · T.C. <b>${esc(u.tc_identity_number||("••••••"+(u.tc_last4||"----")))}</b></div>
+    <div class="muted" style="margin-top:8px;font-size:11px">Kayıt: ${u.profile_completed_at?new Date(u.profile_completed_at).toLocaleString("tr-TR"):"-"}</div>
+    <details style="margin-top:9px"><summary style="cursor:pointer;font-size:11px;color:#cdb7df">Kimlik özeti</summary><code>${esc(u.tc_identity_hash||"-")}</code><div class="muted" style="font-size:10px;margin-top:5px">ID: ${esc(u.id||"-")}</div></details>
+  </article>`;
+}
+function filterAdminPrivateUsers(){
+  const q=normalize($("privateUserSearch")?.value||"");
+  document.querySelectorAll("#privateUserList [data-private-search]").forEach(el=>el.style.display=!q||el.dataset.privateSearch.includes(q)?"block":"none");
+}
+
 function adminLogCategory(action){
   const a=String(action||"").toUpperCase();
   if(a.includes("BAN"))return "ban";
