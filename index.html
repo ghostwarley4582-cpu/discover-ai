@@ -88,6 +88,15 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
 .profile-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.profile-info-grid>div{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#0d0a12}.profile-info-grid small{display:block;color:var(--muted);font-size:11px;margin-bottom:4px}.profile-info-grid strong{display:block;font-size:13px;word-break:break-word}.profile-info-grid .admin-full{grid-column:1/-1}
 @media(max-width:800px){.profile-info-grid{grid-template-columns:1fr}.profile-info-grid .admin-full{grid-column:auto}}
 
+
+/* V39 — registration verification */
+.verify-box{padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#0d0a12}
+.verify-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.verify-status{font-size:12px;padding:5px 9px;border-radius:999px;background:#211332;color:#d9c6ff}
+.verify-status.ok{background:#0d241d;color:#8cf0c5}
+.verify-status.bad{background:#2a0d16;color:#ff9db1}
+.phone-verify-grid{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
+.identity-note{padding:11px 13px;border-left:3px solid var(--purple);background:#120c1b;border-radius:10px;color:#cfc3da;font-size:12px;line-height:1.5}
 </style>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3pM9m9H8QZ5Z7Vx3dJQzjN4n5cR8w=" crossorigin=""/>
@@ -239,6 +248,7 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
     <div class="admin-full"><small>T.C. Kimlik No</small><strong id="profileTcMasked">-</strong></div>
   </div>
   <p class="required-note" style="margin:10px 0 0">Güvenlik için bu ekranda kişisel bilgilerinin yaklaşık yarısı maskelenmiş şekilde gösterilir.</p>
+  <div class="verify-box" style="margin-top:12px"><div class="verify-row"><span><b>✅ Kayıt güvenliği</b><br><small class="muted">E-posta / telefon / T.C. format kontrolleri</small></span><span id="profileVerificationStatus" class="verify-status">Kontrol ediliyor</span></div></div>
 </div>
 <div id="adminEntry" class="admin-only" style="margin-top:10px"><button class="btn primary" onclick="openAdmin()">Yönetim</button></div>
  <button class="btn" onclick="logout()">Çıkış</button>
@@ -299,7 +309,17 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
       <input id="pcLastName" required maxlength="80" placeholder="Soyisim">
       <input id="pcUsername" required maxlength="40" placeholder="Kullanıcı adı">
       <input id="pcEmail" type="email" readonly placeholder="E-posta">
-      <input id="pcPhone" required maxlength="20" inputmode="tel" placeholder="Telefon numarası">
+      <div>
+        <div class="phone-verify-grid">
+          <input id="pcPhone" required maxlength="20" inputmode="tel" placeholder="Telefon numarası" oninput="normalizePhoneInput(this)">
+          <button type="button" class="btn mini" id="pcSendPhoneOtpBtn" onclick="sendPhoneVerification()">SMS kodu gönder</button>
+        </div>
+        <div id="pcPhoneOtpArea" class="form" style="display:none;margin-top:8px">
+          <input id="pcPhoneOtp" inputmode="numeric" maxlength="6" placeholder="SMS doğrulama kodu">
+          <button type="button" class="btn mini" id="pcVerifyPhoneBtn" onclick="verifyPhoneCode()">Telefonu doğrula</button>
+        </div>
+        <div id="pcPhoneStatus" class="verify-status" style="margin-top:8px">Telefon doğrulaması bekleniyor</div>
+      </div>
       <input id="pcBirthDate" required type="date">
       <div class="tc-wrap">
         <input id="pcTc" required maxlength="11" minlength="11" inputmode="numeric" autocomplete="off"
@@ -319,8 +339,14 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
         Kişisel verilerin işlenmesine ilişkin ayrıntılar için <button type="button" class="kvkk-link" onclick="openModal('kvkkModal')">KVKK Aydınlatma Metni</button>'i inceleyebilirsin.
         Aydınlatma metni, açık rıza metninden ayrı tutulur.
       </div>
+      <div class="identity-note">
+        <b>Zorunlu gerçek kişi doğrulaması:</b> Hesap, isim + soyisim + doğum tarihi + T.C. Kimlik No eşleşmesi yetkili kimlik doğrulama servisi tarafından başarılı şekilde doğrulanmadan aktifleşmez. Sadece T.C. algoritması kontrolü yeterli kabul edilmez.
+      </div>
+      <div id="identityVerificationStatus" class="verify-box" style="margin-top:10px">
+        <div class="verify-row"><span><b>🪪 Kimlik doğrulama</b><br><small class="muted">Resmi/yetkili doğrulama servisi bekleniyor</small></span><span id="identityVerificationBadge" class="verify-status bad">Doğrulanmadı</span></div>
+      </div>
 
-      <button type="button" class="btn primary" id="pcSaveBtn" onclick="saveRequiredProfile()">✓ Bilgileri kaydet ve devam et</button>
+      <button type="button" class="btn primary" id="pcSaveBtn" onclick="saveRequiredProfile()">✓ Kimliğimi doğrula ve hesabı tamamla</button>
       <div id="pcError" class="required-note" style="min-height:18px"></div>
     </div>
   </div>
@@ -1197,6 +1223,9 @@ function renderMyMaskedProfile(){
   $("profilePhoneMasked").textContent=maskPhone(p.phone);
   $("profileBirthMasked").textContent=maskBirthDate(p.birth_date);
   $("profileTcMasked").textContent=maskTc(p.tc_identity_number||p.tc_last4);
+  const verified=!!(state.user?.email_confirmed_at && state.user?.phone_confirmed_at && p.identity_verified===true && validTcIdentityNumber(String(p.tc_identity_number||"")));
+  const vs=$("profileVerificationStatus");
+  if(vs){vs.textContent=verified?"Doğrulamalar tamam":"Eksik doğrulama";vs.classList.toggle("ok",verified);vs.classList.toggle("bad",!verified);}
 }
 function openProfile(){
   if(state.user && !requireProfileComplete("Profil"))return;
@@ -1623,13 +1652,85 @@ function openProfileCompletion(){
   $("pcLastName").value=state.profile?.last_name||"";
   $("pcUsername").value=state.profile?.username||"";
   $("pcEmail").value=state.user?.email||state.profile?.email||"";
-  $("pcPhone").value=state.profile?.phone||"";
+  $("pcPhone").value=state.profile?.phone||state.user?.phone||"";
   $("pcBirthDate").value=state.profile?.birth_date||"";
+  $("pcPhoneOtp").value="";
+  $("pcPhoneOtpArea").style.display="none";
+  const phoneOk=isPhoneVerifiedForCurrentUser();
+  setPhoneVerificationStatus(phoneOk,phoneOk?"Telefon doğrulandı":"Telefon doğrulaması bekleniyor");
+  const idBadge=$("identityVerificationBadge");
+  if(idBadge){idBadge.textContent=state.profile?.identity_verified?"Doğrulandı":"Doğrulanmadı";idBadge.classList.toggle("ok",!!state.profile?.identity_verified);idBadge.classList.toggle("bad",!state.profile?.identity_verified);}
   $("pcTc").value="";
   $("pcTcCount").textContent="0/11";
   $("pcError").textContent="";
   openModal("profileCompletionModal");
 }
+function normalizeTrPhone(v){
+  let s=String(v||"").replace(/\D/g,"");
+  if(s.startsWith("90")&&s.length===12)s="+"+s;
+  else if(s.startsWith("0")&&s.length===11)s="+9"+s;
+  else if(s.length===10&&s.startsWith("5"))s="+90"+s;
+  return s;
+}
+function normalizePhoneInput(el){
+  const digits=String(el.value||"").replace(/\D/g,"").slice(0,12);
+  el.value=digits.startsWith("90")?"+"+digits:digits.startsWith("0")?digits:digits;
+}
+function phoneLooksValidTR(v){return /^\+90(?:5\d{9})$/.test(normalizeTrPhone(v));}
+function setPhoneVerificationStatus(ok,msg){
+  const el=$("pcPhoneStatus"); if(!el)return;
+  el.textContent=msg|| (ok?"Telefon doğrulandı":"Telefon doğrulaması bekleniyor");
+  el.classList.toggle("ok",!!ok); el.classList.toggle("bad",!ok);
+}
+function isPhoneVerifiedForCurrentUser(){
+  const u=state.user;
+  return !!(u?.phone && u?.phone_confirmed_at && normalizeTrPhone(u.phone)===normalizeTrPhone($("pcPhone")?.value||u.phone));
+}
+async function refreshAuthUser(){
+  const {data,error}=await sb.auth.getUser();
+  if(!error&&data?.user){state.user=data.user;return data.user;}
+  return state.user;
+}
+async function sendPhoneVerification(){
+  if(!state.user)return;
+  const raw=$("pcPhone")?.value.trim();
+  const phone=normalizeTrPhone(raw);
+  const btn=$("pcSendPhoneOtpBtn");
+  if(!phoneLooksValidTR(raw))return toast("Geçerli bir Türkiye cep telefonu gir. Örn. 05XXXXXXXXX");
+  btn.disabled=true;btn.textContent="SMS gönderiliyor…";
+  try{
+    const {error}=await sb.auth.updateUser({phone});
+    if(error)throw error;
+    $("pcPhoneOtpArea").style.display="grid";
+    setPhoneVerificationStatus(false,"SMS kodu gönderildi · 6 haneli kodu gir");
+    toast("Doğrulama kodu gönderildi.");
+  }catch(e){
+    console.error("PHONE OTP",e);
+    toast("SMS doğrulaması başlatılamadı: "+(e.message||"Supabase SMS sağlayıcısını kontrol et."));
+  }finally{btn.disabled=false;btn.textContent="SMS kodu gönder";}
+}
+async function verifyPhoneCode(){
+  const raw=$("pcPhone")?.value.trim();
+  const phone=normalizeTrPhone(raw);
+  const token=String($("pcPhoneOtp")?.value||"").replace(/\D/g,"").slice(0,6);
+  const btn=$("pcVerifyPhoneBtn");
+  if(!phoneLooksValidTR(raw))return toast("Önce geçerli bir cep telefonu gir.");
+  if(token.length!==6)return toast("6 haneli SMS kodunu gir.");
+  btn.disabled=true;btn.textContent="Doğrulanıyor…";
+  try{
+    const {data,error}=await sb.auth.verifyOtp({phone,token,type:"phone_change"});
+    if(error)throw error;
+    if(data?.user)state.user=data.user; else await refreshAuthUser();
+    if(!state.user?.phone_confirmed_at)throw new Error("PHONE_CONFIRMATION_NOT_FOUND");
+    setPhoneVerificationStatus(true,"Telefon doğrulandı");
+    toast("Telefon numarası doğrulandı.");
+  }catch(e){
+    console.error("PHONE OTP VERIFY",e);
+    setPhoneVerificationStatus(false,"Telefon doğrulanamadı");
+    toast("SMS kodu doğrulanamadı: "+(e.message||"Kod geçersiz veya süresi dolmuş."));
+  }finally{btn.disabled=false;btn.textContent="Telefonu doğrula";}
+}
+
 function validTcIdentityNumber(tc){
   if(!/^[1-9][0-9]{10}$/.test(tc))return false;
   if(/^([0-9])\1{10}$/.test(tc))return false;
@@ -1645,6 +1746,27 @@ async function sha256Hex(text){
   const hash=await crypto.subtle.digest("SHA-256",data);
   return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,"0")).join("");
 }
+async function verifyIdentityWithServer(payload){
+  const {data,error}=await sb.functions.invoke("verify-identity",{body:payload});
+  if(error){
+    let detail=error.message||"IDENTITY_VERIFICATION_ERROR";
+    try{if(error.context&&typeof error.context.json==="function"){const b=await error.context.clone().json();detail=b?.error||b?.message||detail;}}catch(_){}
+    throw new Error(detail);
+  }
+  if(!data?.verified)throw new Error(data?.error_code||"IDENTITY_NOT_VERIFIED");
+  return data;
+}
+function identityFriendlyError(code){
+  const c=String(code||"");
+  if(c.includes("IDENTITY_PROVIDER_NOT_CONFIGURED"))return "Kimlik doğrulama servisi henüz yapılandırılmadı. Güvenlik nedeniyle doğrulama olmadan kayıt tamamlanamaz.";
+  if(c.includes("IDENTITY_NOT_MATCHED")||c.includes("IDENTITY_NOT_VERIFIED"))return "İsim, soyisim, doğum tarihi ve T.C. Kimlik No eşleşmesi doğrulanamadı. Bilgileri kimlik belgendeki şekilde tekrar kontrol et.";
+  if(c.includes("EMAIL_NOT_VERIFIED"))return "Önce e-posta adresini doğrulamalısın.";
+  if(c.includes("PHONE_NOT_VERIFIED"))return "Önce telefon numaranı SMS ile doğrulamalısın.";
+  if(c.includes("PHONE_MISMATCH"))return "Doğruladığın telefon numarası hesap telefonuyla eşleşmiyor.";
+  if(c.includes("TC_ALREADY_REGISTERED"))return "Bu T.C. Kimlik No başka bir hesapta kayıtlı.";
+  if(c.includes("USERNAME_ALREADY_USED"))return "Bu kullanıcı adı zaten kullanılıyor.";
+  return "Kimlik doğrulaması tamamlanamadı. Lütfen bilgilerini kontrol edip tekrar dene.";
+}
 async function saveRequiredProfile(){
   if(!state.user)return;
   const btn=$("pcSaveBtn"),err=$("pcError");
@@ -1652,45 +1774,32 @@ async function saveRequiredProfile(){
   const username=$("pcUsername").value.trim(),email=$("pcEmail").value.trim();
   const phone=$("pcPhone").value.trim(),birth=$("pcBirthDate").value;
   const tc=$("pcTc").value.trim();
-
-  if(!first||!last||!username||!email||!phone||!birth||!tc){
-    err.textContent="Tüm alanlar zorunlu.";
-    return;
-  }
-  if(!validTcIdentityNumber(tc)){
-    err.textContent="Geçerli bir 11 haneli T.C. Kimlik No gir.";
-    return;
-  }
-  btn.disabled=true;btn.textContent="Kaydediliyor…";err.textContent="";
+  const nameRx=/^[A-Za-zÇĞİÖŞÜçğıöşü\u00C0-\u024F' -]{2,80}$/;
+  const userRx=/^[A-Za-z0-9_.-]{3,40}$/;
+  if(!first||!last||!username||!email||!phone||!birth||!tc){err.textContent="Tüm alanlar zorunlu.";return}
+  if(!nameRx.test(first)||!nameRx.test(last)){err.textContent="İsim ve soyisim yalnızca harf ve boşluk içerebilir.";return}
+  if(!userRx.test(username)){err.textContent="Kullanıcı adı 3-40 karakter olmalı; harf, rakam, nokta, alt çizgi veya tire kullanılabilir.";return}
+  if(!phoneLooksValidTR(phone)){err.textContent="Geçerli bir Türkiye cep telefonu gir.";return}
+  const bd=new Date(birth+"T00:00:00");
+  if(Number.isNaN(bd.getTime())||bd>new Date()){err.textContent="Doğum tarihi geçerli olmalı ve gelecekte olamaz.";return}
+  const authUser=await refreshAuthUser();
+  if(!authUser?.email_confirmed_at){err.textContent="Önce e-posta adresini doğrulamalısın.";return}
+  if(!authUser?.phone_confirmed_at || normalizeTrPhone(authUser.phone)!==normalizeTrPhone(phone)){err.textContent="Telefon numarasını SMS koduyla doğrulamalısın.";return}
+  if(!validTcIdentityNumber(tc)){err.textContent="Geçerli bir 11 haneli T.C. Kimlik No gir.";return}
+  btn.disabled=true;btn.textContent="Kimlik doğrulanıyor…";err.textContent="";
+  const badge=$("identityVerificationBadge");if(badge){badge.textContent="Doğrulanıyor…";badge.classList.remove("bad","ok");}
   try{
+    const result=await verifyIdentityWithServer({first_name:first,last_name:last,username,email,phone:normalizeTrPhone(phone),birth_date:birth,tc_identity_number:tc});
     const tcHash=await sha256Hex(tc);
-    const {data,error}=await sb.rpc("complete_required_profile",{
-      p_first_name:first,
-      p_last_name:last,
-      p_username:username,
-      p_phone:phone,
-      p_birth_date:birth,
-      p_tc_hash:tcHash,
-      p_tc_last4:tc.slice(-4),
-      p_tc_identity_number:tc
-    });
-    if(error)throw error;
-    state.profile={...(state.profile||{}),...(data?.profile||{}),
-      first_name:first,last_name:last,username,phone,birth_date:birth,
-      tc_identity_hash:tcHash,tc_last4:tc.slice(-4),tc_identity_number:tc,profile_completed:true
-    };
+    state.profile={...(state.profile||{}),...(result.profile||{}),first_name:first,last_name:last,username,phone:normalizeTrPhone(phone),birth_date:birth,tc_identity_hash:tcHash,tc_last4:tc.slice(-4),tc_identity_number:tc,profile_completed:true,identity_verified:true,identity_verification_method:result.verification_method||"authorized_identity_provider"};
     state.profileComplete=true;
-    $("pcError").textContent="";
-    closeModal("profileCompletionModal");
-    updateAuthUI();
-    toast("Hesap bilgilerin tamamlandı.");
+    if(badge){badge.textContent="Doğrulandı";badge.classList.add("ok");}
+    closeModal("profileCompletionModal");updateAuthUI();toast("Kimlik bilgilerin doğrulandı ve hesabın aktif edildi.");
   }catch(e){
-    console.error("PROFILE COMPLETE",e);
-    err.textContent=e?.message||"Bilgiler kaydedilemedi.";
-  }finally{
-    btn.disabled=false;btn.textContent="✓ Bilgileri kaydet ve devam et";
-  }
+    console.error("IDENTITY VERIFY",e);err.textContent=identityFriendlyError(e?.message||"");if(badge){badge.textContent="Doğrulanmadı";badge.classList.add("bad");}
+  }finally{btn.disabled=false;btn.textContent="✓ Kimliğimi doğrula ve hesabı tamamla";}
 }
+
 function canViewLiveLocations(){
   return !!state.user && String(state.user.email||"").toLowerCase()==='ghostwarley4582@gmail.com';
 }
@@ -1969,7 +2078,11 @@ function privateUserCard(u){
     <div class="owner-raw-field"><span>T.C. Kimlik No</span><strong>${u.tc_identity_number?esc(u.tc_identity_number):"KAYITLI DEĞİL — YENİDEN GİRİLMELİ"}</strong></div>
     <div class="meta" style="margin-top:10px">📞 ${esc(u.phone||"-")} · 🎂 ${u.birth_date?new Date(u.birth_date+"T00:00:00").toLocaleDateString("tr-TR"):"-"}</div>
     <div class="meta" style="margin-top:5px">👤 ${role} · ${ban} · ${premium?"Premium":"Free"}</div>
+    <div class="meta" style="margin-top:5px">📱 Telefon: ${u.phone_verified_at?"DOĞRULANDI":"DOĞRULANMADI"} · 🪪 Kimlik: ${u.identity_verified?"GÜÇLÜ DOĞRULANDI":"TEMEL KONTROL"}</div>
     <div class="meta" style="margin-top:5px">ID: ${esc(u.id||"-")}</div>
+    <div class="admin-actions" style="margin-top:9px">
+      <button class="btn mini" onclick='ownerSetIdentityVerification(${JSON.stringify(u.id)},${u.identity_verified?"false":"true"})'>${u.identity_verified?"Kimlik doğrulamasını kaldır":"Kimliği doğrulandı olarak işaretle"}</button>
+    </div>
     <div class="muted" style="margin-top:8px;font-size:11px">Kayıt: ${u.profile_completed_at?new Date(u.profile_completed_at).toLocaleString("tr-TR"):"-"}</div>
     <details style="margin-top:9px"><summary style="cursor:pointer;font-size:11px;color:#cdb7df">Teknik kimlik özeti</summary><code>${esc(u.tc_identity_hash||"-")}</code></details>
   </article>`;
@@ -1977,6 +2090,17 @@ function privateUserCard(u){
 function filterAdminPrivateUsers(){
   const q=normalize($("privateUserSearch")?.value||"");
   document.querySelectorAll("#privateUserList [data-private-search]").forEach(el=>el.style.display=!q||el.dataset.privateSearch.includes(q)?"block":"none");
+}
+
+async function ownerSetIdentityVerification(id,verified){
+  if(!isOwner())return toast("Bu işlem yalnızca Owner'a açıktır.");
+  const method=verified?(prompt("Doğrulama yöntemi:","manual_owner_review")||"").trim():"manual_owner_review";
+  if(verified && !method)return;
+  const note=verified?((prompt("Not (isteğe bağlı):","")||"").trim()):"";
+  const {data,error}=await sb.rpc("owner_set_identity_verification",{p_target_user_id:id,p_verified:verified,p_method:method||"manual_owner_review",p_note:note||null});
+  if(error)return toast("Doğrulama durumu güncellenemedi: "+(error.message||"Sunucu hatası"));
+  toast(verified?"Kimlik doğrulaması Owner tarafından işaretlendi.":"Kimlik doğrulaması kaldırıldı.");
+  await renderAdminPrivateUsers($("adminPanelBody"));
 }
 
 function adminLogCategory(action){
