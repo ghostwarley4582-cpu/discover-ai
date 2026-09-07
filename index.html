@@ -29,11 +29,11 @@ section{padding:45px 0}.section-head{display:flex;justify-content:space-between;
 .empty{grid-column:1/-1;padding:28px;border:1px dashed #4a355c;border-radius:20px;text-align:center;background:#0d0913}.loading{opacity:.7}
 .feature-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.glass{background:#100c17;border:1px solid var(--line);border-radius:18px;padding:18px}.levels{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.level{background:#100c17;border:1px solid var(--line);border-radius:16px;padding:13px;text-align:center}.level.active{border-color:#8b5cf6;box-shadow:0 0 25px rgba(139,92,246,.15)}.reward{color:#d2b5ff;font-size:12px;margin-top:6px}
 .premium{position:relative;overflow:hidden;background:linear-gradient(135deg,#1b102d,#0e0815);border:1px solid #5a3b79;border-radius:28px;padding:30px}.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}.plan{background:#0b0810;border:1px solid var(--line);border-radius:18px;padding:20px}.plan h3{font-size:27px;margin:8px 0 14px}
-.admin{display:grid;grid-template-columns:1fr 1fr;gap:14px}.alert{border-left:3px solid var(--danger);background:#190b12;padding:15px;border-radius:12px}
+.admin{display:grid;grid-template-columns:1fr 1fr;gap:14px}.alert{border-left:3px solid var(--danger);background:#190b12;padding:15px;border-radius:12px}.admin-only{display:none}.admin-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:15px 0}.stat{background:#0b0810;border:1px solid var(--line);border-radius:15px;padding:14px}.stat b{display:block;font-size:24px;margin-top:4px}.admin-list{display:grid;gap:9px;margin-top:12px}.admin-item{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px;border:1px solid var(--line);background:#0b0810;border-radius:14px}.admin-item small{color:var(--muted);display:block;margin-top:3px}.admin-actions{display:flex;gap:7px;flex-wrap:wrap}.admin-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}.admin-tab.active{border-color:#9d62ff;background:#211332}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(10px);display:none;place-items:center;z-index:50;padding:18px}.modal.open{display:grid}.modalbox{width:min(560px,100%);background:#100b18;border:1px solid #543572;border-radius:25px;padding:25px;max-height:90vh;overflow:auto}.close{float:right;background:none;border:0;color:#aaa;font-size:25px}.form{display:grid;gap:10px}.form input,.form textarea{width:100%;background:#09070d;color:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}.toast{position:fixed;right:18px;bottom:18px;max-width:min(92vw,520px);background:#17101f;border:1px solid #49325f;border-radius:15px;padding:14px 17px;display:none;z-index:70}
 .route-item{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.route-total{display:flex;justify-content:space-between;margin-top:12px;font-size:18px}
 footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-size:13px}
-@media(max-width:800px){.navlinks .desktop{display:none}.hero{padding-top:45px}h1{letter-spacing:-2px}.controls,.grid,.plans,.admin{grid-template-columns:1fr}.feature-grid{grid-template-columns:1fr 1fr}.levels{grid-template-columns:repeat(2,1fr)}.prompt{flex-direction:column}.prompt .btn{width:100%}.section-head{align-items:start;flex-direction:column}}
+@media(max-width:800px){.navlinks .desktop{display:none}.hero{padding-top:45px}h1{letter-spacing:-2px}.controls,.grid,.plans,.admin{grid-template-columns:1fr}.feature-grid{grid-template-columns:1fr 1fr}.levels{grid-template-columns:repeat(2,1fr)}.prompt{flex-direction:column}.prompt .btn{width:100%}.section-head{align-items:start;flex-direction:column}.admin-stats{grid-template-columns:1fr 1fr}.admin-item{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
 <body>
@@ -72,7 +72,6 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 <div class="control"><label>ZAMAN</label><strong id="timeText">4 saat</strong><input id="time" class="range" type="range" min="1" max="12" value="4"></div>
 <div class="control"><label>MOD</label><strong id="modeText">Kişisel</strong><div class="chips" style="margin:0"><button class="chip mini" onclick="setMode('Kişisel')">Kişisel</button><button class="chip mini" onclick="setMode('Çift')">Çift</button><button class="chip mini" onclick="setMode('Arkadaş')">Arkadaş</button></div></div>
 </div>
-<div class="control" style="margin-top:12px"><label>ŞEHİR</label><input id="city" value="İstanbul" placeholder="İstanbul" style="width:100%;background:#09070d;color:#fff;border:1px solid var(--line);border-radius:14px;padding:13px;outline:none"></div>
 </div>
 </section>
 
@@ -125,16 +124,9 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 </div>
 </section>
 
-<section id="admin" class="wrap">
-<div class="section-head"><div><div class="eyebrow">COMMAND CENTER</div><h2>Yönetim ve güvenlik</h2><p class="muted">Gerçek admin işlemleri yalnızca yetkili hesaplarda backend/RLS ile yapılmalıdır.</p></div><button class="btn" onclick="openAdmin()">Yönetim</button></div>
-<div class="admin">
-<div class="glass"><b>📊 Sistem</b><p class="muted">Kullanıcılar · Aktiviteler · Premium · XP</p></div>
-<div class="alert"><b>🚨 Moderasyon kuyruğu</b><p class="muted">Şikayetler, hakaret/profanity ve işletme sorunları admin incelemesine düşer.</p></div>
-</div>
-</section>
 </main>
 
-<footer><div class="wrap">DISCOVER AI · Canlı mekan verileri güvenli Supabase Edge Function üzerinden alınır; secret/service_role anahtarları frontend'e konmaz.</div></footer>
+<footer><div class="wrap">DISCOVER AI · Kişisel deneyimleri daha akıllı keşfet.</div></footer>
 
 <div id="authModal" class="modal"><div class="modalbox">
 <button class="close" onclick="closeModal('authModal')">×</button><div class="eyebrow">ACCOUNT</div>
@@ -153,7 +145,8 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 <button class="close" onclick="closeModal('profileModal')">×</button><div class="eyebrow">PROFILE</div>
 <h2 id="profileName">Kaşif</h2><p id="profileEmail" class="muted"></p>
 <div class="glass"><b id="profileLevel">Seviye 1</b><p>XP: <span id="profileXP">0</span></p><p>Favoriler: <span id="profileFav">0</span></p><p>Rotalar: <span id="profileRoutes">0</span></p></div>
-<button class="btn" onclick="logout()">Çıkış</button>
+<div id="adminEntry" class="admin-only" style="margin-top:10px"><button class="btn primary" onclick="openAdmin()">Yönetim</button></div>
+ <button class="btn" onclick="logout()">Çıkış</button>
 </div></div>
 
 <div id="routeModal" class="modal"><div class="modalbox">
@@ -161,12 +154,29 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 <div id="routeModalBody"></div>
 </div></div>
 
+<div id="reportModal" class="modal"><div class="modalbox">
+ <button class="close" onclick="closeModal('reportModal')">×</button><div class="eyebrow">GÜVENLİK</div><h2>Deneyimi bildir</h2>
+ <p class="muted">Sorunu bize bildir. Ekibimiz inceleyecektir.</p>
+ <textarea id="reportText" rows="5" placeholder="Sorunu kısaca anlat..."></textarea>
+ <button class="btn primary" style="margin-top:10px" onclick="submitReport()">Bildirimi gönder</button>
+ </div></div>
+
 <div id="adminModal" class="modal"><div class="modalbox">
-<button class="close" onclick="closeModal('adminModal')">×</button><div class="eyebrow">COMMAND CENTER</div><h2>Yönetim merkezi</h2>
-<p class="muted">Bu arayüz demo görünümüdür. Gerçek admin yetkilendirmesi backend/RLS ile doğrulanmalıdır.</p>
-<textarea id="reportText" rows="5" placeholder="Örnek şikayet: işletmede sorun yaşandı..."></textarea>
-<button class="btn primary" style="margin-top:10px" onclick="submitReport()">Şikayeti kaydet</button>
-</div></div>
+ <button class="close" onclick="closeModal('adminModal')">×</button><div class="eyebrow">PRIVATE CONTROL</div><h2>DISCOVER AI Yönetim</h2>
+ <p class="muted">Bu alan yalnızca yetkili yönetici hesabına açılır.</p>
+ <div class="admin-stats">
+   <div class="stat"><span class="muted">Kullanıcı</span><b id="adminUserCount">—</b></div>
+   <div class="stat"><span class="muted">Aktif deneyim</span><b id="adminActivityCount">—</b></div>
+   <div class="stat"><span class="muted">Şikayet</span><b id="adminReportCount">—</b></div>
+   <div class="stat"><span class="muted">Admin</span><b id="adminAdminCount">—</b></div>
+ </div>
+ <div class="admin-tabs">
+   <button class="btn admin-tab active" id="adminTabActivities" onclick="loadAdminTab('activities')">Deneyimler</button>
+   <button class="btn admin-tab" id="adminTabUsers" onclick="loadAdminTab('users')">Kullanıcılar</button>
+   <button class="btn admin-tab" id="adminTabReports" onclick="loadAdminTab('reports')">Şikayetler</button>
+ </div>
+ <div id="adminPanelBody"><div class="empty loading">Yönetim verileri yükleniyor...</div></div>
+ </div></div>
 
 <div id="toast" class="toast"></div>
 
@@ -177,12 +187,9 @@ const SUPABASE_PUBLISHABLE_KEY="sb_publishable_b_srPWflLRrFV4ayykMa-g_mFb3Z8rz";
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 
 let activities=[];
-let livePlaces=[];
 let state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel"};
 let lastResults=[];
 let betterOffset=0;
-let liveRequestSeq=0;
-let liveTimer=null;
 
 const $=id=>document.getElementById(id);
 function toast(t){const x=$("toast");x.textContent=t;x.style.display="block";clearTimeout(window.__toast);window.__toast=setTimeout(()=>x.style.display="none",3000)}
@@ -193,69 +200,24 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&l
 function normalize(s){return String(s||"").toLocaleLowerCase("tr-TR").replace(/ı/g,"i").replace(/ş/g,"s").replace(/ğ/g,"g").replace(/ü/g,"u").replace(/ö/g,"o").replace(/ç/g,"c")}
 function currentBudget(){return Number($("budget").value)}
 function currentTime(){return Number($("time").value)*60}
-function currentCity(){return ($("city")?.value||"İstanbul").trim()||"İstanbul"}
 function queryText(){return normalize($("mood").value)}
 function priceText(p){return Number(p||0)===0?"Ücretsiz":"₺"+Number(p).toLocaleString("tr-TR")}
-function priceLevelText(p){const n=Number(p||0);return n>0?"₺".repeat(Math.min(4,n)):"Fiyat bilgisi yok"}
-function emojiFor(a){const t=normalize(a.title+" "+a.tag+" "+(a.categories||[]).join(" "));if(t.includes("sanat"))return"🎨";if(t.includes("yuruyus")||t.includes("park"))return"🌅";if(t.includes("kahve")||t.includes("cafe"))return"☕";if(t.includes("lezzet")||t.includes("restaurant")||t.includes("lokanta"))return"🍽️";if(t.includes("oyun")||t.includes("eglence")||t.includes("bar"))return"🎉";if(t.includes("muz")||t.includes("kultur"))return"🏛️";if(t.includes("foto"))return"📸";if(t.includes("manzara")||t.includes("rooftop"))return"🌃";return a.emoji||"✨"}
+function emojiFor(a){const t=normalize(a.title+" "+a.tag);if(t.includes("sanat"))return"🎨";if(t.includes("yuruyus"))return"🌅";if(t.includes("kahve"))return"☕";if(t.includes("lezzet"))return"🍽️";if(t.includes("oyun")||t.includes("eglence"))return"🎉";if(t.includes("muz")||t.includes("kultur"))return"🏛️";if(t.includes("foto"))return"📸";if(t.includes("manzara"))return"🌃";return a.emoji||"✨"}
 
 function normalizeActivity(a){
   return {
     id:a.id,title:a.title||"Deneyim",price:Number(a.price||0),rating:Number(a.rating||0),
     tag:a.tag||"KEŞİF",description:a.description||"",why:a.why||a.description||"Bütçene ve zamanına göre değerlendirildi.",
     time:Number(a.duration_min||a.time||60),dist:Number(a.distance_km||a.dist_km||0),
-    moods:Array.isArray(a.moods)?a.moods:[],city:a.city||"İstanbul",emoji:a.emoji||"✨",
-    is_active:a.is_active!==false,isLive:false,categories:[]
+    moods:Array.isArray(a.moods)?a.moods:[],city:a.city||"İstanbul",emoji:a.emoji||"✨",is_active:a.is_active!==false
   };
-}
-
-function normalizeLivePlace(p){
-  const loc=p.location||{};
-  const cats=Array.isArray(p.categories)?p.categories.map(c=>c.name).filter(Boolean):[];
-  const title=p.name||"Mekan";
-  const rating=Number(p.rating||0);
-  const distanceKm=Number(p.distance||0)/1000;
-  return {
-    id:"live:"+String(p.place_id||title),
-    place_id:p.place_id||null,
-    title,
-    price:0,
-    priceLevel:Number(p.price||0),
-    rating,
-    tag:"CANLI MEKAN",
-    description:p.description||cats.slice(0,3).join(" · "),
-    why:"Foursquare canlı mekan verisi; konum, puan ve fiyat seviyesi birlikte değerlendirildi.",
-    time:60,
-    dist:distanceKm,
-    moods:cats,
-    city:loc.locality||currentCity(),
-    emoji:"📍",
-    is_active:true,
-    isLive:true,
-    categories:cats,
-    address:loc.formatted_address||[loc.address,loc.locality].filter(Boolean).join(", "),
-    website:p.website||"",
-    tel:p.tel||"",
-    fsq_url:p.fsq_url||"",
-    hours:p.hours||null
-  };
-}
-
-function budgetToPriceLevel(budget){
-  if(budget<=300)return 1;
-  if(budget<=700)return 2;
-  if(budget<=1500)return 3;
-  return 4;
 }
 
 async function loadActivities(){
   $("results").innerHTML='<div class="empty loading">Aktiviteler Supabase üzerinden yükleniyor...</div>';
   const {data,error}=await sb.from("activities").select("id,title,price,rating,tag,description,why,duration_min,distance_km,moods,city,emoji,is_active").eq("is_active",true);
   if(error){
-    console.error(error);
-    activities=[];
-    await recommend(true);
-    return;
+    console.error(error);activities=[];$("results").innerHTML='<div class="empty">Aktiviteler yüklenemedi. Supabase activities tablosu/RLS ayarını kontrol et.</div>';return;
   }
   const map=new Map();
   (data||[]).map(normalizeActivity).forEach(a=>{if(!map.has(normalize(a.title)))map.set(normalize(a.title),a)});
@@ -264,7 +226,7 @@ async function loadActivities(){
 }
 
 function moodMatch(a,q){
-  const hay=normalize([a.title,a.tag,a.description,a.why,...a.moods,...(a.categories||[])].join(" "));
+  const hay=normalize([a.title,a.tag,a.description,a.why,...a.moods].join(" "));
   const words=q.split(/\s+/).filter(w=>w.length>2);
   const matched=words.filter(w=>hay.includes(w));
   return Math.min(1,matched.length/Math.max(1,Math.min(3,words.length)));
@@ -272,24 +234,8 @@ function moodMatch(a,q){
 
 function scoreActivity(a){
   const budget=currentBudget(), time=currentTime(), q=queryText(), mode=normalize(state.mode);
-  if(!a.isLive && (a.price>budget || a.time>time))return -1;
-
+  if(a.price>budget || a.time>time)return -1;
   let score=0;
-
-  if(a.isLive){
-    const level=Number(a.priceLevel||0);
-    const target=budgetToPriceLevel(budget);
-    const priceFit=level?Math.max(0,1-Math.abs(target-level)/4):.5;
-    const moodFit=q?moodMatch(a,q):0;
-    const modeFit=(mode==="cift"&&normalize(a.moods.join(" ")).match(/romantik|cafe|restaurant|bar/))?1:
-                  (mode==="arkadas"&&normalize(a.moods.join(" ")).match(/eglence|oyun|bar/))?1:
-                  (mode==="kisisel"&&normalize(a.moods.join(" ")).match(/kultur|muz|park|sanat|kesif/))?.8:0;
-    const ratingFit=Math.max(0,Math.min(1,a.rating/10));
-    const distanceFit=a.dist>0?Math.max(0,1-a.dist/15):.65;
-    score=priceFit*25+moodFit*30+modeFit*12+ratingFit*28+distanceFit*5;
-    return Math.round(Math.min(100,score));
-  }
-
   const budgetFit=budget===0?(a.price===0?1:0):Math.max(0,1-Math.abs(budget-a.price)/Math.max(budget,1));
   const timeFit=Math.max(0,1-Math.max(0,a.time-time)/Math.max(time,1));
   const moodFit=q?moodMatch(a,q):0;
@@ -303,133 +249,36 @@ function scoreActivity(a){
   return Math.round(Math.min(100,score));
 }
 
-async function fetchLivePlaces(){
-  const seq=++liveRequestSeq;
-  const q=$("mood").value.trim()||(
-    state.mode==="Çift"?"romantik mekanlar":
-    state.mode==="Arkadaş"?"eğlenceli mekanlar":
-    "keşif mekanları"
-  );
-
-  const {data,error}=await sb.functions.invoke("discover-live",{
-    body:{
-      query_text:q,
-      city:currentCity(),
-      budget:currentBudget(),
-      max_results:10,
-      max_price:budgetToPriceLevel(currentBudget()),
-      sort:"RELEVANCE"
-    }
-  });
-
-  if(seq!==liveRequestSeq)return [];
-
-  if(error){
-    console.warn("discover-live:",error);
-    return [];
-  }
-
-  if(!data?.ok || !Array.isArray(data.places)){
-    console.warn("discover-live response:",data);
-    return [];
-  }
-
-  return data.places.map(normalizeLivePlace);
-}
-
-function mergeResults(live,local){
-  const seen=new Set();
-  const all=[];
-  [...live,...local].forEach(a=>{
-    const key=normalize(a.title);
-    if(!seen.has(key)){seen.add(key);all.push(a)}
-  });
-  return all;
-}
-
-async function recommend(silent=false){
-  $("results").innerHTML='<div class="empty loading">✦ Canlı mekanlar aranıyor...</div>';
-  const local=activities.map(a=>({...a,score:scoreActivity(a)})).filter(a=>a.score>=0);
-  const live=await fetchLivePlaces();
-  const liveScored=live.map(a=>({...a,score:scoreActivity(a)})).filter(a=>a.score>=0);
-  const localScored=local;
-  const list=mergeResults(liveScored,localScored).sort((a,b)=>b.score-a.score || b.rating-a.rating);
-
-  lastResults=list;
-  livePlaces=liveScored;
+function recommend(silent=false){
+  if(!activities.length){$("results").innerHTML='<div class="empty">Şu anda gösterilecek aktif deneyim bulunamadı.</div>';return}
   betterOffset=0;
-
-  render(list.slice(0,8));
-
-  const liveText=liveScored.length?`${liveScored.length} canlı mekan`:"canlı mekan bulunamadı";
-  $("resultSummary").textContent=`${list.length} uygun sonuç · ${liveText} · ${currentCity()} · Bütçe ${priceText(currentBudget())} · ${currentTime()/60} saat · ${state.mode}`;
-
-  if(!silent)toast(liveScored.length?"Canlı Foursquare sonuçları güncellendi.":"Canlı sonuç bulunamadı; kayıtlı deneyimler gösteriliyor.");
-}
-
-function scheduleRecommend(silent=true){
-  clearTimeout(liveTimer);
-  liveTimer=setTimeout(()=>recommend(silent),650);
+  let list=activities.map(a=>({...a,score:scoreActivity(a)})).filter(a=>a.score>=0);
+  list.sort((a,b)=>b.score-a.score || b.rating-a.rating);
+  lastResults=list;
+  render(list.slice(0,6));
+  $("resultSummary").textContent=`${list.length} uygun deneyim bulundu · Bütçe ${priceText(currentBudget())} · ${currentTime()/60} saat · ${state.mode}`;
+  if(!silent)toast("DISCOVER Score güncellendi.");
 }
 
 function render(list){
-  if(!list.length){
-    $("results").innerHTML='<div class="empty"><b>Bu kombinasyona uygun deneyim bulamadım.</b><p class="muted">Bütçeyi, zamanı veya şehir bilgisini biraz değiştir.</p></div>';
-    return;
-  }
-
+  if(!list.length){$("results").innerHTML='<div class="empty"><b>Bu kombinasyona uygun deneyim bulamadım.</b><p class="muted">Bütçeyi veya zamanı biraz artırmayı deneyebilirsin.</p></div>';return}
   $("results").innerHTML=list.map(a=>{
-    const isLive=!!a.isLive;
-    const localFav=!isLive && state.favorites.includes(a.id);
+    const fav=state.favorites.includes(a.id);
     const moodNames=(a.moods||[]).slice(0,2).join(" · ");
-
-    const priceHtml=isLive
-      ? `<span class="price">${esc(priceLevelText(a.priceLevel))}</span><span class="muted" style="font-size:12px"> fiyat seviyesi</span>`
-      : `<span class="price">${priceText(a.price)}</span>`;
-
-    const websiteButton=isLive && a.website
-      ? `<button class="btn primary" onclick="openExternal(${JSON.stringify(a.website)})">Web sitesi</button>`
-      : isLive && a.fsq_url
-        ? `<button class="btn primary" onclick="openExternal(${JSON.stringify(a.fsq_url)})">Foursquare</button>`
-        : `<button class="btn primary" onclick="addRoute(${JSON.stringify(a.id)})">Rotama ekle</button>`;
-
-    const favoriteButton=isLive
-      ? `<button class="btn mini" onclick="toggleLiveFavorite(${JSON.stringify(a.id)})">${isLiveFavorite(a.id)?"♥":"♡"}</button>`
-      : `<button class="btn mini" onclick="toggleFavorite(${JSON.stringify(a.id)})">${localFav?"♥":"♡"}</button>`;
-
     return `<article class="card">
       <div class="cover">${emojiFor(a)}<span class="score">%${a.score} Uyum</span></div>
       <span class="tag">${esc(a.tag)}</span>
       <h3>${esc(a.title)}</h3>
-      <div class="meta">★ ${a.rating?Number(a.rating).toFixed(1):"—"} · ${a.dist?esc(a.dist.toFixed(1)+" km"):"Konum yok"} · ${esc(a.city)}</div>
-      ${a.address?`<div class="meta">📍 ${esc(a.address)}</div>`:""}
+      <div class="meta">★ ${a.rating.toFixed(1)} · ${a.dist?esc(a.dist+" km"):"Konum yok"} · ${a.time} dk · ${esc(a.city)}</div>
       <p class="why">${esc(a.why)}</p>
-      <div class="match">🧠 <b>Neden bu?</b> ${esc(moodNames?moodNames+" ile eşleşiyor. ":"")}Bütçe ve tercih sinyallerine göre puanlandı.${isLive?" Canlı Foursquare verisi kullanıldı.":""}</div>
-      <div class="row" style="margin-top:12px">${priceHtml}${favoriteButton}</div>
+      <div class="match">🧠 <b>Neden bu?</b> ${esc(moodNames?moodNames+" ile eşleşiyor. ":"")}Bütçene ve zamanına uyuyor.</div>
+      <div class="row" style="margin-top:12px"><span class="price">${priceText(a.price)}</span><button class="btn mini" onclick="toggleFavorite(${JSON.stringify(a.id)})">${fav?"♥":"♡"}</button></div>
       <div class="card-actions">
-        ${websiteButton}
+        <button class="btn primary" onclick="addRoute(${JSON.stringify(a.id)})">Rotama ekle</button>
         <button class="btn" onclick="reportActivity(${JSON.stringify(a.title)})">Bildir</button>
       </div>
     </article>`;
   }).join("");
-}
-
-function openExternal(url){
-  if(!url)return;
-  window.open(url,"_blank","noopener,noreferrer");
-}
-
-function liveFavoriteKey(){return "discover_ai_live_favorites_v1"}
-function getLiveFavorites(){
-  try{return JSON.parse(localStorage.getItem(liveFavoriteKey())||"[]")}catch{return[]}
-}
-function isLiveFavorite(id){return getLiveFavorites().includes(id)}
-function toggleLiveFavorite(id){
-  const arr=getLiveFavorites();
-  const next=arr.includes(id)?arr.filter(x=>x!==id):[...arr,id];
-  localStorage.setItem(liveFavoriteKey(),JSON.stringify(next));
-  render(lastResults.slice(0,8));
-  toast(arr.includes(id)?"Canlı favoriden çıkarıldı.":"Canlı favorilere eklendi.");
 }
 
 function setMood(v,el){
@@ -439,26 +288,25 @@ function setMood(v,el){
   recommend();
 }
 function setMode(v){state.mode=v;$("modeText").textContent=v;recommend()}
-$("budget").addEventListener("input",e=>{$("budgetText").textContent="₺"+Number(e.target.value).toLocaleString("tr-TR");scheduleRecommend(true)});
-$("time").addEventListener("input",e=>{$("timeText").textContent=e.target.value+" saat";scheduleRecommend(true)});
-$("city").addEventListener("change",()=>recommend());
+$("budget").addEventListener("input",e=>{$("budgetText").textContent="₺"+Number(e.target.value).toLocaleString("tr-TR");recommend(true)});
+$("time").addEventListener("input",e=>{$("timeText").textContent=e.target.value+" saat";recommend(true)});
 
-async function surprise(){
-  $("mood").value="Sürpriz";
-  await recommend(false);
-  if(!lastResults.length)return;
-  const pool=lastResults.slice(0,Math.min(8,lastResults.length));
+function surprise(){
+  if(!activities.length)return toast("Henüz aktivite yüklenmedi.");
+  const candidates=activities.map(a=>({...a,score:scoreActivity(a)})).filter(a=>a.score>=0);
+  if(!candidates.length)return toast("Mevcut bütçe ve zamanda sürpriz bulunamadı.");
+  const pool=candidates.slice().sort((a,b)=>b.score-a.score).slice(0,Math.min(6,candidates.length));
   const a=pool[Math.floor(Math.random()*pool.length)];
-  render([{...a,score:a.score}]);
-  $("resultSummary").textContent="🎲 Canlı veriler ve tercihlerin içinden sürpriz seçim.";
-  scrollToId("explore");
-  toast("Sürpriz deneyimin hazır.");
+  $("mood").value="Sürpriz";
+  render([{...a,score:scoreActivity(a)}]);
+  $("resultSummary").textContent="🎲 Bütçene ve zamanına uyan sürpriz deneyim.";
+  scrollToId("explore");toast("Sürpriz deneyimin hazır.");
 }
 
 function better(){
   if(!lastResults.length)return recommend();
   betterOffset=(betterOffset+3)%Math.max(1,lastResults.length);
-  const list=lastResults.slice(betterOffset).concat(lastResults.slice(0,betterOffset)).slice(0,8);
+  const list=lastResults.slice(betterOffset).concat(lastResults.slice(0,betterOffset)).slice(0,6);
   render(list);
   toast("Alternatif sonuçlar getirildi.");
 }
@@ -521,6 +369,7 @@ function openProfile(){
   $("profileName").textContent=state.profile?.username||"Kaşif";
   $("profileEmail").textContent=state.user.email||"";
   $("profileLevel").textContent="Seviye "+(state.profile?.level||1);
+  $("adminEntry").style.display=state.profile?.is_admin===true?"block":"none";
   $("profileXP").textContent=state.xp;$("profileFav").textContent=state.favorites.length;$("profileRoutes").textContent=state.routes.length;
   openModal("profileModal");
 }
@@ -578,15 +427,81 @@ function updateLevels(){
 }
 
 function subscribe(plan){if(!state.user){toast("Premium için önce hesap oluştur.");return openAuth("join")}toast(plan+" Premium seçildi. Gerçek ödeme bağlantısı sonraki aşamada kurulacak.")}
-function openAdmin(){if(!state.user)return openAuth("login");openModal("adminModal")}
-function reportActivity(title){if(!state.user)return openAuth("login");$("reportText").value="Aktivite bildirimi: "+title+"\\n";openModal("adminModal")}
+function isAdmin(){return !!state.user && state.profile?.is_admin===true}
+async function openAdmin(){
+  if(!state.user)return openAuth("login");
+  if(!isAdmin()){toast("Bu alana erişim yetkiniz yok.");return}
+  openModal("adminModal");
+  await refreshAdminStats();
+  await loadAdminTab("activities");
+}
+function reportActivity(title){
+  if(!state.user)return openAuth("login");
+  $("reportText").value="Aktivite bildirimi: "+title+"\n\n";
+  openModal("reportModal");
+}
 async function submitReport(){
-  const text=$("reportText").value.trim();if(!text)return toast("Şikayet metni gerekli.");
-  try{const {error}=await sb.from("reports").insert({user_id:state.user.id,type:"activity_report",description:text});if(error)throw error;$("reportText").value="";toast("Şikayet kaydedildi.");closeModal("adminModal")}
-  catch(e){toast("Rapor işlemi başarısız: "+e.message)}
+  const text=$("reportText").value.trim();
+  if(!text)return toast("Şikayet metni gerekli.");
+  try{
+    const {error}=await sb.from("reports").insert({user_id:state.user.id,type:"activity_report",description:text});
+    if(error)throw error;
+    $("reportText").value="";toast("Bildirimin alındı.");closeModal("reportModal");
+  }catch(e){toast("Bildirim gönderilemedi: "+(e.message||"Bilinmeyen hata"))}
+}
+async function refreshAdminStats(){
+  if(!isAdmin())return;
+  const [u,a,r,ad]=await Promise.all([
+    sb.from("profiles").select("id",{count:"exact",head:true}),
+    sb.from("activities").select("id",{count:"exact",head:true}).eq("is_active",true),
+    sb.from("reports").select("id",{count:"exact",head:true}),
+    sb.from("profiles").select("id",{count:"exact",head:true}).eq("is_admin",true)
+  ]);
+  $("adminUserCount").textContent=u.count??"—";
+  $("adminActivityCount").textContent=a.count??"—";
+  $("adminReportCount").textContent=r.count??"—";
+  $("adminAdminCount").textContent=ad.count??"—";
+}
+function setAdminTabActive(tab){
+  document.querySelectorAll(".admin-tab").forEach(x=>x.classList.remove("active"));
+  const el=$("adminTab"+(tab.charAt(0).toUpperCase()+tab.slice(1)));if(el)el.classList.add("active");
+}
+async function loadAdminTab(tab){
+  if(!isAdmin())return;
+  setAdminTabActive(tab);
+  const body=$("adminPanelBody");body.innerHTML='<div class="empty loading">Yükleniyor...</div>';
+  if(tab==="activities"){
+    const {data,error}=await sb.from("activities").select("id,title,price,city,is_active,rating").order("title");
+    if(error)return body.innerHTML='<div class="empty">Deneyimler yüklenemedi: '+esc(error.message)+'</div>';
+    body.innerHTML='<div class="admin-list">'+(data||[]).map(a=>`<div class="admin-item"><div><b>${esc(a.title)}</b><small>${esc(a.city||"Konum yok")} · ${priceText(a.price)} · ★ ${Number(a.rating||0).toFixed(1)}</small></div><div class="admin-actions"><button class="btn mini" onclick="toggleActivity(${JSON.stringify(a.id)},${a.is_active!==true})">${a.is_active?'Pasifleştir':'Yayınla'}</button></div></div>`).join('')+'</div>';
+    return;
+  }
+  if(tab==="users"){
+    const {data,error}=await sb.from("profiles").select("id,username,level,xp,is_admin").order("username").limit(100);
+    if(error)return body.innerHTML='<div class="empty">Kullanıcılar yüklenemedi: '+esc(error.message)+'</div>';
+    body.innerHTML='<div class="admin-list">'+(data||[]).map(u=>`<div class="admin-item"><div><b>${esc(u.username||"Kaşif")}</b><small>Seviye ${Number(u.level||1)} · ${Number(u.xp||0)} XP · ${u.is_admin?'Yönetici':'Kullanıcı'}</small></div><div class="admin-actions">${u.id===state.user.id?'<span class="muted">Sen</span>':`<button class="btn mini" onclick="toggleAdminRole(${JSON.stringify(u.id)},${u.is_admin!==true})">${u.is_admin?'Adminliği kaldır':'Admin yap'}</button>`}</div></div>`).join('')+'</div>';
+    return;
+  }
+  const {data,error}=await sb.from("reports").select("id,user_id,type,description,created_at").order("created_at",{ascending:false}).limit(100);
+  if(error)return body.innerHTML='<div class="empty">Şikayetler yüklenemedi: '+esc(error.message)+'</div>';
+  body.innerHTML='<div class="admin-list">'+(data||[]).map(r=>`<div class="admin-item"><div><b>${esc(r.type||"Bildirim")}</b><small>${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</small><div style="margin-top:7px">${esc(r.description||"")}</div></div></div>`).join('')+'</div>';
+}
+async function toggleActivity(id,active){
+  if(!isAdmin())return;
+  const {error}=await sb.from("activities").update({is_active:active}).eq("id",id);
+  if(error)return toast("İşlem başarısız: "+error.message);
+  toast(active?"Deneyim yayınlandı.":"Deneyim pasifleştirildi.");
+  await refreshAdminStats();await loadAdminTab("activities");await loadActivities();
+}
+async function toggleAdminRole(id,makeAdmin){
+  if(!isAdmin())return;
+  const {error}=await sb.from("profiles").update({is_admin:makeAdmin}).eq("id",id);
+  if(error)return toast("Yetki değiştirilemedi: "+error.message);
+  toast(makeAdmin?"Yönetici yetkisi verildi.":"Yönetici yetkisi kaldırıldı.");
+  await refreshAdminStats();await loadAdminTab("users");
 }
 
-["authModal","profileModal","routeModal","adminModal"].forEach(id=>$(id).addEventListener("click",e=>{if(e.target.classList.contains("modal"))closeModal(id)}));
+["authModal","profileModal","routeModal","reportModal","adminModal"].forEach(id=>$(id).addEventListener("click",e=>{if(e.target.classList.contains("modal"))closeModal(id)}));
 
 (async()=>{
   updateAuthUI();updateLevels();
