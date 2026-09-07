@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#09060d">
 <meta name="description" content="DISCOVER AI — bütçene, zamanına ve moduna göre kişisel deneyimler keşfet.">
-<title>DISCOVER AI — Kişisel Deneyim Motoru</title>
+<title>DISCOVER AI — Kişisel Deneyim Motoru · V16</title>
 <style>
 :root{--bg:#08060d;--panel:#100b18;--panel2:#151020;--text:#f7f3ff;--muted:#aaa0b7;--purple:#8b5cf6;--purple2:#c084fc;--line:#2a2139;--green:#69e7b7;--danger:#ff6b8a}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 70% 5%,#261343 0,#10091a 34%,#08060d 75%);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
@@ -428,7 +428,7 @@ async function submitBan(){
   }
   const targetRole=await getTargetRole(banTargetId);
   if(adminRole()==='admin'&&targetRole==='owner'){closeModal('banModal');return toast('Owner hesabına müdahale edilemez.');}
-  const ok=await callAdminRpc('admin_ban_user',{target_user_id:banTargetId,ban_scope:scope,duration_minutes:minutes,reason});
+  const ok=await callAdminRpc('admin_ban_user',{p_target_user_id:banTargetId,p_ban_scope:scope,p_duration_minutes:minutes,p_reason:reason});
   if(ok===null)return;
   closeModal('banModal');toast(scope==='device'?(durationKey==='permanent'?'Cihaz süresiz banlandı.':'Cihaz banlandı.'):(durationKey==='permanent'?'Hesap süresiz banlandı.':'Hesap banlandı.'));
   await renderAdminUsers($('adminPanelBody'));await renderAdminManagersIfVisible();
@@ -1071,4 +1071,3 @@ async function saveSiteSettings(){
 </script>
 </body>
 </html>
-
