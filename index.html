@@ -1711,23 +1711,39 @@ async function undoAdminLog(logId){
   if(!row)return toast("Log bulunamadı.");
   if(!confirm("Bu yönetici işlemi geri alınsın mı?\n\n"+adminLogActionLabel(row.action)+(row.target_email?" → "+row.target_email:"")))return;
   try{
-    const {data,error}=await sb.rpc("admin_undo_action",{p_log_id:String(logId)});
+    const {data,error}=await sb.rpc("admin_undo_action_v2",{p_log_id:String(logId)});
     if(error)throw error;
     toast(data?.message||"İşlem geri alındı.");
     await renderAdminLogs($("adminPanelBody"));
     await refreshAdminStats();
+    if(document.querySelector('[data-admin-section="banned"].active')){
+      await renderAdminBanned($("adminPanelBody"));
+    }
   }catch(e){
     console.error("UNDO ERROR",e);
-    toast("Geri alma başarısız: "+(e.message||"Bu log için geri alma kaydı bulunamadı."));
+    toast("Geri alma başarısız: "+(e.message||"Bu işlem geri alınamıyor."));
   }
 }
 function adminLogUndoButton(r){
   if(String(r.action||'')==='ACTION_UNDONE')return "";
-  const reversible=["ACCOUNT_BANNED","DEVICE_BANNED","BAN_CLEARED","PREMIUM_GRANTED","PREMIUM_REMOVED","ROLE_CHANGED","XP_CHANGED"];
-  if(!reversible.includes(String(r.action||"")))return "";
-  const available=adminUndoCache.some(x=>String(x.log_id||"")===String(r.id||""));
-  if(!available)return `<span class="muted" style="font-size:11px">↩ Geri alma kaydı yok</span>`;
-  return `<button class="btn mini" type="button" onclick='event.preventDefault();event.stopPropagation();undoAdminLog(${JSON.stringify(r.id)})'>↩ Geri al</button>`;
+  const action=String(r.action||"").toUpperCase();
+
+  // Snapshot gerektirmeden güvenli şekilde tersine çevrilebilen mevcut işlemler.
+  const directUndo=["ACCOUNT_BANNED","DEVICE_BANNED","PREMIUM_GRANTED"];
+  if(directUndo.includes(action)){
+    return `<button class="btn mini primary" type="button" onclick='event.preventDefault();event.stopPropagation();undoAdminLog(${JSON.stringify(r.id)})'>↩ Geri al</button>`;
+  }
+
+  const snapshotAvailable=adminUndoCache.some(x=>String(x.log_id||"")===String(r.id||""));
+  if(snapshotAvailable){
+    return `<button class="btn mini primary" type="button" onclick='event.preventDefault();event.stopPropagation();undoAdminLog(${JSON.stringify(r.id)})'>↩ Geri al</button>`;
+  }
+
+  if(["BAN_CLEARED","PREMIUM_REMOVED","ROLE_CHANGED","XP_CHANGED"].includes(action)){
+    return `<span class="muted" style="font-size:11px">↩ Önceki durum kaydı yok</span>`;
+  }
+
+  return "";
 }
 async function editUserStats(id,level,xp){
   if(!isAdmin())return toast("Bu işlem için yetkiniz yok.");
