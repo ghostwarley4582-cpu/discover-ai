@@ -444,7 +444,7 @@ function aiFriendlyError(code){
   if(c.includes("OPENROUTER_AUTH_ERROR")||c.includes("401"))
     return "OpenRouter API anahtarı geçersiz veya yetkisiz.";
   if(c.includes("OPENROUTER_PROVIDER_ERROR"))
-    return "Ücretsiz AI modeli şu anda yanıt vermedi. Birkaç dakika sonra tekrar dene.";
+    return "Ücretsiz AI sağlayıcısı şu anda uygun yanıt veremedi. Tekrar dene.";
   if(c.includes("SUPABASE_ENV_MISSING")||c.includes("AUTH_REQUIRED"))
     return "Oturum doğrulanamadı. Sayfayı yenileyip tekrar giriş yap.";
   return "AI şu anda yanıt veremedi. Lütfen tekrar dene.";
