@@ -363,7 +363,7 @@ async function sendAIRequest(){
   }catch(e){
     console.error("AI ASSISTANT ERROR",e);
     const msg=String(e?.message||"");
-    aiConversation.push({role:"assistant",text:msg.includes("429")?"Ücretsiz AI kullanım limitine ulaşıldı. Daha sonra tekrar dene.":"AI servisine bağlanamadım. Edge Function ve OPENROUTER_API_KEY ayarlarını kontrol et."});
+    aiConversation.push({role:"assistant",text:msg.includes("429")?"Ücretsiz AI kullanım limitine ulaşıldı. Daha sonra tekrar dene.":"AI servisine bağlanamadım. Edge Function, OpenRouter anahtarı veya ücretsiz model limitini kontrol et."});
     renderAIConversation();
   }finally{
     btn.disabled=false;btn.textContent="✦ AI'ya sor";
