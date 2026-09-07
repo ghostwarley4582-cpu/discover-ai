@@ -34,9 +34,59 @@ section{padding:45px 0}.section-head{display:flex;justify-content:space-between;
 .route-item{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.route-total{display:flex;justify-content:space-between;margin-top:12px;font-size:18px}
 footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-size:13px}
 @media(max-width:800px){.navlinks .desktop{display:none}.hero{padding-top:45px}h1{letter-spacing:-2px}.controls,.grid,.plans,.admin,.admin-shell{grid-template-columns:1fr}.admin-sidebar{position:static}.feature-grid{grid-template-columns:1fr 1fr}.levels{grid-template-columns:repeat(2,1fr)}.prompt{flex-direction:column}.prompt .btn{width:100%}.section-head{align-items:start;flex-direction:column}.admin-stats{grid-template-columns:1fr 1fr}.admin-item{align-items:flex-start;flex-direction:column}.admin-form-grid{grid-template-columns:1fr}.admin-full{grid-column:auto}}
+
+/* DISCOVER AI — required location gate */
+#locationGate{
+  position:fixed;inset:0;z-index:9999;display:grid;place-items:center;
+  padding:22px;background:rgba(5,3,9,.97);backdrop-filter:blur(18px);
+}
+#locationGate.hidden{display:none}
+#locationGate .location-card{
+  width:min(620px,94vw);background:#100b18;border:1px solid #543572;
+  border-radius:28px;padding:30px;box-shadow:0 25px 80px rgba(0,0,0,.55);
+}
+.location-lock{font-size:46px;margin-bottom:10px}
+.location-status{display:flex;align-items:center;gap:8px;margin:14px 0;padding:12px 14px;
+  border:1px solid var(--line);border-radius:14px;background:#09070d}
+.location-dot{width:9px;height:9px;border-radius:50%;background:#ffb3b3;box-shadow:0 0 12px rgba(255,120,120,.5)}
+.location-dot.ok{background:#59e6bb;box-shadow:0 0 12px rgba(89,230,187,.55)}
+#locationRetry{display:none}
+body.location-locked>nav,body.location-locked>main,body.location-locked>footer{visibility:hidden}
+#locationMini{
+  display:none;position:fixed;right:18px;top:18px;z-index:80;
+  background:#17101f;border:1px solid #49325f;border-radius:999px;
+  padding:8px 12px;font-size:12px;color:var(--muted)
+}
+#locationMini.show{display:block}
+
 </style>
 </head>
-<body>
+
+<body class="location-locked">
+<div id="locationGate">
+  <div class="location-card">
+    <div class="eyebrow">● GÜVENLİ KONUM DOĞRULAMA</div>
+    <div class="location-lock">📍</div>
+    <h2 style="margin:0 0 8px">Konum izni gerekli</h2>
+    <p class="lead" style="text-align:left;margin:0">
+      DISCOVER AI'ı kullanabilmek için bulunduğun konuma erişim izni vermen gerekiyor.
+      Konum izni verilmeden giriş, keşif, rota ve AI özellikleri kullanıma açılmaz.
+    </p>
+    <div class="location-status">
+      <span id="locationDot" class="location-dot"></span>
+      <span id="locationStatus">Konum izni bekleniyor…</span>
+    </div>
+    <div class="row" style="gap:8px;flex-wrap:wrap">
+      <button id="locationAllow" type="button" class="btn primary" onclick="requestRequiredLocation(true)">📍 Konum izni ver</button>
+      <button id="locationRetry" type="button" class="btn" onclick="requestRequiredLocation(true)">↻ Tekrar dene</button>
+    </div>
+    <p id="locationHelp" class="muted" style="font-size:12px;margin-bottom:0">
+      Tarayıcı izin penceresi gelirse “İzin ver” seçeneğini seç.
+    </p>
+  </div>
+</div>
+<div id="locationMini">📍 Konum aktif</div>
+
 
 <nav>
 <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;width:100%">
@@ -246,11 +296,157 @@ const SUPABASE_PUBLISHABLE_KEY="sb_publishable_b_srPWflLRrFV4ayykMa-g_mFb3Z8rz";
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 
 let activities=[];
-let state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel",aiSettings:null,siteSettings:{}};
+let state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel",aiSettings:null,siteSettings:{},location:null,locationReady:false};
 let lastResults=[];
 let betterOffset=0;
 
 const $=id=>document.getElementById(id);
+
+const LOCATION_REQUIRED=true;
+let requiredLocationBusy=false;
+
+function setLocationUI(status, ok=false){
+  const t=$("locationStatus"),d=$("locationDot"),allow=$("locationAllow"),retry=$("locationRetry"),help=$("locationHelp"),mini=$("locationMini");
+  if(t)t.textContent=status;
+  if(d)d.classList.toggle("ok",ok);
+  if(allow)allow.style.display=ok?"none":"inline-flex";
+  if(retry)retry.style.display=!ok&&status!=="Konum izni bekleniyor…"?"inline-flex":"none";
+  if(help)help.textContent=ok
+    ? "Konumun yalnızca DISCOVER AI deneyimini kişiselleştirmek için kullanılacak."
+    : "Tarayıcı izin penceresi gelirse “İzin ver” seçeneğini seç.";
+  if(mini)mini.classList.toggle("show",ok);
+}
+
+async function getLocationPermissionState(){
+  try{
+    if(!navigator.permissions?.query)return null;
+    const p=await navigator.permissions.query({name:"geolocation"});
+    p.onchange=()=>{ if(p.state==="granted") requestRequiredLocation(false); else if(p.state==="denied") lockLocation("Konum izni kapalı. Tarayıcı site izinlerinden konumu açıp tekrar dene."); };
+    return p.state;
+  }catch(_){return null}
+}
+
+function saveLocationSession(position){
+  const c=position.coords;
+  state.location={
+    latitude:Number(c.latitude),
+    longitude:Number(c.longitude),
+    accuracy:Number(c.accuracy||0),
+    captured_at:new Date().toISOString()
+  };
+  state.locationReady=true;
+  try{sessionStorage.setItem("discover_location",JSON.stringify(state.location))}catch(_){}
+}
+
+function restoreLocationSession(){
+  try{
+    const raw=sessionStorage.getItem("discover_location");
+    if(!raw)return false;
+    const x=JSON.parse(raw);
+    if(!Number.isFinite(Number(x.latitude))||!Number.isFinite(Number(x.longitude)))return false;
+    state.location=x;state.locationReady=true;return true;
+  }catch(_){return false}
+}
+
+function unlockLocation(){
+  document.body.classList.remove("location-locked");
+  $("locationGate")?.classList.add("hidden");
+  setLocationUI("Konum doğrulandı.",true);
+}
+
+function lockLocation(message){
+  state.locationReady=false;
+  document.body.classList.add("location-locked");
+  $("locationGate")?.classList.remove("hidden");
+  setLocationUI(message||"Konum izni gerekli.");
+}
+
+async function requestRequiredLocation(userAction=false){
+  if(!navigator.geolocation){
+    lockLocation("Bu tarayıcı konum erişimini desteklemiyor.");
+    return false;
+  }
+  if(requiredLocationBusy)return false;
+  requiredLocationBusy=true;
+  setLocationUI("Konumun doğrulanıyor…");
+  try{
+    const stateNow=await getLocationPermissionState();
+    if(stateNow==="denied"){
+      lockLocation("Konum izni reddedildi. Tarayıcı site izinlerinden konumu açmalısın.");
+      return false;
+    }
+
+    const position=await new Promise((resolve,reject)=>{
+      navigator.geolocation.getCurrentPosition(resolve,reject,{
+        enableHighAccuracy:true,
+        timeout:12000,
+        maximumAge:300000
+      });
+    });
+
+    if(!Number.isFinite(position.coords.latitude)||!Number.isFinite(position.coords.longitude)){
+      throw new Error("LOCATION_INVALID");
+    }
+
+    saveLocationSession(position);
+    unlockLocation();
+
+    // Oturum açmış kullanıcı varsa konumu Supabase'e güvenli RPC ile kaydet.
+    if(state.user){
+      const {error}=await sb.rpc("update_user_location",{
+        p_latitude:state.location.latitude,
+        p_longitude:state.location.longitude,
+        p_accuracy:state.location.accuracy
+      });
+      if(error)console.warn("Location profile sync:",error.message);
+      else if(state.profile){
+        state.profile.location_lat=state.location.latitude;
+        state.profile.location_lng=state.location.longitude;
+        state.profile.location_accuracy=state.location.accuracy;
+        state.profile.location_updated_at=new Date().toISOString();
+      }
+    }
+
+    return true;
+  }catch(e){
+    console.error("LOCATION ERROR",e);
+    let msg="Konum alınamadı. Konum iznini vermen gerekiyor.";
+    if(e?.code===1)msg="Konum izni reddedildi. Siteyi kullanabilmek için konum iznini aç.";
+    else if(e?.code===2)msg="Konum belirlenemedi. GPS/Wi‑Fi konumunu açıp tekrar dene.";
+    else if(e?.code===3)msg="Konum isteği zaman aşımına uğradı. Tekrar dene.";
+    lockLocation(msg);
+    return false;
+  }finally{
+    requiredLocationBusy=false;
+  }
+}
+
+async function ensureRequiredLocation(){
+  restoreLocationSession();
+  if(state.locationReady){
+    // Permission state is still checked so a browser-denied state cannot silently pass.
+    const p=await getLocationPermissionState();
+    if(p==="denied"){
+      lockLocation("Konum izni kapalı. Siteyi kullanabilmek için tekrar izin ver.");
+      return false;
+    }
+    unlockLocation();
+    // Refresh once per session when permission is already granted.
+    return requestRequiredLocation(false);
+  }
+  return requestRequiredLocation(false);
+}
+
+function requireLocation(featureName="Bu özellik"){
+  if(!state.locationReady){
+    lockLocation("Önce konum izni vermelisin.");
+    toast(featureName+" kullanılamıyor: konum izni gerekli.");
+    return false;
+  }
+  return true;
+}
+
+
 function toast(t){const x=$("toast");x.textContent=t;x.style.display="block";clearTimeout(window.__toast);window.__toast=setTimeout(()=>x.style.display="none",3000)}
 function scrollToId(id){$(id)?.scrollIntoView({behavior:"smooth"})}
 function openModal(id){$(id).classList.add("open")}
@@ -313,6 +509,7 @@ function scoreActivity(a){
 let aiConversationHistory=[];
 
 function openAIAssistant(){
+  if(!requireLocation("AI asistanı")){return;}
   if(!state.user){
     toast("AI asistanını kullanmak için önce giriş yap.");
     openAuth("login");
@@ -483,6 +680,7 @@ async function sendAIAssistant(){
         message:text,
         conversation:recent,
         context:{
+          location:state.location?{latitude:state.location.latitude,longitude:state.location.longitude,accuracy:state.location.accuracy}:null,
           requested_budget:parseBudgetFromText(text),
           requested_time_minutes:parseTimeFromText(text),
           budget:parseBudgetFromText(text)??currentBudget(),
@@ -538,6 +736,7 @@ document.addEventListener("keydown",e=>{
   }
 });
 function recommend(silent=false){
+  if(!requireLocation("Keşfet")){return;}
   if(!activities.length){$("results").innerHTML='<div class="empty">Şu anda gösterilecek aktif deneyim bulunamadı.</div>';return}
   betterOffset=0;
   let list=activities.map(a=>({...a,score:scoreActivity(a)})).filter(a=>a.score>=0);
@@ -728,6 +927,10 @@ async function submitAuth(){
 
 async function syncUser(){
   try{
+    if(!state.locationReady){
+      const ok=await ensureRequiredLocation();
+      if(!ok)return;
+    }
     const {data:{user}}=await sb.auth.getUser();state.user=user;
     if(!user){state.profile=null;state.favorites=[];state.routes=[];state.xp=0;updateAuthUI();updateLevels();return}
     let p=await sb.from("profiles").select("*").eq("id",user.id).maybeSingle();
@@ -782,6 +985,7 @@ function openProfile(){
 async function logout(){await sb.auth.signOut();state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel",aiSettings:null,siteSettings:{}};updateAuthUI();updateLevels();recommend(true);closeModal("profileModal");toast("Çıkış yapıldı.")}
 
 async function toggleFavorite(id){
+  if(!requireLocation("Favoriler")){return;}
   if(!state.user){toast("Favoriye eklemek için giriş yap.");return openAuth("login")}
   const exists=state.favorites.includes(id);
   try{
@@ -797,6 +1001,7 @@ async function toggleFavorite(id){
 }
 
 async function addRoute(id){
+  if(!requireLocation("Rota")){return;}
   if(!state.user){toast("Rota oluşturmak için giriş yap.");return openAuth("login")}
   const a=getActivity(id);if(!a)return;
   try{
@@ -816,6 +1021,7 @@ async function addRoute(id){
 }
 
 function openRoute(){
+  if(!requireLocation("Rota")){return;}
   if(!state.user){toast("Rotanı görmek için giriş yap.");return openAuth("login")}
   const body=$("routeModalBody");
   if(!state.routes.length){body.innerHTML='<div class="empty">Henüz rota oluşturmadın.</div>';openModal("routeModal");return}
@@ -851,6 +1057,7 @@ async function loadPublicSettings(){
 }
 
 function subscribe(plan){
+  if(!requireLocation("Premium")){return;}
   if(!state.user){toast("Premium için önce hesap oluştur.");return openAuth("join")}
   if(state.premium){toast("Zaten aktif Premium üyeliğin var.");return}
   const prices={"Haftalık":Number(state.siteSettings?.premium_weekly??99),"Aylık":Number(state.siteSettings?.premium_monthly??249),"Yıllık":Number(state.siteSettings?.premium_yearly??1999)};
@@ -871,6 +1078,7 @@ async function openAdmin(){
 }
 
 function reportActivity(title){
+  if(!requireLocation("Bildirim")){return;}
   if(!state.user)return openAuth("login");
   $("reportText").value="Aktivite bildirimi: "+title+"\n\n";
   openModal("reportModal");
@@ -1393,6 +1601,8 @@ async function saveSiteSettings(){
 (async()=>{
   updateAuthUI();updateLevels();
   sb.auth.onAuthStateChange(()=>setTimeout(syncUser,0));
+  const locationOk=await ensureRequiredLocation();
+  if(!locationOk)return;
   await Promise.all([loadPublicSettings(),loadActivities(),syncUser()]);
   if(state.aiSettings) recommend(true);
 })();
