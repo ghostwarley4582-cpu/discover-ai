@@ -1722,7 +1722,7 @@ async function sha256Hex(text){
   return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,"0")).join("");
 }
 async function activateProfileNow(payload){
-  const {data,error}=await sb.rpc("activate_profile_now",payload);
+  const {data,error}=await sb.rpc("complete_profile_verified_v48",payload);
   if(error)throw error;
   return data;
 }
@@ -1731,7 +1731,12 @@ function identityFriendlyError(code){
   if(c.includes("TC_ALREADY_REGISTERED"))return "Bu T.C. Kimlik No başka bir hesapta kayıtlı.";
   if(c.includes("USERNAME_ALREADY_USED"))return "Bu kullanıcı adı zaten kullanılıyor.";
   if(c.includes("PHONE_ALREADY_REGISTERED"))return "Bu telefon numarası başka bir hesapta kayıtlı.";
-  if(c.includes("TC_NUMBER_INVALID"))return "Geçerli bir 11 haneli T.C. Kimlik No gir.";
+  if(c.includes("FIRST_NAME_INVALID"))return "İsim geçersiz. Kimlikteki yazımına uygun gir.";
+  if(c.includes("LAST_NAME_INVALID"))return "Soyisim geçersiz. Kimlikteki yazımına uygun gir.";
+  if(c.includes("USERNAME_INVALID"))return "Kullanıcı adı geçersiz.";
+  if(c.includes("PHONE_INVALID"))return "Geçerli bir Türkiye cep telefonu gir.";
+  if(c.includes("BIRTH_DATE_INVALID"))return "Doğum tarihi geçersiz.";
+  if(c.includes("TC_NUMBER_INVALID")||c.includes("TC_HASH_MISMATCH"))return "T.C. Kimlik No geçersiz. 11 haneli numarayı kontrol et.";
   return "Bilgiler gönderilemedi. Lütfen tekrar dene.";
 }
 async function saveRequiredProfile(){
