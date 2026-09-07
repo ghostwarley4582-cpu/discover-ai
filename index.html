@@ -167,7 +167,8 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 <p id="banTargetText" class="muted">Kullanıcı seçilmedi.</p>
 <div class="form">
 <label>Ban türü</label>
-<select id="banScope"><option value="account">Hesap banı</option><option value="device">Cihaz banı</option></select>
+<select id="banScope" onchange="updateBanScopeHint()"><option value="account">Hesap banı</option><option value="device">Cihaz banı</option></select>
+<div id="banDeviceHint" class="muted" style="font-size:13px;margin-top:6px"></div>
 <label style="margin-top:8px">Süre</label>
 <select id="banDuration">
 <option value="10m">10 dakika</option><option value="30m">30 dakika</option><option value="1h">1 saat</option><option value="6h">6 saat</option><option value="12h">12 saat</option><option value="1d">1 gün</option><option value="3d">3 gün</option><option value="7d">7 gün</option><option value="30d">30 gün</option><option value="90d">90 gün</option><option value="180d">180 gün</option><option value="1y">1 yıl</option><option value="permanent">Süresiz</option>
@@ -372,16 +373,38 @@ function banStatusText(u){
 }
 function durationToMinutes(v){return ({"10m":10,"30m":30,"1h":60,"6h":360,"12h":720,"1d":1440,"3d":4320,"7d":10080,"30d":43200,"90d":129600,"180d":259200,"1y":525600})[v]||null}
 let banTargetId=null;
-function openBanDialog(id,username){
+async function getTargetBanDeviceStatus(id){
+  try{
+    const {data,error}=await sb.from("profiles").select("device_id").eq("id",id).maybeSingle();
+    if(error)return {registered:false,error:error.message};
+    return {registered:!!(data?.device_id&&String(data.device_id).length>=8),error:null};
+  }catch(e){return {registered:false,error:e.message||""}}
+}
+async function updateBanScopeHint(){
+  const hint=$("banDeviceHint");
+  if($("banScope").value!=="device"){hint.textContent="Hesap banı yalnızca bu hesabı etkiler; yeni hesap açılabilir.";return;}
+  const st=await getTargetBanDeviceStatus(banTargetId);
+  hint.textContent=st.registered
+    ? "Cihaz kaydı bulundu. Bu cihaz banlanır; aynı cihazdan yeni hesap açılması engellenir."
+    : "Bu hesabın kayıtlı cihazı yok. Kullanıcı en az bir kez giriş yapıp cihazını kaydettikten sonra cihaz banı uygulanabilir.";
+}
+async function openBanDialog(id,username){
   if(!isAdmin())return;
   banTargetId=id;$('banTargetText').textContent=`Hedef: ${username||"Kullanıcı"}`;
-  $('banScope').value='account';$('banDuration').value='1d';$('banReason').value='';openModal('banModal');
+  $('banScope').value='account';$('banDuration').value='1d';$('banReason').value='';openModal('banModal');await updateBanScopeHint();
 }
 async function submitBan(){
   if(!isAdmin()||!banTargetId)return;
   const scope=$('banScope').value,durationKey=$('banDuration').value,reason=$('banReason').value.trim();
   if(!reason)return toast('Ban nedeni gerekli.');
   const minutes=durationToMinutes(durationKey);
+  if(scope==='device'){
+    const st=await getTargetBanDeviceStatus(banTargetId);
+    if(!st.registered){
+      closeModal('banModal');
+      return toast('Cihaz banı uygulanamadı: Bu hesabın kayıtlı cihazı yok. Kullanıcı önce en az bir kez giriş yapmalı.');
+    }
+  }
   const targetRole=await getTargetRole(banTargetId);
   if(adminRole()==='admin'&&targetRole==='owner'){closeModal('banModal');return toast('Owner hesabına müdahale edilemez.');}
   const ok=await callAdminRpc('admin_ban_user',{target_user_id:banTargetId,ban_scope:scope,duration_minutes:minutes,reason});
@@ -720,7 +743,7 @@ function adminUserRow(u){
   const canOps=isOwner() || (adminRole()==="admin" && role!=="owner");
   const canRole=isOwner()?u.id!==state.user.id:((adminRole()==="admin") && role!=="owner");
   return `<div class="admin-item" data-search="${esc(normalize(u.username||""))}">
-    <div><b>${esc(u.username||"Kullanıcı adı yok")}</b><small>Seviye ${Number(u.level||1)} · ${Number(u.xp||0)} XP · ${roleLabel} · ${premium?"Premium":"Free"}${banStatusText(u)}</small></div>
+    <div><b>${esc(u.username||"Kullanıcı adı yok")}</b><small>Seviye ${Number(u.level||1)} · ${Number(u.xp||0)} XP · ${roleLabel} · ${premium?"Premium":"Free"} · Cihaz: ${u.device_id?"kayıtlı":"kayıtsız"}${banStatusText(u)}</small></div>
     <div class="admin-actions">
       ${canOps?`<button class="btn mini" onclick='editUserStats(${JSON.stringify(u.id)},${Number(u.level||1)},${Number(u.xp||0)})'>XP/Seviye</button>`:""}
       ${canOps?`<button class="btn mini" onclick='toggleUserPremium(${JSON.stringify(u.id)},${premium})'>${premium?"Premium kaldır":"Premium ver"}</button>`:""}
