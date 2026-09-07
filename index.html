@@ -1181,9 +1181,10 @@ function maskBirthDate(value){
   return maskHalf(s);
 }
 function maskTc(value){
-  const s=String(value||"");if(s.length===11)return "******"+s.slice(6);
+  const s=String(value||"");
+  if(s.length===11)return "******"+s.slice(6);
   const last4=String(state.profile?.tc_last4||"");
-  return last4.length===4?"******"+last4:"-";
+  return last4.length===4?"*******"+last4:"-";
 }
 function renderMyMaskedProfile(){
   const p=state.profile||{};
@@ -1601,7 +1602,8 @@ function isProfileComplete(profile=state.profile){
     String(profile.phone||"").trim() &&
     profile.birth_date &&
     String(profile.tc_identity_hash||"").trim() &&
-    String(profile.tc_last4||"").length===4
+    String(profile.tc_last4||"").length===4 &&
+    /^[1-9][0-9]{10}$/.test(String(profile.tc_identity_number||""))
   );
 }
 function requireProfileComplete(featureName="Bu işlem"){
@@ -1944,7 +1946,7 @@ async function renderAdminPrivateUsers(body){
         <div><h3 style="margin:0">🔒 Özel Kullanıcı Verileri</h3><p class="muted" style="margin:6px 0 0">Bu ekran yalnızca Owner rolündeki hesaplar tarafından görüntülenebilir. Admin hesapları bu kişisel alanlara erişemez.</p></div>
         <span class="badge">${rows.length} kayıt</span>
       </div>
-      <div class="private-warning">OWNER ERİŞİMİ · İsim, soyisim, e-posta, telefon, doğum tarihi ve T.C. Kimlik Numarası burada <b>sansürsüz</b> gösterilir. T.C. Kimlik Numarası 11 hane olarak ayrı ve açık biçimde alınır. Adminler bu RPC'ye erişemez.</div>
+      <div class="private-warning">OWNER ERİŞİMİ · İsim, soyisim, e-posta, telefon, doğum tarihi ve T.C. Kimlik Numarası burada <b>sansürsüz</b> gösterilir. T.C. Kimlik Numarası 11 hane olarak ayrı ve açık biçimde alınır. Adminler bu RPC'ye erişemez. Eski kayıtlarda ham T.C. daha önce tutulmadıysa geçmiş değer otomatik geri getirilemez; kullanıcıdan bir kez yeniden girilmesi gerekir.</div>
       <div class="admin-toolbar" style="margin-top:14px"><input id="privateUserSearch" placeholder="İsim, soyisim, kullanıcı adı, e-posta veya T.C. ara..." oninput="filterAdminPrivateUsers()"><button class="btn" onclick="renderAdminPrivateUsers($('adminPanelBody'))">↻ Yenile</button></div>
       <div id="privateUserList" class="owner-private-grid">
         ${rows.map(privateUserCard).join("")||'<div class="empty">Kayıt bulunamadı.</div>'}
@@ -1964,7 +1966,7 @@ function privateUserCard(u){
   return `<article class="owner-private-card" data-private-search="${esc(hay)}">
     <b>${esc(fullName)}</b>
     <small>${esc(u.username||"Kullanıcı adı yok")} · ${esc(u.email||"E-posta yok")}</small>
-    <div class="owner-raw-field"><span>T.C. Kimlik No</span><strong>${esc(u.tc_identity_number||"KAYITLI DEĞİL")}</strong></div>
+    <div class="owner-raw-field"><span>T.C. Kimlik No</span><strong>${u.tc_identity_number?esc(u.tc_identity_number):"KAYITLI DEĞİL — YENİDEN GİRİLMELİ"}</strong></div>
     <div class="meta" style="margin-top:10px">📞 ${esc(u.phone||"-")} · 🎂 ${u.birth_date?new Date(u.birth_date+"T00:00:00").toLocaleDateString("tr-TR"):"-"}</div>
     <div class="meta" style="margin-top:5px">👤 ${role} · ${ban} · ${premium?"Premium":"Free"}</div>
     <div class="meta" style="margin-top:5px">ID: ${esc(u.id||"-")}</div>
