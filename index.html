@@ -361,7 +361,7 @@ async function syncUser(){
       const ins=await sb.from("profiles").insert({id:user.id,username,level:1,xp:0}).select().single();
       if(ins.error)throw ins.error;p=ins;
     }
-    state.profile=p.data;state.xp=Number(p.data.xp||0);
+    state.profile=p.data;state.xp=Number(p.data.xp||0);state.premium=!!(p.data.premium_until&&new Date(p.data.premium_until)>new Date());
     state.premium=!!(p.data.premium_until && new Date(p.data.premium_until)>new Date());
     if(p.data.is_banned===true){
       toast("Bu hesap engellenmiş.");
@@ -640,35 +640,47 @@ function adminUserRow(u){
     </div>
   </div>`;
 }
+async function callAdminRpc(fn,args){
+  if(!isAdmin()){toast("Bu işlem için yönetici yetkisi gerekli.");return null}
+  const {data,error}=await sb.rpc(fn,args);
+  if(error){console.error(fn,error);toast("İşlem başarısız: "+(error.message||"Sunucu hatası"));return null}
+  return data;
+}
 async function editUserStats(id,level,xp){
   const nl=prompt("Yeni seviye (1-10):",level);if(nl===null)return;
   const nx=prompt("Yeni XP:",xp);if(nx===null)return;
-  const {error}=await sb.from("profiles").update({level:Math.max(1,Math.min(10,Number(nl)||1)),xp:Math.max(0,Number(nx)||0)}).eq("id",id);
-  if(error)return toast("Kullanıcı güncellenemedi: "+error.message);
+  const ok=await callAdminRpc("admin_set_user_stats",{target_user_id:id,new_level:Math.max(1,Math.min(10,Number(nl)||1)),new_xp:Math.max(0,Number(nx)||0)});
+  if(ok===null)return;
   toast("Kullanıcı XP/seviye güncellendi.");await renderAdminUsers($("adminPanelBody"));await refreshAdminStats();
 }
 async function toggleAdminRole(id,makeAdmin){
   if(!isAdmin())return;
-  const {error}=await sb.from("profiles").update({is_admin:makeAdmin}).eq("id",id);
-  if(error)return toast("Yetki değiştirilemedi: "+error.message);
+  if(id===state.user.id)return toast("Kendi admin yetkini buradan değiştiremezsin.");
+  const ok=await callAdminRpc("admin_set_admin_role",{target_user_id:id,make_admin:makeAdmin});
+  if(ok===null)return;
   toast(makeAdmin?"Yönetici yetkisi verildi.":"Yönetici yetkisi kaldırıldı.");await refreshAdminStats();await renderAdminUsers($("adminPanelBody"));
 }
 async function toggleUserPremium(id,isPremium){
   if(!isAdmin())return;
-  const plan=isPremium?null:prompt("Premium planı: Haftalık / Aylık / Yıllık","Aylık");
-  if(!isPremium && plan===null)return;
-  let until=null;
-  if(!isPremium){
-    const days=plan.toLocaleLowerCase("tr-TR").includes("haft")?7:plan.toLocaleLowerCase("tr-TR").includes("yıl")?365:30;
-    until=new Date(Date.now()+days*86400000).toISOString();
+  if(isPremium){
+    const ok=await callAdminRpc("admin_set_user_premium",{target_user_id:id,plan:null,duration_days:0});
+    if(ok===null)return;
+    toast("Premium kaldırıldı.");
+  }else{
+    const plan=prompt("Premium planı: Haftalık / Aylık / Yıllık","Aylık");
+    if(plan===null)return;
+    const normalized=plan.toLocaleLowerCase("tr-TR");
+    const days=normalized.includes("haft")?7:normalized.includes("yıl")?365:30;
+    const canonical=normalized.includes("haft")?"Haftalık":normalized.includes("yıl")?"Yıllık":"Aylık";
+    const ok=await callAdminRpc("admin_set_user_premium",{target_user_id:id,plan:canonical,duration_days:days});
+    if(ok===null)return;
+    toast(canonical+" Premium aktif edildi.");
   }
-  const {error}=await sb.from("profiles").update({premium_plan:isPremium?null:plan,premium_until:until}).eq("id",id);
-  if(error)return toast("Premium değiştirilemedi: "+error.message);
-  toast(isPremium?"Premium kaldırıldı.":"Premium aktif edildi.");await refreshAdminStats();await renderAdminUsers($("adminPanelBody"));
+  await refreshAdminStats();await renderAdminUsers($("adminPanelBody"));
 }
 async function toggleUserBan(id,ban){
-  const {error}=await sb.from("profiles").update({is_banned:ban}).eq("id",id);
-  if(error)return toast("Kullanıcı durumu değiştirilemedi: "+error.message);
+  const ok=await callAdminRpc("admin_set_user_ban",{target_user_id:id,ban_user:ban});
+  if(ok===null)return;
   toast(ban?"Kullanıcı engellendi.":"Kullanıcının engeli kaldırıldı.");await renderAdminUsers($("adminPanelBody"));
 }
 
