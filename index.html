@@ -1211,8 +1211,10 @@ async function submitBan(){
   }
   const targetRole=await getTargetRole(banTargetId);
   if(adminRole()==='admin'&&targetRole==='owner'){closeModal('banModal');return toast('Owner hesabına müdahale edilemez.');}
+  const undoId=await captureAdminUndo(scope==='device'?"DEVICE_BANNED":"ACCOUNT_BANNED",banTargetId);
   const ok=await callAdminRpc('admin_ban_user',{target_user_id:banTargetId,ban_scope:scope,duration_minutes:minutes,reason:reason});
   if(ok===null)return;
+  await finalizeAdminUndo(undoId);
   closeModal('banModal');toast(scope==='device'?(durationKey==='permanent'?'Cihaz süresiz banlandı.':'Cihaz banlandı.'):(durationKey==='permanent'?'Hesap süresiz banlandı.':'Hesap banlandı.'));
   await renderAdminUsers($('adminPanelBody'));await renderAdminManagersIfVisible();
   if(document.querySelector('[data-admin-section="banned"].active')) await renderAdminBanned($('adminPanelBody'));
@@ -1220,12 +1222,14 @@ async function submitBan(){
 async function removeUserBan(id){
   if(!isAdmin())return;
   if(!confirm('Bu kullanıcının hesabı/cihaz banı kaldırılsın mı?'))return;
+  const undoId=await captureAdminUndo("BAN_CLEARED",id);
   let ok=await callAdminRpc('admin_clear_user_ban',{p_target_user_id:id});
   if(ok===null){
     // Eski/ara sürüm şemaları için geri dönüş: false = ban kaldır.
     ok=await callAdminRpc('admin_set_user_ban',{target_user_id:id,ban_user:false});
   }
   if(ok===null)return;
+  await finalizeAdminUndo(undoId);
   toast('Ban kaldırıldı.');
   await renderAdminUsers($('adminPanelBody'));
   await renderAdminManagersIfVisible();
@@ -1689,12 +1693,50 @@ async function callAdminRpc(fn,args){
     console.error("ADMIN RPC EXCEPTION",fn,e,args);toast("İşlem başarısız: "+(e.message||"Sunucu hatası"));return null;
   }
 }
+async function captureAdminUndo(action,targetUserId){
+  if(!isOwner()||!targetUserId)return null;
+  try{
+    const {data,error}=await sb.rpc("admin_capture_undo",{p_action:action,p_target_user_id:targetUserId});
+    if(error){console.warn("UNDO CAPTURE",error);return null}
+    return data||null;
+  }catch(e){console.warn("UNDO CAPTURE",e);return null}
+}
+async function finalizeAdminUndo(undoId){
+  if(!undoId)return;
+  try{await sb.rpc("admin_finalize_undo",{p_undo_id:undoId});}catch(e){console.warn("UNDO FINALIZE",e)}
+}
+async function undoAdminLog(logId){
+  if(!isOwner())return toast("Bu işlem yalnızca Owner'a açıktır.");
+  const row=adminLogsCache.find(x=>String(x.id)===String(logId));
+  if(!row)return toast("Log bulunamadı.");
+  if(!confirm("Bu yönetici işlemi geri alınsın mı?\n\n"+adminLogActionLabel(row.action)+(row.target_email?" → "+row.target_email:"")))return;
+  try{
+    const {data,error}=await sb.rpc("admin_undo_action",{p_log_id:String(logId)});
+    if(error)throw error;
+    toast(data?.message||"İşlem geri alındı.");
+    await renderAdminLogs($("adminPanelBody"));
+    await refreshAdminStats();
+  }catch(e){
+    console.error("UNDO ERROR",e);
+    toast("Geri alma başarısız: "+(e.message||"Bu log için geri alma kaydı bulunamadı."));
+  }
+}
+function adminLogUndoButton(r){
+  if(String(r.action||'')==='ACTION_UNDONE')return "";
+  const reversible=["ACCOUNT_BANNED","DEVICE_BANNED","BAN_CLEARED","PREMIUM_GRANTED","PREMIUM_REMOVED","ROLE_CHANGED","XP_CHANGED"];
+  if(!reversible.includes(String(r.action||"")))return "";
+  const available=adminUndoCache.some(x=>String(x.log_id||"")===String(r.id||""));
+  if(!available)return `<span class="muted" style="font-size:11px">↩ Geri alma kaydı yok</span>`;
+  return `<button class="btn mini" type="button" onclick='event.preventDefault();event.stopPropagation();undoAdminLog(${JSON.stringify(r.id)})'>↩ Geri al</button>`;
+}
 async function editUserStats(id,level,xp){
   if(!isAdmin())return toast("Bu işlem için yetkiniz yok.");
   const nl=prompt("Yeni seviye (1-10):",level);if(nl===null)return;
   const nx=prompt("Yeni XP:",xp);if(nx===null)return;
+  const undoId=await captureAdminUndo("XP_CHANGED",id);
   const ok=await callAdminRpc("admin_set_user_stats",{target_user_id:id,new_level:Math.max(1,Math.min(10,Number(nl)||1)),new_xp:Math.max(0,Number(nx)||0)});
   if(ok===null)return;
+  await finalizeAdminUndo(undoId);
   toast("Kullanıcı XP/seviye güncellendi.");await renderAdminUsers($("adminPanelBody"));await refreshAdminStats();
 }
 async function setUserRolePrompt(id,current){
@@ -1706,8 +1748,10 @@ async function setUserRolePrompt(id,current){
   const r=role.trim().toLowerCase();
   const allowed=adminRole()==="owner"?["user","admin","owner"]:["user","admin"];
   if(!allowed.includes(r))return toast("Bu yetkiyle seçilebilecek rol: "+allowed.join(" / "));
+  const undoId=await captureAdminUndo("ROLE_CHANGED",id);
   const ok=await callAdminRpc("admin_set_user_role",{target_user_id:id,new_role:r});
   if(ok===null)return;
+  await finalizeAdminUndo(undoId);
   toast(r==="user"?"Kullanıcı rolüne alındı.":r==="admin"?"Admin yetkisi verildi.":"Owner yetkisi verildi.");
   await renderAdminUsers($("adminPanelBody"));await renderAdminAdmins($("adminPanelBody"));
 }
@@ -1719,6 +1763,7 @@ async function toggleUserPremium(id,isPremium){
   if(!isAdmin())return;
   const targetRole=await getTargetRole(id);
   if(adminRole()==="admin" && targetRole==="owner")return toast("Owner hesabına müdahale edilemez.");
+  const undoId=await captureAdminUndo(isPremium?"PREMIUM_REMOVED":"PREMIUM_GRANTED",id);
   if(isPremium){
     const ok=await callAdminRpc("admin_set_user_premium",{target_user_id:id,plan:null,duration_days:0});
     if(ok===null)return;
@@ -1733,6 +1778,7 @@ async function toggleUserPremium(id,isPremium){
     if(ok===null)return;
     toast(canonical+" Premium aktif edildi.");
   }
+  await finalizeAdminUndo(undoId);
   await refreshAdminStats();await renderAdminUsers($("adminPanelBody"));
 }
 async function handleBanAction(id,username,isBanned){
@@ -1763,8 +1809,10 @@ async function promoteUserToAdminByUsername(){
   if(role==="owner")return toast("Bu hesap zaten Owner.");
   if(role==="admin")return toast("Bu hesap zaten Admin.");
   if(!confirm(target.username+" kullanıcısına ADMIN yetkisi verilsin mi?"))return;
+  const undoId=await captureAdminUndo("ROLE_CHANGED",target.id);
   const ok=await callAdminRpc("admin_set_user_role",{target_user_id:target.id,new_role:"admin"});
   if(ok===null)return;
+  await finalizeAdminUndo(undoId);
   toast(target.username+" artık Admin.");await renderAdminAdmins($("adminPanelBody"));
 }
 
@@ -2242,6 +2290,7 @@ function adminLogActionLabel(action){
   };
   return map[action]||action||"ADMIN_ACTION";
 }
+let adminUndoCache=[];
 function filterAdminLogs(){
   const q=normalize($("adminLogSearch")?.value||"");
   const cat=$("adminLogCategory")?.value||"all";
@@ -2254,6 +2303,7 @@ function filterAdminLogs(){
       <b>${esc(adminLogActionLabel(r.action))}</b>
       <small>${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""} · ${esc(r.actor_email||"")} ${r.target_email?"→ "+esc(r.target_email):""}</small>
       <div class="muted" style="margin-top:7px">${esc(r.details||"")}</div>
+      <div class="admin-actions" style="margin-top:9px">${adminLogUndoButton(r)}</div>
     </div>
     <span class="badge ${adminLogCategory(r.action)==="ban"?"bad":"good"}">${adminLogCategory(r.action).toUpperCase()}</span>
   </div>`).join("")||'<div class="empty">Filtreye uyan log bulunamadı.</div>';
@@ -2265,6 +2315,10 @@ async function renderAdminLogs(body,focusTarget=""){
     .order("created_at",{ascending:false}).limit(500);
   if(error){body.innerHTML='<div class="empty">Admin logları yüklenemedi: '+esc(error.message)+'</div>';return}
   adminLogsCache=data||[];
+  try{
+    const ur=await sb.from("admin_action_undo").select("id,log_id,action,target_user_id,created_at,finalized_at,undone_at").not("log_id","is","null");
+    adminUndoCache=ur.error?[]:(ur.data||[]);
+  }catch(_){adminUndoCache=[]}
   body.innerHTML=`
     <div class="admin-card">
       <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center">
