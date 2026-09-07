@@ -641,6 +641,16 @@ function setAdminSectionActive(section){
 
 function applyAdminNavVisibility(){document.querySelectorAll(".owner-only").forEach(x=>x.style.display=isOwner()?"block":"none")}
 
+async function openBannedUsersPanel(){
+  if(!isAdmin()){
+    toast("Bu alana erişim yetkiniz yok.");
+    return;
+  }
+  setAdminSectionActive("banned");
+  const body=$("adminPanelBody");
+  body.innerHTML='<div class="empty loading">Engellenen kullanıcılar yükleniyor...</div>';
+  await renderAdminBanned(body);
+}
 async function loadAdminSection(section){
   if(!isAdmin())return;
   setAdminSectionActive(section);
