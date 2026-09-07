@@ -414,8 +414,16 @@ async function submitBan(){
 }
 async function removeUserBan(id){
   if(!isAdmin())return;
-  const ok=await callAdminRpc('admin_clear_user_ban',{target_user_id:id});if(ok===null)return;
-  toast('Ban kaldırıldı.');await renderAdminUsers($('adminPanelBody'));await renderAdminManagersIfVisible();
+  if(!confirm('Bu kullanıcının hesabı/cihaz banı kaldırılsın mı?'))return;
+  let ok=await callAdminRpc('admin_clear_user_ban',{p_target_user_id:id});
+  if(ok===null){
+    // Eski/ara sürüm şemaları için geri dönüş: false = ban kaldır.
+    ok=await callAdminRpc('admin_set_user_ban',{target_user_id:id,ban_user:false});
+  }
+  if(ok===null)return;
+  toast('Ban kaldırıldı.');
+  await renderAdminUsers($('adminPanelBody'));
+  await renderAdminManagersIfVisible();
 }
 async function renderAdminManagersIfVisible(){if($('adminPanelBody')&&document.querySelector('[data-admin-section="admins"].active'))await renderAdminAdmins($('adminPanelBody'))}
 
