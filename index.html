@@ -163,7 +163,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 
 <div id="banModal" class="modal"><div class="modalbox" style="max-width:560px">
 <button class="close" onclick="closeModal('banModal')">×</button><div class="eyebrow">MODERASYON</div>
-<h2>Ban uygula</h2>
+<h2 id="banModalMode">Ban uygula</h2>
 <p id="banTargetText" class="muted">Kullanıcı seçilmedi.</p>
 <div class="form">
 <label>Ban türü</label>
@@ -396,15 +396,24 @@ function durationKeyFromUntil(until){
   return choices.reduce((best,item)=>Math.abs(item[1]-mins)<Math.abs(best[1]-mins)?item:best,choices[0])[0];
 }
 async function openBanDialog(id,username,existing=null){
-  if(!isAdmin())return;
+  if(!isAdmin()){toast("Bu işlem için yönetici yetkisi gerekli.");return false;}
   banTargetId=id;
+  $('banModalMode').textContent=existing?.is_banned?'Banı düzenle':'Ban uygula';
   $('banTargetText').textContent=`Hedef: ${username||"Kullanıcı"}`;
   $('banScope').value=existing?.ban_scope==='device'?'device':'account';
   $('banDuration').value=durationKeyFromUntil(existing?.ban_until);
   $('banReason').value=existing?.ban_reason||'';
+  const modal=$('banModal');
+  modal.style.zIndex='120';
   openModal('banModal');
   await updateBanScopeHint();
+  return false;
 }
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter" && e.target && e.target.closest && e.target.closest("#banModal") && e.target.tagName!=="TEXTAREA"){
+    e.preventDefault();
+  }
+});
 async function submitBan(){
   if(!isAdmin()||!banTargetId)return;
   const scope=$('banScope').value,durationKey=$('banDuration').value,reason=$('banReason').value.trim();
@@ -781,7 +790,7 @@ function adminUserRow(u){
       ${canOps?`<button class="btn mini" onclick='editUserStats(${JSON.stringify(u.id)},${Number(u.level||1)},${Number(u.xp||0)})'>XP/Seviye</button>`:""}
       ${canOps?`<button class="btn mini" onclick='toggleUserPremium(${JSON.stringify(u.id)},${premium})'>${premium?"Premium kaldır":"Premium ver"}</button>`:""}
       ${canRole?`<button class="btn mini" onclick='setUserRolePrompt(${JSON.stringify(u.id)},${JSON.stringify(role||"user")})'>Rol</button>`:""}
-      ${canOps?`<button type="button" class="btn mini" onclick='handleBanAction(${JSON.stringify(u.id)},${JSON.stringify(u.username||"Kullanıcı")},${isProfileBanned(u)})'>${isProfileBanned(u)?"Banı kaldır":"Banla"}</button>`:""}
+      ${canOps?`<button type="button" class="btn mini" data-ban-action="1" onclick='event.preventDefault();event.stopPropagation();openBanDialog(${JSON.stringify(u.id)},${JSON.stringify(u.username||"Kullanıcı")})'>Banla</button>`:""}
     </div>
   </div>`;
 }
@@ -1051,7 +1060,7 @@ async function saveSiteSettings(){
   updatePublicPrices();
   toast("Sistem ayarları kaydedildi.");
 }
-["authModal","profileModal","routeModal","reportModal","banModal","adminModal"].forEach(id=>$(id).addEventListener("click",e=>{if(e.target.classList.contains("modal"))closeModal(id)}));
+["authModal","profileModal","routeModal","reportModal","banModal","adminModal"].forEach(id=>$(id).addEventListener("click",e=>{if(id==="adminModal"&&document.querySelector("#banModal.open"))return;if(e.target.classList.contains("modal"))closeModal(id)}));
 
 (async()=>{
   updateAuthUI();updateLevels();
@@ -1062,3 +1071,4 @@ async function saveSiteSettings(){
 </script>
 </body>
 </html>
+
