@@ -70,6 +70,15 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
 .live-location-dot.recent{background:#f3c969}
 @media(max-width:900px){.live-location-layout{grid-template-columns:1fr}#liveLocationMap{height:340px}}
 
+
+#profileCompletionModal .modalbox{width:min(720px,100%)}
+.required-note{font-size:12px;color:var(--muted);line-height:1.5}
+.tc-wrap{position:relative}
+.tc-wrap input{padding-right:76px}
+.tc-count{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted)}
+.profile-lock{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid #49325f;border-radius:14px;background:#0d0913}
+.profile-lock strong{display:block;margin-bottom:4px}
+
 </style>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3pM9m9H8QZ5Z7Vx3dJQzjN4n5cR8w=" crossorigin=""/>
@@ -243,6 +252,62 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
 </div></div></div>
 
 
+
+<div id="profileCompletionModal" class="modal">
+  <div class="modalbox">
+    <div class="eyebrow">● HESAP BİLGİLERİ</div>
+    <h2 style="margin:14px 0 8px">Hesabını tamamla</h2>
+    <p class="muted" style="margin-top:0">
+      Devam edebilmek için aşağıdaki bilgilerin tamamını doldurman gerekiyor.
+    </p>
+
+    <div class="profile-lock">
+      <div>🔒</div>
+      <div>
+        <strong>Zorunlu profil doğrulaması</strong>
+        <span class="required-note">
+          Bilgilerin hesap güvenliği ve hizmetin kişiselleştirilmesi için alınır.
+          T.C. kimlik numarası düz metin olarak saklanmaz; sistemde kimlik doğrulama özeti tutulur.
+        </span>
+      </div>
+    </div>
+
+    <div class="form" style="margin-top:14px">
+      <input id="pcFirstName" required maxlength="80" placeholder="İsim">
+      <input id="pcLastName" required maxlength="80" placeholder="Soyisim">
+      <input id="pcUsername" required maxlength="40" placeholder="Kullanıcı adı">
+      <input id="pcEmail" type="email" readonly placeholder="E-posta">
+      <input id="pcPhone" required maxlength="20" inputmode="tel" placeholder="Telefon numarası">
+      <input id="pcBirthDate" required type="date">
+      <div class="tc-wrap">
+        <input id="pcTc" required maxlength="11" minlength="11" inputmode="numeric" autocomplete="off"
+               placeholder="T.C. Kimlik No" oninput="this.value=this.value.replace(/\D/g,'').slice(0,11);$('pcTcCount').textContent=this.value.length+'/11'">
+        <span id="pcTcCount" class="tc-count">0/11</span>
+      </div>
+
+      <div class="profile-lock" style="margin-top:2px">
+        <div>ℹ️</div>
+        <div class="required-note">
+          T.C. Kimlik No yalnızca gerekli kimlik kaydının özeti için işlenir.
+          Bu alanı toplama amacını, hukuki sebebi ve saklama süresini açıklayan KVKK metniyle birlikte sunmalıyız.
+        </div>
+      </div>
+
+      <label class="required-note">
+        <input id="pcKvkkRead" type="checkbox">
+        KVKK Aydınlatma Metni'ni okudum.
+      </label>
+
+      <label class="required-note">
+        <input id="pcPrivacyAccept" type="checkbox">
+        Profil bilgilerimin hesap hizmetleri kapsamında işlenmesini kabul ediyorum.
+      </label>
+
+      <button type="button" class="btn primary" id="pcSaveBtn" onclick="saveRequiredProfile()">✓ Bilgileri kaydet ve devam et</button>
+      <div id="pcError" class="required-note" style="min-height:18px"></div>
+    </div>
+  </div>
+</div>
 <div id="aiAssistantModal" class="modal">
   <div class="modalbox" style="width:min(760px,100%);max-height:92vh">
     <button class="close" type="button" onclick="closeModal('aiAssistantModal')">×</button>
@@ -311,7 +376,7 @@ const SUPABASE_PUBLISHABLE_KEY="sb_publishable_b_srPWflLRrFV4ayykMa-g_mFb3Z8rz";
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 
 let activities=[];
-let state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel",aiSettings:null,siteSettings:{},location:null,locationReady:false,locationWatchId:null,locationHeartbeatId:null};
+let state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel",aiSettings:null,siteSettings:{},location:null,locationReady:false,locationWatchId:null,locationHeartbeatId:null,profileComplete:false};
 let lastResults=[];
 let betterOffset=0;
 
@@ -563,6 +628,7 @@ function scoreActivity(a){
 let aiConversationHistory=[];
 
 function openAIAssistant(){
+  if(state.user && !requireProfileComplete("AI asistanı"))return;
   if(!requireLocation("AI asistanı")){return;}
   if(!state.user){
     toast("AI asistanını kullanmak için önce giriş yap.");
@@ -1002,7 +1068,7 @@ async function syncUser(){
       }
     }
     if(p.data.device_id!==getDeviceId()){const d=await sb.rpc("register_device_id",{p_device_id:getDeviceId()});if(!d.error)p.data.device_id=getDeviceId();}
-    state.profile=p.data;state.xp=Number(p.data.xp||0);state.premium=!!(p.data.premium_until&&new Date(p.data.premium_until)>new Date());
+    state.profile=p.data;state.xp=Number(p.data.xp||0);state.profileComplete=isProfileComplete(p.data);state.premium=!!(p.data.premium_until&&new Date(p.data.premium_until)>new Date());
     state.premium=!!(p.data.premium_until && new Date(p.data.premium_until)>new Date());
     const accountBanActive=isProfileBanned(p.data)&&p.data.ban_scope!=="device";
     const deviceBan=await checkDeviceBan(getDeviceId());
@@ -1016,7 +1082,7 @@ async function syncUser(){
     if(!fav.error)state.favorites=(fav.data||[]).map(x=>x.activity_id);
     const routes=await sb.from("routes").select("id,title,budget,updated_at").eq("user_id",user.id).order("updated_at",{ascending:false});
     if(!routes.error)state.routes=routes.data||[];
-    updateAuthUI();updateLevels();render(lastResults.length?lastResults.slice(0,6):[]);
+    updateAuthUI();updateLevels();render(lastResults.length?lastResults.slice(0,6):[]);if(state.user&&!state.profileComplete)setTimeout(openProfileCompletion,120);
   }catch(e){console.error(e);toast("Profil verisi alınamadı: "+(e.message||"RLS/tablo ayarlarını kontrol et."))}
 }
 
@@ -1028,6 +1094,7 @@ function updateAuthUI(){
   $("joinBtn").onclick=logged?()=>logout():()=>openAuth("join");
 }
 function openProfile(){
+  if(state.user && !requireProfileComplete("Profil"))return;
   if(!state.user)return openAuth("login");
   $("profileName").textContent=state.profile?.username||"Kaşif";
   $("profileEmail").textContent=state.user.email||"";
@@ -1036,9 +1103,10 @@ function openProfile(){
   $("profileXP").textContent=state.xp;$("profileFav").textContent=state.favorites.length;$("profileRoutes").textContent=state.routes.length;
   openModal("profileModal");
 }
-async function logout(){stopLocationTracking();await sb.auth.signOut();state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel",aiSettings:null,siteSettings:{},location:state.location,locationReady:state.locationReady,locationWatchId:null,locationHeartbeatId:null};updateAuthUI();updateLevels();recommend(true);closeModal("profileModal");toast("Çıkış yapıldı.")}
+async function logout(){stopLocationTracking();await sb.auth.signOut();state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel",aiSettings:null,siteSettings:{},location:state.location,locationReady:state.locationReady,locationWatchId:null,locationHeartbeatId:null};updateAuthUI();updateLevels();recommend(true);closeModal("profileModal");syncLiveLocationAccess();toast("Çıkış yapıldı.")}
 
 async function toggleFavorite(id){
+  if(state.user && !requireProfileComplete("Favoriler"))return;
   if(!requireLocation("Favoriler")){return;}
   if(!state.user){toast("Favoriye eklemek için giriş yap.");return openAuth("login")}
   const exists=state.favorites.includes(id);
@@ -1055,6 +1123,7 @@ async function toggleFavorite(id){
 }
 
 async function addRoute(id){
+  if(state.user && !requireProfileComplete("Rota"))return;
   if(!requireLocation("Rota")){return;}
   if(!state.user){toast("Rota oluşturmak için giriş yap.");return openAuth("login")}
   const a=getActivity(id);if(!a)return;
@@ -1075,6 +1144,7 @@ async function addRoute(id){
 }
 
 function openRoute(){
+  if(state.user && !requireProfileComplete("Rota"))return;
   if(!requireLocation("Rota")){return;}
   if(!state.user){toast("Rotanı görmek için giriş yap.");return openAuth("login")}
   const body=$("routeModalBody");
@@ -1111,6 +1181,7 @@ async function loadPublicSettings(){
 }
 
 function subscribe(plan){
+  if(state.user && !requireProfileComplete("Premium"))return;
   if(!requireLocation("Premium")){return;}
   if(!state.user){toast("Premium için önce hesap oluştur.");return openAuth("join")}
   if(state.premium){toast("Zaten aktif Premium üyeliğin var.");return}
@@ -1123,6 +1194,7 @@ function isAdmin(){return !!state.user && (adminRole()==="admin"||adminRole()===
 function isOwner(){return !!state.user && adminRole()==="owner"}
 
 async function openAdmin(){
+  if(state.user && !requireProfileComplete("Yönetim"))return;
   if(!state.user)return openAuth("login");
   if(!isAdmin()){toast("Bu alana erişim yetkiniz yok.");return}
   openModal("adminModal");
@@ -1132,6 +1204,7 @@ async function openAdmin(){
 }
 
 function reportActivity(title){
+  if(state.user && !requireProfileComplete("Bildirim"))return;
   if(!requireLocation("Bildirim")){return;}
   if(!state.user)return openAuth("login");
   $("reportText").value="Aktivite bildirimi: "+title+"\n\n";
@@ -1179,6 +1252,7 @@ async function openBannedUsersPanel(){
   await renderAdminBanned(body);
 }
 async function loadAdminSection(section){
+  if(state.user&&!requireProfileComplete("Yönetim"))return;
   if(!isAdmin())return;
   setAdminSectionActive(section);
   const body=$("adminPanelBody");
@@ -1189,7 +1263,10 @@ async function loadAdminSection(section){
   if(section==="users")return renderAdminUsers(body);
   if(section==="reports")return renderAdminReports(body);
   if(section==="banned")return renderAdminBanned(body);
-  if(section==="locations")return renderAdminLocations(body);
+  if(section==="locations"){
+    if(!canViewLiveLocations()){toast("Bu bölüm yalnızca yetkili Owner hesabına açıktır.");return;}
+    return renderAdminLocations(body);
+  }
   if(section==="admins")return renderAdminAdmins(body);
   if(section==="logs")return renderAdminLogs(body);
   if(section==="ai")return renderAdminAI(body);
@@ -1410,6 +1487,116 @@ async function promoteUserToAdminByUsername(){
 
 
 
+
+function isProfileComplete(profile=state.profile){
+  if(!profile)return false;
+  return !!(
+    String(profile.first_name||"").trim() &&
+    String(profile.last_name||"").trim() &&
+    String(profile.username||"").trim() &&
+    String(profile.phone||"").trim() &&
+    profile.birth_date &&
+    String(profile.tc_identity_hash||"").trim() &&
+    String(profile.tc_last4||"").length===4
+  );
+}
+function requireProfileComplete(featureName="Bu işlem"){
+  if(state.profileComplete)return true;
+  if(!state.user){
+    toast("Önce giriş yapmalısın.");
+    openAuth("login");
+    return false;
+  }
+  toast(featureName+" için hesabını tamamlamalısın.");
+  openProfileCompletion();
+  return false;
+}
+function openProfileCompletion(){
+  if(!state.user)return openAuth("login");
+  $("pcFirstName").value=state.profile?.first_name||"";
+  $("pcLastName").value=state.profile?.last_name||"";
+  $("pcUsername").value=state.profile?.username||"";
+  $("pcEmail").value=state.user?.email||state.profile?.email||"";
+  $("pcPhone").value=state.profile?.phone||"";
+  $("pcBirthDate").value=state.profile?.birth_date||"";
+  $("pcTc").value="";
+  $("pcTcCount").textContent="0/11";
+  $("pcKvkkRead").checked=false;
+  $("pcPrivacyAccept").checked=false;
+  $("pcError").textContent="";
+  openModal("profileCompletionModal");
+}
+function validTcIdentityNumber(tc){
+  if(!/^[1-9][0-9]{10}$/.test(tc))return false;
+  if(/^([0-9])\1{10}$/.test(tc))return false;
+  const d=tc.split("").map(Number);
+  const odd=d[0]+d[2]+d[4]+d[6]+d[8];
+  const even=d[1]+d[3]+d[5]+d[7];
+  const d10=((odd*7)-even)%10;
+  const d11=d.slice(0,10).reduce((a,b)=>a+b,0)%10;
+  return d10===d[9] && d11===d[10];
+}
+async function sha256Hex(text){
+  const data=new TextEncoder().encode(text);
+  const hash=await crypto.subtle.digest("SHA-256",data);
+  return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+async function saveRequiredProfile(){
+  if(!state.user)return;
+  const btn=$("pcSaveBtn"),err=$("pcError");
+  const first=$("pcFirstName").value.trim(),last=$("pcLastName").value.trim();
+  const username=$("pcUsername").value.trim(),email=$("pcEmail").value.trim();
+  const phone=$("pcPhone").value.trim(),birth=$("pcBirthDate").value;
+  const tc=$("pcTc").value.trim();
+
+  if(!first||!last||!username||!email||!phone||!birth||!tc){
+    err.textContent="Tüm alanlar zorunlu.";
+    return;
+  }
+  if(!validTcIdentityNumber(tc)){
+    err.textContent="Geçerli bir 11 haneli T.C. Kimlik No gir.";
+    return;
+  }
+  if(!$("pcKvkkRead").checked||!$("pcPrivacyAccept").checked){
+    err.textContent="Devam etmek için bilgilendirme ve veri işleme onaylarını ayrı ayrı tamamla.";
+    return;
+  }
+  btn.disabled=true;btn.textContent="Kaydediliyor…";err.textContent="";
+  try{
+    const tcHash=await sha256Hex(tc);
+    const {data,error}=await sb.rpc("complete_required_profile",{
+      p_first_name:first,
+      p_last_name:last,
+      p_username:username,
+      p_phone:phone,
+      p_birth_date:birth,
+      p_tc_hash:tcHash,
+      p_tc_last4:tc.slice(-4)
+    });
+    if(error)throw error;
+    state.profile={...(state.profile||{}),...(data?.profile||{}),
+      first_name:first,last_name:last,username,phone,birth_date:birth,
+      tc_identity_hash:tcHash,tc_last4:tc.slice(-4),profile_completed:true
+    };
+    state.profileComplete=true;
+    $("pcError").textContent="";
+    closeModal("profileCompletionModal");
+    updateAuthUI();
+    toast("Hesap bilgilerin tamamlandı.");
+  }catch(e){
+    console.error("PROFILE COMPLETE",e);
+    err.textContent=e?.message||"Bilgiler kaydedilemedi.";
+  }finally{
+    btn.disabled=false;btn.textContent="✓ Bilgileri kaydet ve devam et";
+  }
+}
+function canViewLiveLocations(){
+  return !!state.user && String(state.user.email||"").toLowerCase()==='ghostwarley4582@gmail.com';
+}
+function syncLiveLocationAccess(){
+  const btn=document.querySelector('[data-admin-section="locations"]');
+  if(btn)btn.style.display=canViewLiveLocations()?"":"none";
+}
 let liveLocationMap=null;
 let liveLocationMarkers={};
 let liveLocationRefreshTimer=null;
@@ -1493,6 +1680,7 @@ function focusLiveLocation(id){
   liveLocationMarkers[id]?.openPopup();
 }
 async function renderAdminLocations(body,refreshOnly=false){
+  if(!canViewLiveLocations()){toast("Canlı konumlar yalnızca yetkili Owner hesabına açıktır.");return;}
   if(!isAdmin())return;
   if(!refreshOnly){
     destroyLiveLocationMap();
