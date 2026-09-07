@@ -428,7 +428,7 @@ async function submitBan(){
   }
   const targetRole=await getTargetRole(banTargetId);
   if(adminRole()==='admin'&&targetRole==='owner'){closeModal('banModal');return toast('Owner hesabına müdahale edilemez.');}
-  const ok=await callAdminRpc('admin_ban_user',{p_target_user_id:banTargetId,p_ban_scope:scope,p_duration_minutes:minutes,p_reason:reason});
+  const ok=await callAdminRpc('admin_ban_user',{target_user_id:banTargetId,ban_scope:scope,duration_minutes:minutes,reason:reason});
   if(ok===null)return;
   closeModal('banModal');toast(scope==='device'?(durationKey==='permanent'?'Cihaz süresiz banlandı.':'Cihaz banlandı.'):(durationKey==='permanent'?'Hesap süresiz banlandı.':'Hesap banlandı.'));
   await renderAdminUsers($('adminPanelBody'));await renderAdminManagersIfVisible();
@@ -799,7 +799,12 @@ async function callAdminRpc(fn,args){
   if(!isAdmin()){toast("Bu işlem için yönetici yetkisi gerekli.");return null}
   try{
     const {data,error}=await sb.rpc(fn,args);
-    if(error){console.error("ADMIN RPC ERROR",fn,error,args);toast("İşlem başarısız: "+(error.message||error.details||error.hint||"Sunucu hatası"));return null}
+    if(error){
+      console.error("ADMIN RPC ERROR",fn,error,args);
+      const msg=error.message||error.details||error.hint||"Sunucu hatası";
+      toast("İşlem başarısız: "+msg);
+      return null
+    }
     return data;
   }catch(e){
     console.error("ADMIN RPC EXCEPTION",fn,e,args);toast("İşlem başarısız: "+(e.message||"Sunucu hatası"));return null;
