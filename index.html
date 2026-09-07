@@ -72,6 +72,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 <div class="control"><label>ZAMAN</label><strong id="timeText">4 saat</strong><input id="time" class="range" type="range" min="1" max="12" value="4"></div>
 <div class="control"><label>MOD</label><strong id="modeText">Kişisel</strong><div class="chips" style="margin:0"><button class="chip mini" onclick="setMode('Kişisel')">Kişisel</button><button class="chip mini" onclick="setMode('Çift')">Çift</button><button class="chip mini" onclick="setMode('Arkadaş')">Arkadaş</button></div></div>
 </div>
+<div class="control" style="margin-top:12px"><label>ŞEHİR</label><input id="city" value="İstanbul" placeholder="İstanbul" style="width:100%;background:#09070d;color:#fff;border:1px solid var(--line);border-radius:14px;padding:13px;outline:none"></div>
 </div>
 </section>
 
@@ -133,7 +134,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 </section>
 </main>
 
-<footer><div class="wrap">DISCOVER AI · Publishable key tarayıcıda kullanılabilir; secret/service_role anahtarları asla frontend'e konmaz.</div></footer>
+<footer><div class="wrap">DISCOVER AI · Canlı mekan verileri güvenli Supabase Edge Function üzerinden alınır; secret/service_role anahtarları frontend'e konmaz.</div></footer>
 
 <div id="authModal" class="modal"><div class="modalbox">
 <button class="close" onclick="closeModal('authModal')">×</button><div class="eyebrow">ACCOUNT</div>
@@ -176,9 +177,12 @@ const SUPABASE_PUBLISHABLE_KEY="sb_publishable_b_srPWflLRrFV4ayykMa-g_mFb3Z8rz";
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 
 let activities=[];
+let livePlaces=[];
 let state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel"};
 let lastResults=[];
 let betterOffset=0;
+let liveRequestSeq=0;
+let liveTimer=null;
 
 const $=id=>document.getElementById(id);
 function toast(t){const x=$("toast");x.textContent=t;x.style.display="block";clearTimeout(window.__toast);window.__toast=setTimeout(()=>x.style.display="none",3000)}
@@ -189,24 +193,69 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&l
 function normalize(s){return String(s||"").toLocaleLowerCase("tr-TR").replace(/ı/g,"i").replace(/ş/g,"s").replace(/ğ/g,"g").replace(/ü/g,"u").replace(/ö/g,"o").replace(/ç/g,"c")}
 function currentBudget(){return Number($("budget").value)}
 function currentTime(){return Number($("time").value)*60}
+function currentCity(){return ($("city")?.value||"İstanbul").trim()||"İstanbul"}
 function queryText(){return normalize($("mood").value)}
 function priceText(p){return Number(p||0)===0?"Ücretsiz":"₺"+Number(p).toLocaleString("tr-TR")}
-function emojiFor(a){const t=normalize(a.title+" "+a.tag);if(t.includes("sanat"))return"🎨";if(t.includes("yuruyus"))return"🌅";if(t.includes("kahve"))return"☕";if(t.includes("lezzet"))return"🍽️";if(t.includes("oyun")||t.includes("eglence"))return"🎉";if(t.includes("muz")||t.includes("kultur"))return"🏛️";if(t.includes("foto"))return"📸";if(t.includes("manzara"))return"🌃";return a.emoji||"✨"}
+function priceLevelText(p){const n=Number(p||0);return n>0?"₺".repeat(Math.min(4,n)):"Fiyat bilgisi yok"}
+function emojiFor(a){const t=normalize(a.title+" "+a.tag+" "+(a.categories||[]).join(" "));if(t.includes("sanat"))return"🎨";if(t.includes("yuruyus")||t.includes("park"))return"🌅";if(t.includes("kahve")||t.includes("cafe"))return"☕";if(t.includes("lezzet")||t.includes("restaurant")||t.includes("lokanta"))return"🍽️";if(t.includes("oyun")||t.includes("eglence")||t.includes("bar"))return"🎉";if(t.includes("muz")||t.includes("kultur"))return"🏛️";if(t.includes("foto"))return"📸";if(t.includes("manzara")||t.includes("rooftop"))return"🌃";return a.emoji||"✨"}
 
 function normalizeActivity(a){
   return {
     id:a.id,title:a.title||"Deneyim",price:Number(a.price||0),rating:Number(a.rating||0),
     tag:a.tag||"KEŞİF",description:a.description||"",why:a.why||a.description||"Bütçene ve zamanına göre değerlendirildi.",
     time:Number(a.duration_min||a.time||60),dist:Number(a.distance_km||a.dist_km||0),
-    moods:Array.isArray(a.moods)?a.moods:[],city:a.city||"İstanbul",emoji:a.emoji||"✨",is_active:a.is_active!==false
+    moods:Array.isArray(a.moods)?a.moods:[],city:a.city||"İstanbul",emoji:a.emoji||"✨",
+    is_active:a.is_active!==false,isLive:false,categories:[]
   };
+}
+
+function normalizeLivePlace(p){
+  const loc=p.location||{};
+  const cats=Array.isArray(p.categories)?p.categories.map(c=>c.name).filter(Boolean):[];
+  const title=p.name||"Mekan";
+  const rating=Number(p.rating||0);
+  const distanceKm=Number(p.distance||0)/1000;
+  return {
+    id:"live:"+String(p.place_id||title),
+    place_id:p.place_id||null,
+    title,
+    price:0,
+    priceLevel:Number(p.price||0),
+    rating,
+    tag:"CANLI MEKAN",
+    description:p.description||cats.slice(0,3).join(" · "),
+    why:"Foursquare canlı mekan verisi; konum, puan ve fiyat seviyesi birlikte değerlendirildi.",
+    time:60,
+    dist:distanceKm,
+    moods:cats,
+    city:loc.locality||currentCity(),
+    emoji:"📍",
+    is_active:true,
+    isLive:true,
+    categories:cats,
+    address:loc.formatted_address||[loc.address,loc.locality].filter(Boolean).join(", "),
+    website:p.website||"",
+    tel:p.tel||"",
+    fsq_url:p.fsq_url||"",
+    hours:p.hours||null
+  };
+}
+
+function budgetToPriceLevel(budget){
+  if(budget<=300)return 1;
+  if(budget<=700)return 2;
+  if(budget<=1500)return 3;
+  return 4;
 }
 
 async function loadActivities(){
   $("results").innerHTML='<div class="empty loading">Aktiviteler Supabase üzerinden yükleniyor...</div>';
   const {data,error}=await sb.from("activities").select("id,title,price,rating,tag,description,why,duration_min,distance_km,moods,city,emoji,is_active").eq("is_active",true);
   if(error){
-    console.error(error);activities=[];$("results").innerHTML='<div class="empty">Aktiviteler yüklenemedi. Supabase activities tablosu/RLS ayarını kontrol et.</div>';return;
+    console.error(error);
+    activities=[];
+    await recommend(true);
+    return;
   }
   const map=new Map();
   (data||[]).map(normalizeActivity).forEach(a=>{if(!map.has(normalize(a.title)))map.set(normalize(a.title),a)});
@@ -215,7 +264,7 @@ async function loadActivities(){
 }
 
 function moodMatch(a,q){
-  const hay=normalize([a.title,a.tag,a.description,a.why,...a.moods].join(" "));
+  const hay=normalize([a.title,a.tag,a.description,a.why,...a.moods,...(a.categories||[])].join(" "));
   const words=q.split(/\s+/).filter(w=>w.length>2);
   const matched=words.filter(w=>hay.includes(w));
   return Math.min(1,matched.length/Math.max(1,Math.min(3,words.length)));
@@ -223,8 +272,24 @@ function moodMatch(a,q){
 
 function scoreActivity(a){
   const budget=currentBudget(), time=currentTime(), q=queryText(), mode=normalize(state.mode);
-  if(a.price>budget || a.time>time)return -1;
+  if(!a.isLive && (a.price>budget || a.time>time))return -1;
+
   let score=0;
+
+  if(a.isLive){
+    const level=Number(a.priceLevel||0);
+    const target=budgetToPriceLevel(budget);
+    const priceFit=level?Math.max(0,1-Math.abs(target-level)/4):.5;
+    const moodFit=q?moodMatch(a,q):0;
+    const modeFit=(mode==="cift"&&normalize(a.moods.join(" ")).match(/romantik|cafe|restaurant|bar/))?1:
+                  (mode==="arkadas"&&normalize(a.moods.join(" ")).match(/eglence|oyun|bar/))?1:
+                  (mode==="kisisel"&&normalize(a.moods.join(" ")).match(/kultur|muz|park|sanat|kesif/))?.8:0;
+    const ratingFit=Math.max(0,Math.min(1,a.rating/10));
+    const distanceFit=a.dist>0?Math.max(0,1-a.dist/15):.65;
+    score=priceFit*25+moodFit*30+modeFit*12+ratingFit*28+distanceFit*5;
+    return Math.round(Math.min(100,score));
+  }
+
   const budgetFit=budget===0?(a.price===0?1:0):Math.max(0,1-Math.abs(budget-a.price)/Math.max(budget,1));
   const timeFit=Math.max(0,1-Math.max(0,a.time-time)/Math.max(time,1));
   const moodFit=q?moodMatch(a,q):0;
@@ -238,36 +303,133 @@ function scoreActivity(a){
   return Math.round(Math.min(100,score));
 }
 
-function recommend(silent=false){
-  if(!activities.length){$("results").innerHTML='<div class="empty">Şu anda gösterilecek aktif deneyim bulunamadı.</div>';return}
-  betterOffset=0;
-  let list=activities.map(a=>({...a,score:scoreActivity(a)})).filter(a=>a.score>=0);
-  list.sort((a,b)=>b.score-a.score || b.rating-a.rating);
+async function fetchLivePlaces(){
+  const seq=++liveRequestSeq;
+  const q=$("mood").value.trim()||(
+    state.mode==="Çift"?"romantik mekanlar":
+    state.mode==="Arkadaş"?"eğlenceli mekanlar":
+    "keşif mekanları"
+  );
+
+  const {data,error}=await sb.functions.invoke("discover-live",{
+    body:{
+      query_text:q,
+      city:currentCity(),
+      budget:currentBudget(),
+      max_results:10,
+      max_price:budgetToPriceLevel(currentBudget()),
+      sort:"RELEVANCE"
+    }
+  });
+
+  if(seq!==liveRequestSeq)return [];
+
+  if(error){
+    console.warn("discover-live:",error);
+    return [];
+  }
+
+  if(!data?.ok || !Array.isArray(data.places)){
+    console.warn("discover-live response:",data);
+    return [];
+  }
+
+  return data.places.map(normalizeLivePlace);
+}
+
+function mergeResults(live,local){
+  const seen=new Set();
+  const all=[];
+  [...live,...local].forEach(a=>{
+    const key=normalize(a.title);
+    if(!seen.has(key)){seen.add(key);all.push(a)}
+  });
+  return all;
+}
+
+async function recommend(silent=false){
+  $("results").innerHTML='<div class="empty loading">✦ Canlı mekanlar aranıyor...</div>';
+  const local=activities.map(a=>({...a,score:scoreActivity(a)})).filter(a=>a.score>=0);
+  const live=await fetchLivePlaces();
+  const liveScored=live.map(a=>({...a,score:scoreActivity(a)})).filter(a=>a.score>=0);
+  const localScored=local;
+  const list=mergeResults(liveScored,localScored).sort((a,b)=>b.score-a.score || b.rating-a.rating);
+
   lastResults=list;
-  render(list.slice(0,6));
-  $("resultSummary").textContent=`${list.length} uygun deneyim bulundu · Bütçe ${priceText(currentBudget())} · ${currentTime()/60} saat · ${state.mode}`;
-  if(!silent)toast("DISCOVER Score güncellendi.");
+  livePlaces=liveScored;
+  betterOffset=0;
+
+  render(list.slice(0,8));
+
+  const liveText=liveScored.length?`${liveScored.length} canlı mekan`:"canlı mekan bulunamadı";
+  $("resultSummary").textContent=`${list.length} uygun sonuç · ${liveText} · ${currentCity()} · Bütçe ${priceText(currentBudget())} · ${currentTime()/60} saat · ${state.mode}`;
+
+  if(!silent)toast(liveScored.length?"Canlı Foursquare sonuçları güncellendi.":"Canlı sonuç bulunamadı; kayıtlı deneyimler gösteriliyor.");
+}
+
+function scheduleRecommend(silent=true){
+  clearTimeout(liveTimer);
+  liveTimer=setTimeout(()=>recommend(silent),650);
 }
 
 function render(list){
-  if(!list.length){$("results").innerHTML='<div class="empty"><b>Bu kombinasyona uygun deneyim bulamadım.</b><p class="muted">Bütçeyi veya zamanı biraz artırmayı deneyebilirsin.</p></div>';return}
+  if(!list.length){
+    $("results").innerHTML='<div class="empty"><b>Bu kombinasyona uygun deneyim bulamadım.</b><p class="muted">Bütçeyi, zamanı veya şehir bilgisini biraz değiştir.</p></div>';
+    return;
+  }
+
   $("results").innerHTML=list.map(a=>{
-    const fav=state.favorites.includes(a.id);
+    const isLive=!!a.isLive;
+    const localFav=!isLive && state.favorites.includes(a.id);
     const moodNames=(a.moods||[]).slice(0,2).join(" · ");
+
+    const priceHtml=isLive
+      ? `<span class="price">${esc(priceLevelText(a.priceLevel))}</span><span class="muted" style="font-size:12px"> fiyat seviyesi</span>`
+      : `<span class="price">${priceText(a.price)}</span>`;
+
+    const websiteButton=isLive && a.website
+      ? `<button class="btn primary" onclick="openExternal(${JSON.stringify(a.website)})">Web sitesi</button>`
+      : isLive && a.fsq_url
+        ? `<button class="btn primary" onclick="openExternal(${JSON.stringify(a.fsq_url)})">Foursquare</button>`
+        : `<button class="btn primary" onclick="addRoute(${JSON.stringify(a.id)})">Rotama ekle</button>`;
+
+    const favoriteButton=isLive
+      ? `<button class="btn mini" onclick="toggleLiveFavorite(${JSON.stringify(a.id)})">${isLiveFavorite(a.id)?"♥":"♡"}</button>`
+      : `<button class="btn mini" onclick="toggleFavorite(${JSON.stringify(a.id)})">${localFav?"♥":"♡"}</button>`;
+
     return `<article class="card">
       <div class="cover">${emojiFor(a)}<span class="score">%${a.score} Uyum</span></div>
       <span class="tag">${esc(a.tag)}</span>
       <h3>${esc(a.title)}</h3>
-      <div class="meta">★ ${a.rating.toFixed(1)} · ${a.dist?esc(a.dist+" km"):"Konum yok"} · ${a.time} dk · ${esc(a.city)}</div>
+      <div class="meta">★ ${a.rating?Number(a.rating).toFixed(1):"—"} · ${a.dist?esc(a.dist.toFixed(1)+" km"):"Konum yok"} · ${esc(a.city)}</div>
+      ${a.address?`<div class="meta">📍 ${esc(a.address)}</div>`:""}
       <p class="why">${esc(a.why)}</p>
-      <div class="match">🧠 <b>Neden bu?</b> ${esc(moodNames?moodNames+" ile eşleşiyor. ":"")}Bütçene ve zamanına uyuyor.</div>
-      <div class="row" style="margin-top:12px"><span class="price">${priceText(a.price)}</span><button class="btn mini" onclick="toggleFavorite(${JSON.stringify(a.id)})">${fav?"♥":"♡"}</button></div>
+      <div class="match">🧠 <b>Neden bu?</b> ${esc(moodNames?moodNames+" ile eşleşiyor. ":"")}Bütçe ve tercih sinyallerine göre puanlandı.${isLive?" Canlı Foursquare verisi kullanıldı.":""}</div>
+      <div class="row" style="margin-top:12px">${priceHtml}${favoriteButton}</div>
       <div class="card-actions">
-        <button class="btn primary" onclick="addRoute(${JSON.stringify(a.id)})">Rotama ekle</button>
+        ${websiteButton}
         <button class="btn" onclick="reportActivity(${JSON.stringify(a.title)})">Bildir</button>
       </div>
     </article>`;
   }).join("");
+}
+
+function openExternal(url){
+  if(!url)return;
+  window.open(url,"_blank","noopener,noreferrer");
+}
+
+function liveFavoriteKey(){return "discover_ai_live_favorites_v1"}
+function getLiveFavorites(){
+  try{return JSON.parse(localStorage.getItem(liveFavoriteKey())||"[]")}catch{return[]}
+}
+function isLiveFavorite(id){return getLiveFavorites().includes(id)}
+function toggleLiveFavorite(id){
+  const arr=getLiveFavorites();
+  const next=arr.includes(id)?arr.filter(x=>x!==id):[...arr,id];
+  localStorage.setItem(liveFavoriteKey(),JSON.stringify(next));
+  render(lastResults.slice(0,8));
+  toast(arr.includes(id)?"Canlı favoriden çıkarıldı.":"Canlı favorilere eklendi.");
 }
 
 function setMood(v,el){
@@ -277,25 +439,26 @@ function setMood(v,el){
   recommend();
 }
 function setMode(v){state.mode=v;$("modeText").textContent=v;recommend()}
-$("budget").addEventListener("input",e=>{$("budgetText").textContent="₺"+Number(e.target.value).toLocaleString("tr-TR");recommend(true)});
-$("time").addEventListener("input",e=>{$("timeText").textContent=e.target.value+" saat";recommend(true)});
+$("budget").addEventListener("input",e=>{$("budgetText").textContent="₺"+Number(e.target.value).toLocaleString("tr-TR");scheduleRecommend(true)});
+$("time").addEventListener("input",e=>{$("timeText").textContent=e.target.value+" saat";scheduleRecommend(true)});
+$("city").addEventListener("change",()=>recommend());
 
-function surprise(){
-  if(!activities.length)return toast("Henüz aktivite yüklenmedi.");
-  const candidates=activities.map(a=>({...a,score:scoreActivity(a)})).filter(a=>a.score>=0);
-  if(!candidates.length)return toast("Mevcut bütçe ve zamanda sürpriz bulunamadı.");
-  const pool=candidates.slice().sort((a,b)=>b.score-a.score).slice(0,Math.min(6,candidates.length));
-  const a=pool[Math.floor(Math.random()*pool.length)];
+async function surprise(){
   $("mood").value="Sürpriz";
-  render([{...a,score:scoreActivity(a)}]);
-  $("resultSummary").textContent="🎲 Bütçene ve zamanına uyan sürpriz deneyim.";
-  scrollToId("explore");toast("Sürpriz deneyimin hazır.");
+  await recommend(false);
+  if(!lastResults.length)return;
+  const pool=lastResults.slice(0,Math.min(8,lastResults.length));
+  const a=pool[Math.floor(Math.random()*pool.length)];
+  render([{...a,score:a.score}]);
+  $("resultSummary").textContent="🎲 Canlı veriler ve tercihlerin içinden sürpriz seçim.";
+  scrollToId("explore");
+  toast("Sürpriz deneyimin hazır.");
 }
 
 function better(){
   if(!lastResults.length)return recommend();
   betterOffset=(betterOffset+3)%Math.max(1,lastResults.length);
-  const list=lastResults.slice(betterOffset).concat(lastResults.slice(0,betterOffset)).slice(0,6);
+  const list=lastResults.slice(betterOffset).concat(lastResults.slice(0,betterOffset)).slice(0,8);
   render(list);
   toast("Alternatif sonuçlar getirildi.");
 }
