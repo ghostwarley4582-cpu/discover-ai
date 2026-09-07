@@ -181,9 +181,9 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 
 <div id="aiModal" class="modal"><div class="modalbox" style="width:min(760px,100%)">
 <button class="close" onclick="closeModal('aiModal')">×</button>
-<div class="eyebrow">✦ DISCOVER AI ASSISTANT</div>
+<div class="eyebrow">✦ DISCOVER AI ASSISTANT <span id="aiProviderBadge" class="badge good" style="margin-left:8px">FREE AI</span></div>
 <h2 style="margin-bottom:6px">Bugününü AI ile tasarla</h2>
-<p class="muted" style="margin-top:0">Bütçe, zaman, mod ve seçtiğin deneyimler birlikte değerlendirilir.</p>
+<p class="muted" style="margin-top:0">Bütçe, zaman, mod ve seçtiğin deneyimler birlikte değerlendirilir. Ücretsiz AI katmanı kullanılır.</p>
 <div id="aiConversation" class="glass" style="max-height:420px;overflow:auto;margin-top:12px">
   <div class="muted">Merhaba. Ne yapmak istediğini anlat; sana uygun deneyimleri seçip nedenlerini açıklayayım.</div>
 </div>
@@ -362,7 +362,8 @@ async function sendAIRequest(){
     renderAIConversation();
   }catch(e){
     console.error("AI ASSISTANT ERROR",e);
-    aiConversation.push({role:"assistant",text:"AI servisine bağlanamadım. Edge Function ve OPENAI_API_KEY ayarlarını kontrol et."});
+    const msg=String(e?.message||"");
+    aiConversation.push({role:"assistant",text:msg.includes("429")?"Ücretsiz AI kullanım limitine ulaşıldı. Daha sonra tekrar dene.":"AI servisine bağlanamadım. Edge Function ve OPENROUTER_API_KEY ayarlarını kontrol et."});
     renderAIConversation();
   }finally{
     btn.disabled=false;btn.textContent="✦ AI'ya sor";
