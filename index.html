@@ -1590,13 +1590,23 @@ function reportActivity(title){
 }
 
 async function submitReport(){
+  if(!state.user)return openAuth("login");
   const text=$("reportText").value.trim();
   if(!text)return toast("Şikayet metni gerekli.");
   try{
-    const {error}=await sb.from("reports").insert({user_id:state.user.id,type:"activity_report",description:text,status:"open"});
+    const {data,error}=await sb.rpc("create_activity_report_v67",{
+      p_type:"activity_report",
+      p_description:text
+    });
     if(error)throw error;
-    $("reportText").value="";toast("Bildirimin alındı.");closeModal("reportModal");
-  }catch(e){toast("Bildirim gönderilemedi: "+(e.message||"Bilinmeyen hata"))}
+    if(data?.ok!==true)throw new Error(data?.message||"Rapor oluşturulamadı.");
+    $("reportText").value="";
+    toast("Bildirimin alındı.");
+    closeModal("reportModal");
+  }catch(e){
+    console.error("REPORT INSERT",e);
+    toast("Bildirim gönderilemedi: "+(e.message||"Sunucu hatası"));
+  }
 }
 
 async function refreshAdminStats(){
@@ -2358,42 +2368,69 @@ function bannedUserRow(u){
 }
 
 async function renderAdminReports(body){
-  const {data,error}=await sb.from("reports").select("id,user_id,type,description,status,admin_note,created_at").order("created_at",{ascending:false}).limit(200);
-  if(error){body.innerHTML='<div class="empty">Şikayetler yüklenemedi: '+esc(error.message)+'</div>';return}
+  if(!isAdmin())return;
+  const {data,error}=await sb.rpc("admin_list_reports_v67");
+  if(error){
+    body.innerHTML='<div class="empty">Şikayetler yüklenemedi: '+esc(error.message||"Sunucu hatası")+'</div>';
+    return;
+  }
   body.innerHTML=`
-    <div class="admin-toolbar"><button class="btn" onclick="renderAdminReports($('adminPanelBody'))">↻ Yenile</button></div>
-    <div class="admin-list">${(data||[]).map(r=>`
-      <div class="admin-item" style="align-items:flex-start">
-        <div style="flex:1"><b>${esc(r.type||"Bildirim")}</b><small>${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""} · Durum: ${esc(r.status||"open")}</small>
-        <div style="margin-top:8px">${esc(r.description||"")}</div>${r.admin_note?`<div class="muted" style="margin-top:7px">Not: ${esc(r.admin_note)}</div>`:""}</div>
-        <div class="admin-actions">
-          ${r.status!=="resolved"?`<button class="btn mini" onclick="resolveReport(${JSON.stringify(r.id)})">Çözüldü</button>`:`<button class="btn mini" onclick="reopenReport(${JSON.stringify(r.id)})">Aç</button>`}
-          <button class="btn mini" onclick="noteReport(${JSON.stringify(r.id)},${JSON.stringify(r.admin_note||"")})">Not ekle</button>
-          <button class="btn mini" onclick="deleteReport(${JSON.stringify(r.id)})">Sil</button>
-        </div>
-      </div>`).join("")||'<div class="empty">Şikayet kuyruğu boş.</div>'}</div>`;
+    <div class="admin-toolbar">
+      <button class="btn" type="button" onclick="renderAdminReports($('adminPanelBody'))">↻ Yenile</button>
+    </div>
+    <div class="admin-list">
+      ${(data||[]).map(r=>`
+        <div class="admin-item" style="align-items:flex-start">
+          <div style="flex:1">
+            <b>${esc(r.type||"Bildirim")}</b>
+            <small>${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""} · Durum: ${esc(r.status||"open")}</small>
+            <div style="margin-top:8px">${esc(r.description||"")}</div>
+            ${r.admin_note?`<div class="muted" style="margin-top:7px">Not: ${esc(r.admin_note)}</div>`:""}
+            ${r.target_username?`<div class="muted" style="margin-top:5px">Kullanıcı: ${esc(r.target_username)}</div>`:""}
+          </div>
+          <div class="admin-actions">
+            ${r.status!=="resolved"
+              ?`<button class="btn mini" type="button" onclick='resolveReport(${JSON.stringify(r.id)})'>Çözüldü</button>`
+              :`<button class="btn mini" type="button" onclick='reopenReport(${JSON.stringify(r.id)})'>Aç</button>`}
+            <button class="btn mini" type="button" onclick='noteReport(${JSON.stringify(r.id)},${JSON.stringify(r.admin_note||"")})'>Not ekle</button>
+            <button class="btn mini" type="button" onclick='deleteReport(${JSON.stringify(r.id)})'>Sil</button>
+          </div>
+        </div>`).join("")||'<div class="empty">Şikayet kuyruğu boş.</div>'}
+    </div>`;
 }
 async function resolveReport(id){
-  const {error}=await sb.from("reports").update({status:"resolved"}).eq("id",id);
-  if(error)return toast("Şikayet güncellenemedi: "+error.message);
-  toast("Şikayet çözüldü.");await refreshAdminStats();await renderAdminReports($("adminPanelBody"));
+  const {data,error}=await sb.rpc("admin_update_report_v67",{p_report_id:id,p_action:"resolve",p_note:null});
+  if(error)return toast("Şikayet güncellenemedi: "+(error.message||"Sunucu hatası"));
+  if(data?.ok!==true)return toast(data?.message||"Şikayet güncellenemedi.");
+  toast("Şikayet çözüldü.");
+  await refreshAdminStats();
+  await renderAdminReports($("adminPanelBody"));
 }
 async function reopenReport(id){
-  const {error}=await sb.from("reports").update({status:"open"}).eq("id",id);
-  if(error)return toast("Şikayet açılamadı: "+error.message);
-  toast("Şikayet yeniden açıldı.");await refreshAdminStats();await renderAdminReports($("adminPanelBody"));
+  const {data,error}=await sb.rpc("admin_update_report_v67",{p_report_id:id,p_action:"reopen",p_note:null});
+  if(error)return toast("Şikayet açılamadı: "+(error.message||"Sunucu hatası"));
+  if(data?.ok!==true)return toast(data?.message||"Şikayet açılamadı.");
+  toast("Şikayet yeniden açıldı.");
+  await refreshAdminStats();
+  await renderAdminReports($("adminPanelBody"));
 }
 async function noteReport(id,current){
-  const note=prompt("Admin notu:",current||"");if(note===null)return;
-  const {error}=await sb.from("reports").update({admin_note:note}).eq("id",id);
-  if(error)return toast("Not kaydedilemedi: "+error.message);
-  toast("Not kaydedildi.");await renderAdminReports($("adminPanelBody"));
+  const note=prompt("Admin notu:",current||"");
+  if(note===null)return;
+  const {data,error}=await sb.rpc("admin_update_report_v67",{p_report_id:id,p_action:"note",p_note:note});
+  if(error)return toast("Not kaydedilemedi: "+(error.message||"Sunucu hatası"));
+  if(data?.ok!==true)return toast(data?.message||"Not kaydedilemedi.");
+  toast("Not kaydedildi.");
+  await renderAdminReports($("adminPanelBody"));
 }
 async function deleteReport(id){
   if(!confirm("Bu şikayet silinsin mi?"))return;
-  const {error}=await sb.from("reports").delete().eq("id",id);
-  if(error)return toast("Şikayet silinemedi: "+error.message);
-  toast("Şikayet silindi.");await refreshAdminStats();await renderAdminReports($("adminPanelBody"));
+  const {data,error}=await sb.rpc("admin_update_report_v67",{p_report_id:id,p_action:"delete",p_note:null});
+  if(error)return toast("Şikayet silinemedi: "+(error.message||"Sunucu hatası"));
+  if(data?.ok!==true)return toast(data?.message||"Şikayet silinemedi.");
+  toast("Şikayet silindi.");
+  await refreshAdminStats();
+  await renderAdminReports($("adminPanelBody"));
 }
 
 async function renderAdminManagers(body){
