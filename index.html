@@ -508,6 +508,91 @@ body.auth-locked #locationMini{display:none!important}
 </div>
 </div></div>
 
+
+<div id="activityDetailModal" class="modal">
+  <div class="modalbox" style="width:min(760px,100%)">
+    <button class="close" type="button" onclick="closeModal('activityDetailModal')">×</button>
+    <div class="eyebrow">✦ DENEYİM</div>
+    <h2 id="activityDetailTitle" style="margin:14px 0 6px">Deneyim</h2>
+    <p id="activityDetailMeta" class="muted" style="margin-top:0"></p>
+    <div id="activityDetailBody" class="glass" style="margin-top:14px"></div>
+    <div class="card-actions" style="margin-top:14px">
+      <button type="button" class="btn primary" id="activityDetailRouteBtn">Rotama ekle</button>
+      <button type="button" class="btn" id="activityDetailFavBtn">Favorilere ekle</button>
+    </div>
+  </div>
+</div>
+
+<div id="activityEditorModal" class="modal">
+  <div class="modalbox" style="width:min(820px,100%)">
+    <button class="close" type="button" onclick="closeModal('activityEditorModal')">×</button>
+    <div class="eyebrow">⚙️ DENEYİM YÖNETİMİ</div>
+    <h2 id="activityEditorTitle" style="margin:14px 0 6px">Yeni deneyim</h2>
+    <p class="muted" style="margin-top:0">Deneyimin tüm alanlarını tek ekrandan oluştur veya düzenle.</p>
+
+    <div class="form" style="margin-top:14px">
+      <div class="admin-form-grid">
+        <div>
+          <label class="muted">Deneyim adı</label>
+          <input id="aeTitle" placeholder="Örn. Boğaz'da gün batımı">
+        </div>
+        <div>
+          <label class="muted">Şehir</label>
+          <input id="aeCity" placeholder="İstanbul">
+        </div>
+        <div>
+          <label class="muted">Fiyat (₺)</label>
+          <input id="aePrice" type="number" min="0" step="1">
+        </div>
+        <div>
+          <label class="muted">Puan</label>
+          <input id="aeRating" type="number" min="0" max="5" step="0.1">
+        </div>
+        <div>
+          <label class="muted">Kategori</label>
+          <input id="aeTag" placeholder="KEŞİF">
+        </div>
+        <div>
+          <label class="muted">Süre (dakika)</label>
+          <input id="aeDuration" type="number" min="1" step="1">
+        </div>
+        <div>
+          <label class="muted">Mesafe (km)</label>
+          <input id="aeDistance" type="number" min="0" step="0.1">
+        </div>
+        <div>
+          <label class="muted">Emoji</label>
+          <input id="aeEmoji" placeholder="✨" maxlength="8">
+        </div>
+        <div class="admin-full">
+          <label class="muted">Ruh halleri / etiketler</label>
+          <input id="aeMoods" placeholder="romantik, sakin, keşif">
+        </div>
+        <div class="admin-full">
+          <label class="muted">Kısa açıklama</label>
+          <textarea id="aeDescription" rows="3" placeholder="Deneyimi anlat..."></textarea>
+        </div>
+        <div class="admin-full">
+          <label class="muted">Neden öneriliyor?</label>
+          <textarea id="aeWhy" rows="3" placeholder="DISCOVER Score neden bu deneyimi seçsin?"></textarea>
+        </div>
+        <div class="admin-full">
+          <label class="muted" style="display:flex;gap:8px;align-items:center">
+            <input id="aeActive" type="checkbox" checked style="width:auto">
+            Yayında
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" style="justify-content:flex-end;gap:8px;margin-top:14px">
+      <button type="button" class="btn" onclick="closeModal('activityEditorModal')">İptal</button>
+      <button type="button" class="btn primary" onclick="saveActivityFromEditor()">Kaydet</button>
+    </div>
+    <div id="aeError" class="required-note" style="min-height:18px;margin-top:8px"></div>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1059,21 +1144,29 @@ function recommend(silent=false){
 }
 
 function render(list){
-  if(!list.length){$("results").innerHTML='<div class="empty"><b>Bu kombinasyona uygun deneyim bulamadım.</b><p class="muted">Bütçeyi veya zamanı biraz artırmayı deneyebilirsin.</p></div>';return}
+  if(!list.length){
+    $("results").innerHTML='<div class="empty"><b>Bu kombinasyona uygun deneyim bulamadım.</b><p class="muted">Bütçeyi veya zamanı biraz artırmayı deneyebilirsin.</p></div>';
+    return;
+  }
   $("results").innerHTML=list.map(a=>{
     const fav=state.favorites.includes(a.id);
-    const moodNames=(a.moods||[]).slice(0,2).join(" · ");
+    const moodNames=(a.moods||[]).slice(0,3).join(" · ");
     return `<article class="card">
       <div class="cover">${emojiFor(a)}<span class="score">%${a.score} Uyum</span></div>
       <span class="tag">${esc(a.tag)}</span>
       <h3>${esc(a.title)}</h3>
-      <div class="meta">★ ${a.rating.toFixed(1)} · ${a.dist?esc(a.dist+" km"):"Konum yok"} · ${a.time} dk · ${esc(a.city)}</div>
+      <div class="meta">★ ${Number(a.rating||0).toFixed(1)} · ${a.dist?esc(a.dist+" km"):"Konum yok"} · ${Number(a.time||0)} dk · ${esc(a.city)}</div>
       <p class="why">${esc(a.why)}</p>
       <div class="match">🧠 <b>Neden bu?</b> ${esc(moodNames?moodNames+" ile eşleşiyor. ":"")}Bütçene ve zamanına uyuyor.</div>
-      <div class="row" style="margin-top:12px"><span class="price">${priceText(a.price)}</span><button class="btn mini" onclick="toggleFavorite(${JSON.stringify(a.id)})">${fav?"♥":"♡"}</button></div>
+      <div class="row" style="margin-top:12px">
+        <span class="price">${priceText(a.price)}</span>
+        <button class="btn mini" type="button" aria-label="${fav?"Favoriden çıkar":"Favoriye ekle"}" onclick="toggleFavorite(${JSON.stringify(a.id)})">${fav?"♥":"♡"}</button>
+      </div>
       <div class="card-actions">
-        <button class="btn primary" onclick="addRoute(${JSON.stringify(a.id)})">Rotama ekle</button>
-        <button class="btn" onclick="reportActivity(${JSON.stringify(a.title)})">Bildir</button>
+        <button class="btn" type="button" onclick='openActivityDetail(${JSON.stringify(a.id)})'>Detaylar</button>
+        <button class="btn primary" type="button" onclick='addRoute(${JSON.stringify(a.id)})'>Rotama ekle</button>
+        <button class="btn" type="button" onclick='reportActivity(${JSON.stringify(a.title)})'>Bildir</button>
+        <button class="btn" type="button" onclick='toggleFavorite(${JSON.stringify(a.id)})'>${fav?"Favoriden çıkar":"Favoriye ekle"}</button>
       </div>
     </article>`;
   }).join("");
@@ -1584,71 +1677,227 @@ async function renderAdminOverview(body){
 }
 
 async function renderAdminActivities(body){
-  const {data,error}=await sb.from("activities").select("id,title,price,rating,tag,description,why,duration_min,distance_km,moods,city,emoji,is_active").order("title");
-  if(error){body.innerHTML='<div class="empty">Deneyimler yüklenemedi: '+esc(error.message)+'</div>';return}
+  if(!isAdmin())return;
+  const {data,error}=await sb.from("activities")
+    .select("id,title,price,rating,tag,description,why,duration_min,distance_km,moods,city,emoji,is_active")
+    .order("title");
+
+  if(error){
+    body.innerHTML='<div class="empty">Deneyimler yüklenemedi: '+esc(error.message)+'</div>';
+    return;
+  }
+
   body.innerHTML=`
-    <div class="admin-toolbar">
-      <input id="activitySearch" placeholder="Deneyim ara..." oninput="filterAdminList('activitySearch','activityAdminList')">
-      <button class="btn primary" onclick="openActivityEditor()">＋ Yeni deneyim</button>
-    </div>
-    <div id="activityAdminList" class="admin-list">${(data||[]).map(a=>adminActivityRow(a)).join("")||'<div class="empty">Henüz deneyim yok.</div>'}</div>`;
+    <div class="admin-card">
+      <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
+        <div>
+          <h3 style="margin:0">📍 Deneyimler</h3>
+          <p class="muted" style="margin:6px 0 0">Oluştur, düzenle, yayınla/pasifleştir veya sil. Değişiklikler Supabase'e güvenli admin RPC'leri üzerinden kaydedilir.</p>
+        </div>
+        <span class="badge good">${(data||[]).filter(x=>x.is_active!==false).length} yayında</span>
+      </div>
+
+      <div class="admin-toolbar" style="margin-top:14px">
+        <input id="activitySearch" placeholder="Deneyim, şehir veya kategori ara..." oninput="filterAdminList('activitySearch','activityAdminList')">
+        <button class="btn primary" type="button" onclick="openActivityEditor()">＋ Yeni deneyim</button>
+        <button class="btn" type="button" onclick="renderAdminActivities($('adminPanelBody'))">↻ Yenile</button>
+      </div>
+
+      <div id="activityAdminList" class="admin-list">
+        ${(data||[]).map(a=>adminActivityRow(a)).join("")||'<div class="empty">Henüz deneyim yok.</div>'}
+      </div>
+    </div>`;
 }
+
 function adminActivityRow(a){
-  return `<div class="admin-item" data-search="${esc(normalize(a.title+" "+(a.city||"")))}">
-    <div><b>${esc(a.title)}</b><small>${esc(a.city||"Konum yok")} · ${priceText(a.price)} · ${Number(a.duration_min||0)} dk · ★ ${Number(a.rating||0).toFixed(1)}</small></div>
+  const active=a.is_active!==false;
+  return `<div class="admin-item" data-search="${esc(normalize([a.title,a.city,a.tag,a.description].filter(Boolean).join(" ")))}">
+    <div style="flex:1">
+      <b>${esc(a.title)}</b>
+      <small>${esc(a.city||"Konum yok")} · ${priceText(a.price)} · ${Number(a.duration_min||0)} dk · ★ ${Number(a.rating||0).toFixed(1)}</small>
+      <div class="muted" style="margin-top:5px">${esc(a.tag||"KEŞİF")} ${a.distance_km!=null?"· "+esc(Number(a.distance_km)+" km"):""}</div>
+    </div>
     <div class="admin-actions">
-      <span class="badge ${a.is_active?"good":"bad"}">${a.is_active?"Yayında":"Pasif"}</span>
-      <button class="btn mini" onclick='openActivityEditor(${JSON.stringify(a).replace(/'/g,"&#39;")})'>Düzenle</button>
-      <button class="btn mini" onclick="toggleActivity(${JSON.stringify(a.id)},${a.is_active!==true})">${a.is_active?"Pasifleştir":"Yayınla"}</button>
-      <button class="btn mini" onclick="deleteActivity(${JSON.stringify(a.id)})">Sil</button>
+      <span class="badge ${active?"good":"bad"}">${active?"Yayında":"Pasif"}</span>
+      <button class="btn mini" type="button" onclick='openActivityDetail(${JSON.stringify(a.id)})'>Görüntüle</button>
+      <button class="btn mini" type="button" onclick='openActivityEditorById(${JSON.stringify(a.id)})'>Düzenle</button>
+      <button class="btn mini" type="button" onclick='toggleActivity(${JSON.stringify(a.id)},${!active})'>${active?"Pasifleştir":"Yayınla"}</button>
+      <button class="btn mini" type="button" onclick='deleteActivity(${JSON.stringify(a.id)})'>Sil</button>
     </div>
   </div>`;
 }
+
 function filterAdminList(inputId,listId){
-  const q=normalize($(inputId).value);
-  document.querySelectorAll("#"+listId+" .admin-item").forEach(x=>x.style.display=normalize(x.dataset.search||"").includes(q)?"flex":"none");
+  const el=$(inputId),q=normalize(el?.value||"");
+  document.querySelectorAll("#"+listId+" .admin-item").forEach(x=>{
+    x.style.display=!q||normalize(x.dataset.search||"").includes(q)?"flex":"none";
+  });
 }
-function openActivityEditor(a=null){
-  const x=a||{};
-  const id=x.id||"";
-  const title=prompt("Deneyim adı:",x.title||"");
-  if(title===null)return;
-  const city=prompt("Şehir:",x.city||"İstanbul");
-  if(city===null)return;
-  const price=prompt("Fiyat (₺):",x.price??0);
-  if(price===null)return;
-  const rating=prompt("Puan (0-5):",x.rating??4.5);
-  if(rating===null)return;
-  const tag=prompt("Kategori etiketi:",x.tag||"KEŞİF");
-  if(tag===null)return;
-  const duration_min=prompt("Süre (dakika):",x.duration_min??60);
-  if(duration_min===null)return;
-  const description=prompt("Açıklama:",x.description||"");
-  if(description===null)return;
-  saveActivity({id,title,city,price:Number(price),rating:Number(rating),tag,duration_min:Number(duration_min),description,why:x.why||description,moods:x.moods||[],emoji:x.emoji||"✨",is_active:x.id?x.is_active!==false:true});
-}
-async function saveActivity(a){
+
+let activityEditorId=null;
+
+async function openActivityEditorById(id){
   if(!isAdmin())return;
-  const payload={title:a.title,city:a.city,price:a.price,rating:a.rating,tag:a.tag,duration_min:a.duration_min,description:a.description,why:a.why,moods:a.moods,emoji:a.emoji,is_active:a.is_active};
-  const q=a.id?sb.from("activities").update(payload).eq("id",a.id):sb.from("activities").insert(payload);
-  const {error}=await q;
-  if(error)return toast("Deneyim kaydedilemedi: "+error.message);
-  toast(a.id?"Deneyim güncellendi.":"Yeni deneyim eklendi.");
-  await loadActivities();await refreshAdminStats();await renderAdminActivities($("adminPanelBody"));
+  const {data,error}=await sb.from("activities")
+    .select("id,title,price,rating,tag,description,why,duration_min,distance_km,moods,city,emoji,is_active")
+    .eq("id",id).maybeSingle();
+
+  if(error||!data)return toast("Deneyim yüklenemedi: "+(error?.message||"Kayıt bulunamadı"));
+  openActivityEditor(data);
 }
+
+function openActivityEditor(a=null){
+  if(!isAdmin())return;
+  const x=a||{};
+  activityEditorId=x.id||null;
+
+  $("activityEditorTitle").textContent=activityEditorId?"Deneyimi düzenle":"Yeni deneyim";
+  $("aeTitle").value=x.title||"";
+  $("aeCity").value=x.city||"İstanbul";
+  $("aePrice").value=x.price??0;
+  $("aeRating").value=x.rating??4.5;
+  $("aeTag").value=x.tag||"KEŞİF";
+  $("aeDuration").value=x.duration_min??60;
+  $("aeDistance").value=x.distance_km??0;
+  $("aeEmoji").value=x.emoji||"✨";
+  $("aeMoods").value=Array.isArray(x.moods)?x.moods.join(", "):"";
+  $("aeDescription").value=x.description||"";
+  $("aeWhy").value=x.why||"";
+  $("aeActive").checked=x.id?x.is_active!==false:true;
+  $("aeError").textContent="";
+
+  openModal("activityEditorModal");
+}
+
+async function saveActivityFromEditor(){
+  if(!isAdmin())return;
+
+  const title=$("aeTitle").value.trim();
+  const city=$("aeCity").value.trim();
+  const price=Number($("aePrice").value);
+  const rating=Number($("aeRating").value);
+  const tag=$("aeTag").value.trim();
+  const duration=Number($("aeDuration").value);
+  const distance=Number($("aeDistance").value||0);
+  const emoji=$("aeEmoji").value.trim()||"✨";
+  const moods=$("aeMoods").value.split(",").map(x=>x.trim()).filter(Boolean);
+  const description=$("aeDescription").value.trim();
+  const why=$("aeWhy").value.trim()||description;
+  const active=$("aeActive").checked;
+  const err=$("aeError");
+
+  if(!title||!city||!tag||!description){
+    err.textContent="Deneyim adı, şehir, kategori ve açıklama alanları gerekli.";
+    return;
+  }
+  if(!Number.isFinite(price)||price<0){
+    err.textContent="Fiyat geçerli bir sayı olmalı.";
+    return;
+  }
+  if(!Number.isFinite(rating)||rating<0||rating>5){
+    err.textContent="Puan 0 ile 5 arasında olmalı.";
+    return;
+  }
+  if(!Number.isFinite(duration)||duration<1){
+    err.textContent="Süre en az 1 dakika olmalı.";
+    return;
+  }
+  if(!Number.isFinite(distance)||distance<0){
+    err.textContent="Mesafe 0 veya daha büyük olmalı.";
+    return;
+  }
+
+  err.textContent="Kaydediliyor...";
+  const {data,error}=await sb.rpc("admin_activity_upsert_v64",{
+    p_id:activityEditorId,
+    p_title:title,
+    p_city:city,
+    p_price:price,
+    p_rating:rating,
+    p_tag:tag,
+    p_description:description,
+    p_why:why,
+    p_duration_min:Math.round(duration),
+    p_distance_km:distance,
+    p_moods:moods,
+    p_emoji:emoji,
+    p_is_active:active
+  });
+
+  if(error){
+    err.textContent=error.message||"Sunucu hatası";
+    toast("Deneyim kaydedilemedi: "+err.textContent);
+    return;
+  }
+
+  closeModal("activityEditorModal");
+  toast(activityEditorId?"Deneyim güncellendi.":"Yeni deneyim eklendi.");
+  await loadActivities();
+  await refreshAdminStats();
+  await renderAdminActivities($("adminPanelBody"));
+}
+
+async function saveActivity(a){
+  // Eski kod çağrıları için uyumluluk katmanı.
+  openActivityEditor(a||null);
+}
+
 async function toggleActivity(id,active){
   if(!isAdmin())return;
-  const {error}=await sb.from("activities").update({is_active:active}).eq("id",id);
-  if(error)return toast("İşlem başarısız: "+error.message);
+
+  const {data,error}=await sb.rpc("admin_activity_toggle_v64",{
+    p_id:id,
+    p_active:!!active
+  });
+
+  if(error){
+    toast("İşlem başarısız: "+error.message);
+    return;
+  }
+
   toast(active?"Deneyim yayınlandı.":"Deneyim pasifleştirildi.");
-  await refreshAdminStats();await renderAdminActivities($("adminPanelBody"));await loadActivities();
+  await refreshAdminStats();
+  await renderAdminActivities($("adminPanelBody"));
+  await loadActivities();
 }
+
 async function deleteActivity(id){
   if(!isAdmin())return;
   if(!confirm("Bu deneyim kalıcı olarak silinsin mi?"))return;
-  const {error}=await sb.from("activities").delete().eq("id",id);
-  if(error)return toast("Silme başarısız: "+error.message);
-  toast("Deneyim silindi.");await refreshAdminStats();await renderAdminActivities($("adminPanelBody"));await loadActivities();
+
+  const {data,error}=await sb.rpc("admin_activity_delete_v64",{p_id:id});
+  if(error){
+    toast("Silme başarısız: "+error.message);
+    return;
+  }
+
+  toast("Deneyim silindi.");
+  await refreshAdminStats();
+  await renderAdminActivities($("adminPanelBody"));
+  await loadActivities();
+}
+
+function openActivityDetail(id){
+  const a=getActivity(id);
+  if(!a)return toast("Deneyim bulunamadı.");
+
+  $("activityDetailTitle").textContent=a.title;
+  $("activityDetailMeta").textContent=`${a.city} · ${priceText(a.price)} · ${a.time} dk · ★ ${Number(a.rating||0).toFixed(1)}${a.dist?" · "+a.dist+" km":""}`;
+
+  const moods=(a.moods||[]).map(x=>`<span class="tag" style="margin-right:5px">${esc(x)}</span>`).join("");
+  $("activityDetailBody").innerHTML=`
+    <div class="cover" style="margin-bottom:14px">${emojiFor(a)}<span class="score">%${Number(a.score||scoreActivity(a))} Uyum</span></div>
+    <div class="tag">${esc(a.tag)}</div>
+    ${moods?`<div style="margin-top:7px">${moods}</div>`:""}
+    <p style="line-height:1.7;margin-bottom:8px">${esc(a.description)}</p>
+    <div class="match">🧠 <b>Neden bu?</b> ${esc(a.why||"Bütçe ve zamanına göre uygun.")}</div>
+  `;
+
+  $("activityDetailRouteBtn").onclick=()=>{closeModal("activityDetailModal");addRoute(a.id)};
+  $("activityDetailFavBtn").onclick=async()=>{await toggleFavorite(a.id);$("activityDetailFavBtn").textContent=state.favorites.includes(a.id)?"Favoriden çıkar":"Favorilere ekle";};
+  $("activityDetailFavBtn").textContent=state.favorites.includes(a.id)?"Favoriden çıkar":"Favorilere ekle";
+
+  openModal("activityDetailModal");
 }
 
 async function renderAdminUsers(body){
