@@ -30,7 +30,7 @@ section{padding:45px 0}.section-head{display:flex;justify-content:space-between;
 .feature-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.glass{background:#100c17;border:1px solid var(--line);border-radius:18px;padding:18px}.levels{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.level{background:#100c17;border:1px solid var(--line);border-radius:16px;padding:13px;text-align:center}.level.active{border-color:#8b5cf6;box-shadow:0 0 25px rgba(139,92,246,.15)}.reward{color:#d2b5ff;font-size:12px;margin-top:6px}
 .premium{position:relative;overflow:hidden;background:linear-gradient(135deg,#1b102d,#0e0815);border:1px solid #5a3b79;border-radius:28px;padding:30px}.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}.plan{background:#0b0810;border:1px solid var(--line);border-radius:18px;padding:20px}.plan h3{font-size:27px;margin:8px 0 14px}
 .admin{display:grid;grid-template-columns:1fr;gap:14px}.alert{border-left:3px solid var(--danger);background:#190b12;padding:15px;border-radius:12px}.admin-only{display:none}.admin-shell{display:grid;grid-template-columns:210px 1fr;gap:14px}.admin-sidebar{background:#0b0810;border:1px solid var(--line);border-radius:18px;padding:10px;align-self:start;position:sticky;top:10px}.admin-sidebar button{width:100%;text-align:left;margin-bottom:7px}.admin-sidebar button:last-child{margin-bottom:0}.admin-sidebar .active{border-color:#9d62ff;background:#211332}.admin-content{min-width:0}.admin-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 15px}.stat{background:#0b0810;border:1px solid var(--line);border-radius:15px;padding:14px}.stat b{display:block;font-size:24px;margin-top:4px}.admin-list{display:grid;gap:9px;margin-top:12px}.admin-item{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:13px;border:1px solid var(--line);background:#0b0810;border-radius:14px}.admin-item small{color:var(--muted);display:block;margin-top:3px}.admin-actions{display:flex;gap:7px;flex-wrap:wrap}.admin-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}.admin-tab.active{border-color:#9d62ff;background:#211332}.admin-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.admin-toolbar input{flex:1;min-width:180px;background:#09070d;color:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}.admin-card{background:#0b0810;border:1px solid var(--line);border-radius:16px;padding:15px}.admin-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.admin-form-grid input,.admin-form-grid textarea,.admin-form-grid select{width:100%;background:#09070d;color:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}.admin-form-grid textarea{min-height:90px}.admin-full{grid-column:1/-1}.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#211332;color:#d9c6ff;font-size:11px}.badge.good{background:#0d241d;color:#8cf0c5}.badge.bad{background:#2a0d16;color:#ff9db1}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(10px);display:none;place-items:center;z-index:50;padding:18px}.modal.open{display:grid}.modalbox{width:min(560px,100%);background:#100b18;border:1px solid #543572;border-radius:25px;padding:25px;max-height:90vh;overflow:auto}.close{float:right;background:none;border:0;color:#aaa;font-size:25px}.form{display:grid;gap:10px}.form input,.form textarea{width:100%;background:#09070d;color:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}.toast{position:fixed;right:18px;bottom:18px;max-width:min(92vw,520px);background:#17101f;border:1px solid #49325f;border-radius:15px;padding:14px 17px;display:none;z-index:70}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(10px);display:none;place-items:center;z-index:50;padding:18px}.modal.open{display:grid}.modal#adminModal{z-index:50}.modal#banModal{z-index:120}.modalbox{width:min(560px,100%);background:#100b18;border:1px solid #543572;border-radius:25px;padding:25px;max-height:90vh;overflow:auto}.close{float:right;background:none;border:0;color:#aaa;font-size:25px}.form{display:grid;gap:10px}.form input,.form textarea{width:100%;background:#09070d;color:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}.toast{position:fixed;right:18px;bottom:18px;max-width:min(92vw,520px);background:#17101f;border:1px solid #49325f;border-radius:15px;padding:14px 17px;display:none;z-index:70}
 .route-item{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.route-total{display:flex;justify-content:space-between;margin-top:12px;font-size:18px}
 footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-size:13px}
 @media(max-width:800px){.navlinks .desktop{display:none}.hero{padding-top:45px}h1{letter-spacing:-2px}.controls,.grid,.plans,.admin,.admin-shell{grid-template-columns:1fr}.admin-sidebar{position:static}.feature-grid{grid-template-columns:1fr 1fr}.levels{grid-template-columns:repeat(2,1fr)}.prompt{flex-direction:column}.prompt .btn{width:100%}.section-head{align-items:start;flex-direction:column}.admin-stats{grid-template-columns:1fr 1fr}.admin-item{align-items:flex-start;flex-direction:column}.admin-form-grid{grid-template-columns:1fr}.admin-full{grid-column:auto}}
@@ -190,6 +190,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
     <button class="btn admin-nav" data-admin-section="activities" onclick="loadAdminSection('activities')">📍 Deneyimler</button>
     <button class="btn admin-nav" data-admin-section="users" onclick="loadAdminSection('users')">👥 Kullanıcılar</button>
     <button class="btn admin-nav" data-admin-section="reports" onclick="loadAdminSection('reports')">🚨 Moderasyon</button>
+    <button class="btn admin-nav" data-admin-section="banned" onclick="loadAdminSection(\'banned\')">⛔ Engellenen Kullanıcılar</button>
     <button class="btn admin-nav" data-admin-section="admins" onclick="loadAdminSection('admins')">🛡️ Yöneticiler</button>
     <button class="btn admin-nav owner-only" data-admin-section="logs" onclick="loadAdminSection('logs')">🔐 Admin Logları</button>
     <button class="btn admin-nav owner-only" data-admin-section="ai" onclick="loadAdminSection('ai')">🧠 AI Motoru</button>
@@ -388,10 +389,21 @@ async function updateBanScopeHint(){
     ? "Cihaz kaydı bulundu. Bu cihaz banlanır; aynı cihazdan yeni hesap açılması engellenir."
     : "Bu hesabın kayıtlı cihazı yok. Kullanıcı en az bir kez giriş yapıp cihazını kaydettikten sonra cihaz banı uygulanabilir.";
 }
-async function openBanDialog(id,username){
+function durationKeyFromUntil(until){
+  if(!until)return 'permanent';
+  const mins=Math.max(1,Math.round((new Date(until).getTime()-Date.now())/60000));
+  const choices=[['10m',10],['30m',30],['1h',60],['6h',360],['12h',720],['1d',1440],['3d',4320],['7d',10080],['30d',43200],['90d',129600],['180d',259200],['1y',525600]];
+  return choices.reduce((best,item)=>Math.abs(item[1]-mins)<Math.abs(best[1]-mins)?item:best,choices[0])[0];
+}
+async function openBanDialog(id,username,existing=null){
   if(!isAdmin())return;
-  banTargetId=id;$('banTargetText').textContent=`Hedef: ${username||"Kullanıcı"}`;
-  $('banScope').value='account';$('banDuration').value='1d';$('banReason').value='';openModal('banModal');await updateBanScopeHint();
+  banTargetId=id;
+  $('banTargetText').textContent=`Hedef: ${username||"Kullanıcı"}`;
+  $('banScope').value=existing?.ban_scope==='device'?'device':'account';
+  $('banDuration').value=durationKeyFromUntil(existing?.ban_until);
+  $('banReason').value=existing?.ban_reason||'';
+  openModal('banModal');
+  await updateBanScopeHint();
 }
 async function submitBan(){
   if(!isAdmin()||!banTargetId)return;
@@ -411,6 +423,7 @@ async function submitBan(){
   if(ok===null)return;
   closeModal('banModal');toast(scope==='device'?(durationKey==='permanent'?'Cihaz süresiz banlandı.':'Cihaz banlandı.'):(durationKey==='permanent'?'Hesap süresiz banlandı.':'Hesap banlandı.'));
   await renderAdminUsers($('adminPanelBody'));await renderAdminManagersIfVisible();
+  if(document.querySelector('[data-admin-section="banned"].active')) await renderAdminBanned($('adminPanelBody'));
 }
 async function removeUserBan(id){
   if(!isAdmin())return;
@@ -424,6 +437,7 @@ async function removeUserBan(id){
   toast('Ban kaldırıldı.');
   await renderAdminUsers($('adminPanelBody'));
   await renderAdminManagersIfVisible();
+  if(document.querySelector('[data-admin-section="banned"].active')) await renderAdminBanned($('adminPanelBody'));
 }
 async function renderAdminManagersIfVisible(){if($('adminPanelBody')&&document.querySelector('[data-admin-section="admins"].active'))await renderAdminAdmins($('adminPanelBody'))}
 
@@ -637,6 +651,7 @@ async function loadAdminSection(section){
   if(section==="activities")return renderAdminActivities(body);
   if(section==="users")return renderAdminUsers(body);
   if(section==="reports")return renderAdminReports(body);
+  if(section==="banned")return renderAdminBanned(body);
   if(section==="admins")return renderAdminAdmins(body);
   if(section==="logs")return renderAdminLogs(body);
   if(section==="ai")return renderAdminAI(body);
@@ -656,7 +671,7 @@ async function renderAdminOverview(body){
       <div class="admin-actions">
         <button class="btn primary" onclick="loadAdminSection('activities')">+ Deneyim ekle</button>
         <button class="btn" onclick="loadAdminSection('users')">Kullanıcıları yönet</button>
-        <button class="btn" onclick="loadAdminSection('reports')">Moderasyon kuyruğu</button>
+        <button class="btn" onclick="loadAdminSection('reports')">Moderasyon kuyruğu</button><button class="btn" onclick="loadAdminSection('banned')">Engellenen kullanıcılar</button>
       </div>
     </div>
     <div class="admin-card" style="margin-top:12px">
@@ -820,8 +835,9 @@ async function toggleUserPremium(id,isPremium){
 async function handleBanAction(id,username,isBanned){
   if(!isAdmin())return toast("Bu işlem için yönetici yetkisi gerekli.");
   if(isBanned){
-    if(!confirm((username||"Kullanıcı")+" için mevcut ban kaldırılsın mı?"))return;
-    return removeUserBan(id);
+    const {data,error}=await sb.from("profiles").select("id,username,ban_scope,ban_until,ban_reason,is_banned").eq("id",id).maybeSingle();
+    if(error)return toast("Ban bilgisi alınamadı: "+error.message);
+    return openBanDialog(id,username||data?.username||"Kullanıcı",data||null);
   }
   return openBanDialog(id,username||"Kullanıcı");
 }
@@ -847,6 +863,55 @@ async function promoteUserToAdminByUsername(){
   const ok=await callAdminRpc("admin_set_user_role",{target_user_id:target.id,new_role:"admin"});
   if(ok===null)return;
   toast(target.username+" artık Admin.");await renderAdminAdmins($("adminPanelBody"));
+}
+
+
+async function renderAdminBanned(body){
+  if(!isAdmin())return;
+  const {data,error}=await sb.from("profiles")
+    .select("id,username,level,xp,is_admin,admin_role,is_banned,premium_plan,premium_until,ban_scope,ban_until,ban_reason,device_id")
+    .eq("is_banned",true)
+    .order("ban_until",{ascending:true})
+    .limit(300);
+  if(error){body.innerHTML='<div class="empty">Engellenen kullanıcılar yüklenemedi: '+esc(error.message)+'</div>';return}
+
+  const active=(data||[]).filter(u=>isProfileBanned(u));
+  body.innerHTML=`
+    <div class="admin-card">
+      <div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
+        <div>
+          <h3 style="margin:0">⛔ Engellenen Kullanıcılar</h3>
+          <p class="muted" style="margin:6px 0 0">Hesap ve cihaz banları tek kategoride. Ban nedeni, türü ve süresi burada görünür; yetkin varsa banı düzenleyebilir veya kaldırabilirsin.</p>
+        </div>
+        <span class="badge bad">${active.length} aktif ban</span>
+      </div>
+      <div class="admin-toolbar" style="margin-top:14px">
+        <input id="bannedSearch" placeholder="Kullanıcı adı / ban nedeni ara..." oninput="filterAdminList('bannedSearch','bannedUserList')">
+        <button class="btn" onclick="renderAdminBanned($('adminPanelBody'))">↻ Yenile</button>
+      </div>
+      <div id="bannedUserList" class="admin-list">
+        ${active.map(u=>bannedUserRow(u)).join("")||'<div class="empty">Aktif engellenen kullanıcı yok.</div>'}
+      </div>
+    </div>`;
+}
+function bannedUserRow(u){
+  const role=getRole(u);
+  const protectedOwner=role==="owner";
+  const canEdit=isOwner() || (adminRole()==="admin"&&!protectedOwner);
+  const scope=u.ban_scope==="device"?"Cihaz banı":"Hesap banı";
+  const until=u.ban_until?formatBanUntil(u.ban_until):"Süresiz";
+  return `<div class="admin-item" style="align-items:flex-start" data-search="${esc(normalize((u.username||"")+" "+(u.ban_reason||"")+" "+scope))}">
+    <div style="flex:1">
+      <b>${esc(u.username||"Kullanıcı adı yok")}</b>
+      <small>${scope} · ${until} · ${role==="owner"?"OWNER":role==="admin"?"ADMIN":"Kullanıcı"}</small>
+      <div class="muted" style="margin-top:7px">Ban nedeni: ${esc(u.ban_reason||"Belirtilmedi")}</div>
+      ${u.ban_scope==="device"?'<div class="muted" style="margin-top:4px">Banlanan unsur: kayıtlı cihaz</div>':''}
+    </div>
+    <div class="admin-actions">
+      ${canEdit?`<button class="btn mini" onclick='openBanDialog(${JSON.stringify(u.id)},${JSON.stringify(u.username||"Kullanıcı")},${JSON.stringify({ban_scope:u.ban_scope,ban_until:u.ban_until,ban_reason:u.ban_reason})})'>Banı düzenle</button>`:""}
+      ${canEdit?`<button class="btn mini" onclick='removeUserBan(${JSON.stringify(u.id)})'>Banı kaldır</button>`:`<span class="muted">Owner korumalı</span>`}
+    </div>
+  </div>`;
 }
 
 async function renderAdminReports(body){
