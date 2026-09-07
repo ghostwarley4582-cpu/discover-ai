@@ -328,7 +328,7 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
     <div class="profile-lock">
       <div>🔒</div>
       <div>
-        <strong>Zorunlu profil doğrulaması</strong>
+        <strong>Zorunlu hesap bilgileri</strong>
         <span class="required-note">
           Bilgilerin hesap güvenliği ve hizmetin kişiselleştirilmesi için alınır.
           T.C. kimlik numarası yalnızca yetkili Owner ekranında tam olarak görüntülenebilir; normal kullanıcı ekranında maskeli gösterilir.
@@ -1694,7 +1694,7 @@ function setPhoneVerificationStatus(ok,msg){
   el.classList.toggle("bad",false);
 }
 async function activateProfileNow(payload){
-  const {data,error}=await sb.rpc("save_profile_unvalidated_v52",payload);
+  const {data,error}=await sb.rpc("save_profile_unvalidated_v53",payload);
   if(error)throw error;
   return data;
 }
@@ -1714,13 +1714,15 @@ async function saveRequiredProfile(){
   const phone=$("pcPhone").value;
   const birth=$("pcBirthDate").value || null;
   const tc=$("pcTc").value;
-  const authUser=await refreshAuthUser();
-  if(!authUser){err.textContent="Oturum doğrulanamadı. Sayfayı yenileyip tekrar giriş yap.";return}
   btn.disabled=true;btn.textContent="Kaydediliyor…";err.textContent="";
   const badge=$("identityVerificationBadge"),hint=$("identityVerificationHint");
   if(badge){badge.textContent="Kaydediliyor…";badge.classList.add("ok");badge.classList.remove("bad");}
-  if(hint)hint.textContent="Bilgiler doğrulama yapılmadan kaydediliyor.";
+  if(hint)hint.textContent="Bilgiler doğrudan hesabına kaydediliyor.";
   try{
+    const {data:{user:authUser},error:authError}=await sb.auth.getUser();
+    if(authError||!authUser){
+      throw new Error("AUTH_REQUIRED");
+    }
     const result=await activateProfileNow({
       p_first_name:first,p_last_name:last,p_username:username,
       p_phone:phone,p_birth_date:birth,p_tc_identity_number:tc
@@ -1732,11 +1734,11 @@ async function saveRequiredProfile(){
     closeModal("profileCompletionModal");
     updateAuthUI();
     if(badge){badge.textContent="Kayıtlı";badge.classList.add("ok");}
-    if(hint)hint.textContent="Profil bilgileri kaydedildi. SMS/kimlik doğrulaması şimdilik kapalı.";
+    if(hint)hint.textContent="Profil bilgileri kaydedildi. SMS ve kimlik doğrulaması şimdilik kapalı.";
     toast("Bilgilerin kaydedildi ve hesabın aktif.");
   }catch(e){
     console.error("PROFILE SAVE",e);
-    const raw=String(e?.message||e?.code||"");
+    const raw=String(e?.message||e?.code||e?.error_description||"");
     err.textContent=identityFriendlyError(raw)+(raw?` (${raw})`:"");
     if(badge){badge.textContent="Kaydedilemedi";badge.classList.remove("ok");badge.classList.add("bad");}
   }finally{btn.disabled=false;btn.textContent="✓ Bilgilerimi kaydet ve devam et";}
