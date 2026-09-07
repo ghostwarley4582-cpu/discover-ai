@@ -258,7 +258,7 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
     <div class="admin-full"><small>T.C. Kimlik No</small><strong id="profileTcMasked">-</strong></div>
   </div>
   <p class="required-note" style="margin:10px 0 0">Güvenlik için bu ekranda kişisel bilgilerinin yaklaşık yarısı maskelenmiş şekilde gösterilir.</p>
-  <div class="verify-box" style="margin-top:12px"><div class="verify-row"><span><b>✅ Kayıt güvenliği</b><br><small class="muted">E-posta / telefon / T.C. format kontrolleri</small></span><span id="profileVerificationStatus" class="verify-status">Kontrol ediliyor</span></div></div>
+  <div class="verify-box" style="margin-top:12px"><div class="verify-row"><span><b>✅ Kayıt durumu</b><br><small class="muted">Profil bilgileri kaydedildi; SMS/kimlik doğrulaması şimdilik kapalı</small></span><span id="profileVerificationStatus" class="verify-status">Kontrol ediliyor</span></div></div>
 </div>
 <div id="adminEntry" class="admin-only" style="margin-top:10px"><button class="btn primary" onclick="openAdmin()">Yönetim</button></div>
  <button class="btn" onclick="logout()">Çıkış</button>
@@ -337,19 +337,18 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
     </div>
 
     <div class="form" style="margin-top:14px">
-      <input id="pcFirstName" required maxlength="80" placeholder="İsim">
-      <input id="pcLastName" required maxlength="80" placeholder="Soyisim">
-      <input id="pcUsername" required maxlength="40" placeholder="Kullanıcı adı">
+      <input id="pcFirstName" placeholder="İsim">
+      <input id="pcLastName" placeholder="Soyisim">
+      <input id="pcUsername" placeholder="Kullanıcı adı">
       <input id="pcEmail" type="email" readonly placeholder="E-posta">
       <div>
-        <input id="pcPhone" required maxlength="20" inputmode="tel" placeholder="Telefon numarası" oninput="normalizePhoneInput(this)">
+        <input id="pcPhone" inputmode="tel" placeholder="Telefon numarası">
         <div id="pcPhoneStatus" class="verify-status" style="margin-top:8px">Telefon numarası kayıt için alınır; SMS doğrulaması şimdilik kapalı.</div>
       </div>
-      <input id="pcBirthDate" required type="date">
+      <input id="pcBirthDate" type="date">
       <div class="tc-wrap">
-        <input id="pcTc" required maxlength="11" minlength="11" inputmode="numeric" autocomplete="off"
-               placeholder="T.C. Kimlik No" oninput="this.value=this.value.replace(/\D/g,'').slice(0,11);$('pcTcCount').textContent=this.value.length+'/11'">
-        <span id="pcTcCount" class="tc-count">0/11</span>
+        <input id="pcTc" inputmode="text" autocomplete="off" placeholder="T.C. Kimlik No">
+        <span id="pcTcCount" class="tc-count">0 karakter</span>
       </div>
 
       <div class="profile-lock" style="margin-top:2px">
@@ -365,13 +364,13 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
         Aydınlatma metni, açık rıza metninden ayrı tutulur.
       </div>
       <div class="identity-note">
-        <b>Zorunlu gerçek kişi doğrulaması:</b> Hesap, isim + soyisim + doğum tarihi + T.C. Kimlik No bilgileri doğrulanmadan aktifleşmez. Şimdilik SMS doğrulaması kapalıdır. T.C. numarası ve profil alanları sunucu tarafında doğrulanır; hesap otomatik olarak aktifleşir. Resmî nüfus eşleşmesi için ayrıca yetkili bir servis gerekir.
+        <b>Kayıt bilgileri:</b> SMS ve kimlik doğrulaması şimdilik devre dışıdır. Girdiğin profil bilgileri herhangi bir içerik veya gerçeklik kontrolünden geçirilmeden hesabına kaydedilir.
       </div>
       <div id="identityVerificationStatus" class="verify-box" style="margin-top:10px">
-        <div class="verify-row"><span><b>🪪 T.C. Kimlik No kontrolü</b><br><small id="identityVerificationHint" class="muted">T.C. Kimlik No ve profil alanları sunucu tarafında kontrol edilir</small></span><span id="identityVerificationBadge" class="verify-status ok">Kontrole hazır</span></div>
+        <div class="verify-row"><span><b>📝 Profil kaydı</b><br><small id="identityVerificationHint" class="muted">Bilgiler doğrudan hesabına kaydedilir</small></span><span id="identityVerificationBadge" class="verify-status ok">Hazır</span></div>
       </div>
 
-      <button type="button" class="btn primary" id="pcSaveBtn" onclick="saveRequiredProfile()">✓ Bilgilerimi kontrol et ve hesabı tamamla</button>
+      <button type="button" class="btn primary" id="pcSaveBtn" onclick="saveRequiredProfile()">✓ Bilgilerimi kaydet ve devam et</button>
       <div id="pcError" class="required-note" style="min-height:18px"></div>
     </div>
   </div>
@@ -1136,7 +1135,6 @@ async function renderAdminManagersIfVisible(){if($('adminPanelBody')&&document.q
 
 async function submitAuth(){
   const mode=$("authModal").dataset.mode||"join",name=$("authName").value.trim(),email=$("authEmail").value.trim(),password=$("authPassword").value;
-  if(!email||password.length<6)return toast("E-posta ve en az 6 karakterli şifre gerekli.");
   try{
     if(mode==="join"){
       const db=await checkDeviceBan(getDeviceId());
@@ -1248,9 +1246,8 @@ function renderMyMaskedProfile(){
   $("profilePhoneMasked").textContent=maskPhone(p.phone);
   $("profileBirthMasked").textContent=maskBirthDate(p.birth_date);
   $("profileTcMasked").textContent=maskTc(p.tc_identity_number||p.tc_last4);
-  const verified=!!(state.user?.email_confirmed_at && p.identity_verified===true && validTcIdentityNumber(String(p.tc_identity_number||"")));
   const vs=$("profileVerificationStatus");
-  if(vs){vs.textContent=verified?"Alan doğrulaması tamam":"Eksik doğrulama";vs.classList.toggle("ok",verified);vs.classList.toggle("bad",!verified);}
+  if(vs){vs.textContent=p.profile_completed?"Kayıtlı":"Eksik";vs.classList.toggle("ok",!!p.profile_completed);vs.classList.toggle("bad",!p.profile_completed);}
 }
 function openProfile(){
   if(state.user && !requireProfileComplete("Profil"))return;
@@ -1649,17 +1646,7 @@ async function promoteUserToAdminByUsername(){
 
 
 function isProfileComplete(profile=state.profile){
-  if(!profile)return false;
-  return !!(
-    String(profile.first_name||"").trim() &&
-    String(profile.last_name||"").trim() &&
-    String(profile.username||"").trim() &&
-    String(profile.phone||"").trim() &&
-    profile.birth_date &&
-    String(profile.tc_identity_hash||"").trim() &&
-    String(profile.tc_last4||"").length===4 &&
-    /^[1-9][0-9]{10}$/.test(String(profile.tc_identity_number||""))
-  );
+  return !!(profile && profile.profile_completed===true);
 }
 function requireProfileComplete(featureName="Bu işlem"){
   if(state.profileComplete)return true;
@@ -1682,9 +1669,9 @@ function openProfileCompletion(){
   $("pcBirthDate").value=state.profile?.birth_date||"";
   setPhoneVerificationStatus(false,"Telefon numarası kayıt için alınır; SMS doğrulaması şimdilik kapalı.");
   const idBadge=$("identityVerificationBadge");
-  if(idBadge){idBadge.textContent=state.profile?.identity_verified?"Doğrulandı":"Doğrulanmadı";idBadge.classList.toggle("ok",!!state.profile?.identity_verified);idBadge.classList.toggle("bad",!state.profile?.identity_verified);}
+  if(idBadge){idBadge.textContent=state.profile?.profile_completed?"Kayıtlı":"Hazır";idBadge.classList.add("ok");idBadge.classList.remove("bad");}
   $("pcTc").value="";
-  $("pcTcCount").textContent="0/11";
+  $("pcTcCount").textContent=String($("pcTc").value||"").length+" karakter";
   $("pcError").textContent="";
   openModal("profileCompletionModal");
 }
@@ -1706,81 +1693,51 @@ function setPhoneVerificationStatus(ok,msg){
   el.classList.toggle("ok",!!ok);
   el.classList.toggle("bad",false);
 }
-function validTcIdentityNumber(tc){
-  if(!/^[1-9][0-9]{10}$/.test(tc))return false;
-  if(/^([0-9])\1{10}$/.test(tc))return false;
-  const d=tc.split("").map(Number);
-  const odd=d[0]+d[2]+d[4]+d[6]+d[8];
-  const even=d[1]+d[3]+d[5]+d[7];
-  const d10=((odd*7)-even)%10;
-  const d11=d.slice(0,10).reduce((a,b)=>a+b,0)%10;
-  return d10===d[9] && d11===d[10];
-}
-async function sha256Hex(text){
-  const data=new TextEncoder().encode(text);
-  const hash=await crypto.subtle.digest("SHA-256",data);
-  return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,"0")).join("");
-}
 async function activateProfileNow(payload){
-  const {data,error}=await sb.rpc("complete_profile_verified_v50",payload);
+  const {data,error}=await sb.rpc("save_profile_unvalidated_v51",payload);
   if(error)throw error;
   return data;
 }
 function identityFriendlyError(code){
   const c=String(code||"");
-  if(c.includes("TC_ALREADY_REGISTERED"))return "Bu T.C. Kimlik No başka bir hesapta kayıtlı.";
-  if(c.includes("USERNAME_ALREADY_USED"))return "Bu kullanıcı adı zaten kullanılıyor.";
-  if(c.includes("PHONE_ALREADY_REGISTERED"))return "Bu telefon numarası başka bir hesapta kayıtlı.";
-  if(c.includes("FIRST_NAME_INVALID"))return "İsim geçersiz. Kimlikteki yazımına uygun gir.";
-  if(c.includes("LAST_NAME_INVALID"))return "Soyisim geçersiz. Kimlikteki yazımına uygun gir.";
-  if(c.includes("USERNAME_INVALID"))return "Kullanıcı adı geçersiz.";
-  if(c.includes("PHONE_INVALID"))return "Geçerli bir Türkiye cep telefonu gir.";
-  if(c.includes("BIRTH_DATE_INVALID"))return "Doğum tarihi geçersiz.";
-  if(c.includes("TC_NUMBER_INVALID")||c.includes("TC_HASH_MISMATCH"))return "Geçerli bir 11 haneli T.C. Kimlik No gir.";
-  if(c.includes("TC_ALREADY_REGISTERED"))return "Bu T.C. Kimlik No başka bir hesapta kayıtlı.";
-  return "Kayıt tamamlanamadı. Bilgileri kontrol edip tekrar dene.";
+  if(c.includes("PROFILE_NOT_FOUND"))return "Profil kaydı bulunamadı. Lütfen tekrar giriş yap.";
+  if(c.includes("AUTH_REQUIRED"))return "Oturum süresi dolmuş. Lütfen tekrar giriş yap.";
+  return "Profil kaydedilemedi. Lütfen tekrar dene.";
 }
 async function saveRequiredProfile(){
   if(!state.user)return;
   const btn=$("pcSaveBtn"),err=$("pcError");
-  const first=$("pcFirstName").value.trim(),last=$("pcLastName").value.trim();
-  const username=$("pcUsername").value.trim(),email=$("pcEmail").value.trim();
-  const phone=$("pcPhone").value.trim(),birth=$("pcBirthDate").value;
-  const tc=$("pcTc").value.trim();
-  const nameRx=/^[A-Za-zÇĞİÖŞÜçğıöşü\u00C0-\u024F' -]{2,80}$/;
-  const userRx=/^[A-Za-z0-9_.-]{3,40}$/;
-  if(!first||!last||!username||!email||!phone||!birth||!tc){err.textContent="Tüm alanlar zorunlu.";return}
-  if(!nameRx.test(first)||!nameRx.test(last)){err.textContent="İsim ve soyisim yalnızca harf ve boşluk içerebilir.";return}
-  if(!userRx.test(username)){err.textContent="Kullanıcı adı 3-40 karakter olmalı; harf, rakam, nokta, alt çizgi veya tire kullanılabilir.";return}
-  if(!/^\+90(?:5\d{9})$/.test(normalizeTrPhone(phone))){err.textContent="Geçerli bir Türkiye cep telefonu gir.";return}
-  const bd=new Date(birth+"T00:00:00");
-  if(Number.isNaN(bd.getTime())||bd>new Date()){err.textContent="Doğum tarihi geçerli olmalı ve gelecekte olamaz.";return}
+  const first=$("pcFirstName").value;
+  const last=$("pcLastName").value;
+  const username=$("pcUsername").value;
+  const email=$("pcEmail").value;
+  const phone=$("pcPhone").value;
+  const birth=$("pcBirthDate").value || null;
+  const tc=$("pcTc").value;
   const authUser=await refreshAuthUser();
   if(!authUser){err.textContent="Oturum doğrulanamadı. Sayfayı yenileyip tekrar giriş yap.";return}
-  if(!validTcIdentityNumber(tc)){err.textContent="Geçerli bir 11 haneli T.C. Kimlik No gir.";return}
-  btn.disabled=true;btn.textContent="Doğrulanıyor…";err.textContent="";
+  btn.disabled=true;btn.textContent="Kaydediliyor…";err.textContent="";
   const badge=$("identityVerificationBadge"),hint=$("identityVerificationHint");
-  if(badge){badge.textContent="Kontrol ediliyor…";badge.classList.remove("bad","ok");}
-  if(hint)hint.textContent="T.C. Kimlik No ve profil alanları sunucu tarafında kontrol ediliyor.";
+  if(badge){badge.textContent="Kaydediliyor…";badge.classList.add("ok");badge.classList.remove("bad");}
+  if(hint)hint.textContent="Bilgiler doğrulama yapılmadan kaydediliyor.";
   try{
-    const tcHash=await sha256Hex(tc);
     const result=await activateProfileNow({
-      p_first_name:first,p_last_name:last,p_username:username,p_phone:normalizeTrPhone(phone),
-      p_birth_date:birth,p_tc_identity_number:tc,p_tc_hash:tcHash
+      p_first_name:first,p_last_name:last,p_username:username,
+      p_phone:phone,p_birth_date:birth,p_tc_identity_number:tc
     });
     state.profile={...(state.profile||{}),...(result?.profile||{}),first_name:first,last_name:last,username,
-      phone:normalizeTrPhone(phone),birth_date:birth,tc_identity_hash:tcHash,tc_last4:tc.slice(-4),
-      tc_identity_number:tc,profile_completed:true,identity_verified:true,identity_verification_method:result?.verification_method||"local_validation"};
+      email:email,phone,birth_date:birth,tc_last4:String(tc||"").slice(-4),tc_identity_number:tc,
+      profile_completed:true,identity_verified:false,identity_verification_method:"not_verified"};
     state.profileComplete=true;
     closeModal("profileCompletionModal");
     updateAuthUI();
-    if(badge){badge.textContent="Doğrulandı";badge.classList.add("ok");}
-    if(hint)hint.textContent="Bilgiler kaydedildi. SMS doğrulaması şu an devre dışı.";
-    toast("Bilgilerin doğrulandı ve hesabın aktif.");
+    if(badge){badge.textContent="Kayıtlı";badge.classList.add("ok");}
+    if(hint)hint.textContent="Profil bilgileri kaydedildi. SMS/kimlik doğrulaması şimdilik kapalı.";
+    toast("Bilgilerin kaydedildi ve hesabın aktif.");
   }catch(e){
-    console.error("IDENTITY SUBMIT",e);err.textContent=identityFriendlyError(e?.message||"");
-    if(badge){badge.textContent="Kontrol başarısız";badge.classList.add("bad");}
-  }finally{btn.disabled=false;btn.textContent="✓ Bilgilerimi kontrol et ve hesabı tamamla";}
+    console.error("PROFILE SAVE",e);err.textContent=identityFriendlyError(e?.message||"");
+    if(badge){badge.textContent="Kaydedilemedi";badge.classList.remove("ok");badge.classList.add("bad");}
+  }finally{btn.disabled=false;btn.textContent="✓ Bilgilerimi kaydet ve devam et";}
 }
 
 function canViewLiveLocations(){
