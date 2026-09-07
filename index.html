@@ -161,6 +161,22 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
  <button class="btn primary" style="margin-top:10px" onclick="submitReport()">Bildirimi gönder</button>
  </div></div>
 
+<div id="banModal" class="modal"><div class="modalbox" style="max-width:560px">
+<button class="close" onclick="closeModal('banModal')">×</button><div class="eyebrow">MODERASYON</div>
+<h2>Ban uygula</h2>
+<p id="banTargetText" class="muted">Kullanıcı seçilmedi.</p>
+<div class="form">
+<label>Ban türü</label>
+<select id="banScope"><option value="account">Hesap banı</option><option value="device">Cihaz banı</option></select>
+<label style="margin-top:8px">Süre</label>
+<select id="banDuration">
+<option value="10m">10 dakika</option><option value="30m">30 dakika</option><option value="1h">1 saat</option><option value="6h">6 saat</option><option value="12h">12 saat</option><option value="1d">1 gün</option><option value="3d">3 gün</option><option value="7d">7 gün</option><option value="30d">30 gün</option><option value="90d">90 gün</option><option value="180d">180 gün</option><option value="1y">1 yıl</option><option value="permanent">Süresiz</option>
+</select>
+<label style="margin-top:8px">Ban nedeni</label>
+<textarea id="banReason" rows="4" placeholder="Örn. spam, kötüye kullanım, sahte hesap..." maxlength="500"></textarea>
+<div class="row" style="margin-top:10px;justify-content:flex-end;gap:8px"><button class="btn" onclick="closeModal('banModal')">Vazgeç</button><button class="btn primary" onclick="submitBan()">Banı uygula</button></div>
+</div></div></div>
+
 <div id="adminModal" class="modal"><div class="modalbox" style="width:min(1180px,100%)">
 <button class="close" onclick="closeModal('adminModal')">×</button>
 <div class="eyebrow">PRIVATE CONTROL</div>
@@ -335,15 +351,64 @@ async function openAuth(type="login"){
 }
 function switchAuth(){openAuth($("authModal").dataset.mode==="login"?"join":"login")}
 
+function getDeviceId(){
+  const key="discover_ai_device_id";
+  let id=localStorage.getItem(key);
+  if(!id){id=(crypto.randomUUID?crypto.randomUUID():"d_"+Date.now().toString(36)+Math.random().toString(36).slice(2));localStorage.setItem(key,id)}
+  return id;
+}
+async function checkDeviceBan(deviceId){
+  try{const {data,error}=await sb.rpc("check_device_ban",{p_device_id:deviceId});if(error)return {active:false};return data||{active:false};}catch(e){return {active:false}}
+}
+function isProfileBanned(u){
+  if(!u?.is_banned)return false;
+  return !u.ban_until || new Date(u.ban_until)>new Date();
+}
+function formatBanUntil(v){try{return new Date(v).toLocaleString("tr-TR")}catch(e){return String(v)}}
+function banStatusText(u){
+  if(!isProfileBanned(u))return "";
+  const scope=u.ban_scope==="device"?"CİHAZ BANLI":"HESAP BANLI";
+  return ` · ${scope}${u.ban_until?" · "+formatBanUntil(u.ban_until):" · SÜRESİZ"}`;
+}
+function durationToMinutes(v){return ({"10m":10,"30m":30,"1h":60,"6h":360,"12h":720,"1d":1440,"3d":4320,"7d":10080,"30d":43200,"90d":129600,"180d":259200,"1y":525600})[v]||null}
+let banTargetId=null;
+function openBanDialog(id,username){
+  if(!isAdmin())return;
+  banTargetId=id;$('banTargetText').textContent=`Hedef: ${username||"Kullanıcı"}`;
+  $('banScope').value='account';$('banDuration').value='1d';$('banReason').value='';openModal('banModal');
+}
+async function submitBan(){
+  if(!isAdmin()||!banTargetId)return;
+  const scope=$('banScope').value,durationKey=$('banDuration').value,reason=$('banReason').value.trim();
+  if(!reason)return toast('Ban nedeni gerekli.');
+  const minutes=durationToMinutes(durationKey);
+  const targetRole=await getTargetRole(banTargetId);
+  if(adminRole()==='admin'&&targetRole==='owner'){closeModal('banModal');return toast('Owner hesabına müdahale edilemez.');}
+  const ok=await callAdminRpc('admin_ban_user',{target_user_id:banTargetId,ban_scope:scope,duration_minutes:minutes,reason});
+  if(ok===null)return;
+  closeModal('banModal');toast(scope==='device'?(durationKey==='permanent'?'Cihaz süresiz banlandı.':'Cihaz banlandı.'):(durationKey==='permanent'?'Hesap süresiz banlandı.':'Hesap banlandı.'));
+  await renderAdminUsers($('adminPanelBody'));await renderAdminManagersIfVisible();
+}
+async function removeUserBan(id){
+  if(!isAdmin())return;
+  const ok=await callAdminRpc('admin_clear_user_ban',{target_user_id:id});if(ok===null)return;
+  toast('Ban kaldırıldı.');await renderAdminUsers($('adminPanelBody'));await renderAdminManagersIfVisible();
+}
+async function renderAdminManagersIfVisible(){if($('adminPanelBody')&&document.querySelector('[data-admin-section="admins"].active'))await renderAdminAdmins($('adminPanelBody'))}
+
 async function submitAuth(){
   const mode=$("authModal").dataset.mode||"join",name=$("authName").value.trim(),email=$("authEmail").value.trim(),password=$("authPassword").value;
   if(!email||password.length<6)return toast("E-posta ve en az 6 karakterli şifre gerekli.");
   try{
     if(mode==="join"){
+      const db=await checkDeviceBan(getDeviceId());
+      if(db.active)return toast(db.banned_until?`Bu cihaz ${formatBanUntil(db.banned_until)} tarihine kadar banlı.`:"Bu cihaz süresiz banlandı. Yeni hesap oluşturamazsınız.");
       const {data,error}=await sb.auth.signUp({email,password,options:{data:{full_name:name,username:name||undefined}}});
       if(error)throw error;
       toast(data.session?"Kayıt ve giriş başarılı.":"Kayıt tamamlandı. E-posta doğrulaması gerekebilir.");
     }else{
+      const db=await checkDeviceBan(getDeviceId());
+      if(db.active)return toast(db.banned_until?`Bu cihaz ${formatBanUntil(db.banned_until)} tarihine kadar banlı.`:"Bu cihaz süresiz banlandı; giriş yapamazsınız.");
       const {error}=await sb.auth.signInWithPassword({email,password});
       if(error)throw error;toast("Giriş başarılı.");
     }
@@ -359,7 +424,7 @@ async function syncUser(){
     if(p.error)throw p.error;
     if(!p.data){
       const username=(user.user_metadata?.username||user.user_metadata?.full_name||user.email?.split("@")[0]||"Kaşif").trim();
-      const ins=await sb.from("profiles").insert({id:user.id,username,level:1,xp:0}).select().single();
+      const ins=await sb.from("profiles").insert({id:user.id,username,level:1,xp:0,device_id:getDeviceId()}).select().single();
       if(ins.error)throw ins.error;p=ins;
     }else{
       const metaUsername=(user.user_metadata?.username||user.user_metadata?.full_name||"").trim();
@@ -369,13 +434,16 @@ async function syncUser(){
         if(!upd.error && upd.data)p=upd;
       }
     }
+    if(p.data.device_id!==getDeviceId()){const d=await sb.rpc("register_device_id",{p_device_id:getDeviceId()});if(!d.error)p.data.device_id=getDeviceId();}
     state.profile=p.data;state.xp=Number(p.data.xp||0);state.premium=!!(p.data.premium_until&&new Date(p.data.premium_until)>new Date());
     state.premium=!!(p.data.premium_until && new Date(p.data.premium_until)>new Date());
-    if(p.data.is_banned===true){
-      toast("Bu hesap engellenmiş.");
-      await sb.auth.signOut();
-      state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel",aiSettings:null,siteSettings:{}};
-      updateAuthUI();return;
+    const accountBanActive=isProfileBanned(p.data)&&p.data.ban_scope!=="device";
+    const deviceBan=await checkDeviceBan(getDeviceId());
+    if(accountBanActive || deviceBan.active){
+      const msg=accountBanActive
+        ? (p.data.ban_until?`Hesabınız ${formatBanUntil(p.data.ban_until)} tarihine kadar banlı.`:"Hesabınız süresiz banlandı.")
+        : (deviceBan.banned_until?`Bu cihaz ${formatBanUntil(deviceBan.banned_until)} tarihine kadar banlı.`:"Bu cihaz süresiz banlandı.");
+      toast(msg);await sb.auth.signOut();state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel",aiSettings:null,siteSettings:{}};updateAuthUI();return;
     }
     const fav=await sb.from("favorites").select("activity_id").eq("user_id",user.id);
     if(!fav.error)state.favorites=(fav.data||[]).map(x=>x.activity_id);
@@ -637,7 +705,7 @@ async function deleteActivity(id){
 }
 
 async function renderAdminUsers(body){
-  const {data,error}=await sb.from("profiles").select("id,username,level,xp,is_admin,admin_role,premium_plan,premium_until,is_banned").order("username").limit(200);
+  const {data,error}=await sb.from("profiles").select("id,username,level,xp,is_admin,admin_role,premium_plan,premium_until,is_banned,ban_scope,ban_until,ban_reason,device_id").order("username").limit(200);
   if(error){body.innerHTML='<div class="empty">Kullanıcılar yüklenemedi: '+esc(error.message)+'</div>';return}
   body.innerHTML=`
     <div class="admin-toolbar"><input id="userSearch" placeholder="Kullanıcı adı ara..." oninput="filterAdminList('userSearch','userAdminList')"></div>
@@ -652,12 +720,12 @@ function adminUserRow(u){
   const canOps=isOwner() || (adminRole()==="admin" && role!=="owner");
   const canRole=isOwner()?u.id!==state.user.id:((adminRole()==="admin") && role!=="owner");
   return `<div class="admin-item" data-search="${esc(normalize(u.username||""))}">
-    <div><b>${esc(u.username||"Kullanıcı adı yok")}</b><small>Seviye ${Number(u.level||1)} · ${Number(u.xp||0)} XP · ${roleLabel} · ${premium?"Premium":"Free"}${u.is_banned?" · ENGELLİ":""}</small></div>
+    <div><b>${esc(u.username||"Kullanıcı adı yok")}</b><small>Seviye ${Number(u.level||1)} · ${Number(u.xp||0)} XP · ${roleLabel} · ${premium?"Premium":"Free"}${banStatusText(u)}</small></div>
     <div class="admin-actions">
       ${canOps?`<button class="btn mini" onclick='editUserStats(${JSON.stringify(u.id)},${Number(u.level||1)},${Number(u.xp||0)})'>XP/Seviye</button>`:""}
       ${canOps?`<button class="btn mini" onclick='toggleUserPremium(${JSON.stringify(u.id)},${premium})'>${premium?"Premium kaldır":"Premium ver"}</button>`:""}
       ${canRole?`<button class="btn mini" onclick='setUserRolePrompt(${JSON.stringify(u.id)},${JSON.stringify(role||"user")})'>Rol</button>`:""}
-      ${canOps?`<button class="btn mini" onclick='toggleUserBan(${JSON.stringify(u.id)},${u.is_banned!==true})'>${u.is_banned?"Yasağı kaldır":"Engelle"}</button>`:""}
+      ${canOps?`<button class="btn mini" onclick='toggleUserBan(${JSON.stringify(u.id)},${u.is_banned!==true})'>${isProfileBanned(u)?"Banı kaldır":"Banla"}</button>`:""}
     </div>
   </div>`;
 }
@@ -720,11 +788,8 @@ async function toggleUserPremium(id,isPremium){
 }
 async function toggleUserBan(id,ban){
   if(!isAdmin())return;
-  const targetRole=await getTargetRole(id);
-  if(adminRole()==="admin" && targetRole==="owner")return toast("Owner hesabına müdahale edilemez.");
-  const ok=await callAdminRpc("admin_set_user_ban",{target_user_id:id,ban_user:ban});
-  if(ok===null)return;
-  toast(ban?"Kullanıcı engellendi.":"Kullanıcının engeli kaldırıldı.");await renderAdminUsers($("adminPanelBody"));
+  if(ban)return openBanDialog(id,"Kullanıcı");
+  return removeUserBan(id);
 }
 async function promoteUserToAdminByUsername(){
   if(!isAdmin())return;
@@ -787,7 +852,7 @@ async function deleteReport(id){
 }
 
 async function renderAdminManagers(body){
-  const {data,error}=await sb.from("profiles").select("id,username,level,xp,is_admin,admin_role,is_banned,premium_plan,premium_until").in("admin_role",["owner","admin"]).order("admin_role",{ascending:true}).order("username");
+  const {data,error}=await sb.from("profiles").select("id,username,level,xp,is_admin,admin_role,is_banned,premium_plan,premium_until,ban_scope,ban_until,ban_reason,device_id").in("admin_role",["owner","admin"]).order("admin_role",{ascending:true}).order("username");
   if(error){body.innerHTML='<div class="empty">Yöneticiler yüklenemedi: '+esc(error.message)+'</div>';return}
   const owners=(data||[]).filter(u=>getRole(u)==="owner");
   const admins=(data||[]).filter(u=>getRole(u)==="admin");
@@ -804,11 +869,11 @@ function managerRow(u){
   const isTargetOwner=role==="owner";
   const canOperate=isOwner() || (adminRole()==="admin" && !isTargetOwner);
   const canRole=isOwner()?u.id!==state.user.id:(adminRole()==="admin"&&!isTargetOwner);
-  return `<div class="admin-item"><div><b>${esc(u.username||"Kullanıcı adı yok")}</b><small>${role==="owner"?"OWNER":"ADMIN"} · ${u.is_banned?"Engelli":"Aktif"} · ${premium?"Premium":"Free"}</small></div><div class="admin-actions">
+  return `<div class="admin-item"><div><b>${esc(u.username||"Kullanıcı adı yok")}</b><small>${role==="owner"?"OWNER":"ADMIN"} · ${isProfileBanned(u)?(u.ban_scope==="device"?"CİHAZ BANLI":"HESAP BANLI"):"Aktif"} · ${premium?"Premium":"Free"}</small></div><div class="admin-actions">
     ${canOperate?`<button class="btn mini" onclick='editUserStats(${JSON.stringify(u.id)},${Number(u.level||1)},${Number(u.xp||0)})'>XP/Seviye</button>`:""}
     ${canOperate?`<button class="btn mini" onclick='toggleUserPremium(${JSON.stringify(u.id)},${premium})'>${premium?"Premium kaldır":"Premium ver"}</button>`:""}
     ${canRole?`<button class="btn mini" onclick='setUserRolePrompt(${JSON.stringify(u.id)},${JSON.stringify(role)})'>Rol</button>`:""}
-    ${canOperate?`<button class="btn mini" onclick='toggleUserBan(${JSON.stringify(u.id)},${u.is_banned!==true})'>${u.is_banned?"Yasağı kaldır":"Engelle"}</button>`:""}
+    ${canOperate?(isProfileBanned(u)?`<button class="btn mini" onclick='removeUserBan(${JSON.stringify(u.id)})'>Banı kaldır</button>`:`<button class="btn mini" onclick='openBanDialog(${JSON.stringify(u.id)},${JSON.stringify(u.username||"Kullanıcı")})'>Banla</button>`):""}
     ${!canOperate&&!canRole?'<span class="muted">Owner korumalı</span>':''}
   </div></div>`;
 }
@@ -874,7 +939,7 @@ async function saveSiteSettings(){
   updatePublicPrices();
   toast("Sistem ayarları kaydedildi.");
 }
-["authModal","profileModal","routeModal","reportModal","adminModal"].forEach(id=>$(id).addEventListener("click",e=>{if(e.target.classList.contains("modal"))closeModal(id)}));
+["authModal","profileModal","routeModal","reportModal","banModal","adminModal"].forEach(id=>$(id).addEventListener("click",e=>{if(e.target.classList.contains("modal"))closeModal(id)}));
 
 (async()=>{
   updateAuthUI();updateLevels();
