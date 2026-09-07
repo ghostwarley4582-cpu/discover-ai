@@ -58,7 +58,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 <div class="ai-box">
 <div class="prompt">
 <input id="mood" placeholder="Örn: Sevgilimle sakin ama özel bir gün geçirmek istiyorum...">
-<button class="btn primary" onclick="recommend()">✦ Bana Öner</button><button class="btn" onclick="openAIAssistant()">🧠 AI ile konuş</button>
+<button class="btn primary" onclick="recommend()">✦ Bana Öner</button><button type="button" class="btn" onclick="openAIAssistant()">🧠 AI ile konuş</button>
 </div>
 <div class="chips">
 <button class="chip" onclick="setMood('Romantik',this)">❤️ Romantik</button>
@@ -179,22 +179,32 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 </div></div></div>
 
 
-<div id="aiModal" class="modal"><div class="modalbox" style="width:min(760px,100%)">
-<button class="close" onclick="closeModal('aiModal')">×</button>
-<div class="eyebrow">✦ DISCOVER AI ASSISTANT <span id="aiProviderBadge" class="badge good" style="margin-left:8px">FREE AI</span></div>
-<h2 style="margin-bottom:6px">Bugününü AI ile tasarla</h2>
-<p class="muted" style="margin-top:0">Bütçe, zaman, mod ve seçtiğin deneyimler birlikte değerlendirilir. Ücretsiz AI modeli kullanılır.</p>
-<div id="aiConversation" class="glass" style="max-height:420px;overflow:auto;margin-top:12px">
-  <div class="muted">Merhaba. Ne yapmak istediğini anlat; sana uygun deneyimleri seçip nedenlerini açıklayayım.</div>
-</div>
-<div class="form" style="margin-top:12px">
-  <textarea id="aiPrompt" rows="3" placeholder="Örn: Cumartesi sevgilimle 1500 TL bütçeyle sakin, romantik ve çok kalabalık olmayan bir gün istiyorum."></textarea>
-  <div class="row" style="justify-content:flex-end;gap:8px">
-    <button type="button" class="btn" onclick="clearAIChat()">Temizle</button>
-    <button type="button" class="btn primary" id="aiSendBtn" onclick="sendAIRequest()">✦ AI'ya sor</button>
+<div id="aiAssistantModal" class="modal">
+  <div class="modalbox" style="width:min(760px,100%);max-height:92vh">
+    <button class="close" type="button" onclick="closeModal('aiAssistantModal')">×</button>
+    <div class="eyebrow">✦ DISCOVER AI ASSISTANT <span class="badge good" style="margin-left:8px">FREE AI</span></div>
+    <h2 style="margin-bottom:6px">Bugününü AI ile tasarla</h2>
+    <p class="muted" style="margin-top:0">
+      İsteğini yaz. DISCOVER AI bütçeni, zamanı, modunu ve mevcut deneyimleri birlikte değerlendirir.
+    </p>
+
+    <div id="aiConversation" class="glass" style="max-height:390px;overflow:auto;margin-top:12px">
+      <div class="muted">
+        Merhaba. Bana nasıl bir gün istediğini anlat; mevcut deneyimler arasından sana en uygun seçenekleri bulayım.
+      </div>
+    </div>
+
+    <div class="form" style="margin-top:12px">
+      <textarea id="aiPrompt" rows="3" maxlength="2000"
+        placeholder="Örn: Sevgilimle 1000 TL bütçeyle sakin ve romantik bir gün geçirmek istiyorum."></textarea>
+      <div class="row" style="justify-content:flex-end;gap:8px">
+        <button type="button" class="btn" onclick="clearAIAssistant()">Temizle</button>
+        <button type="button" class="btn primary" id="aiSendBtn" onclick="sendAIAssistant()">✦ AI'ya sor</button>
+      </div>
+      <div id="aiStatus" class="muted" style="font-size:12px;min-height:16px"></div>
+    </div>
   </div>
 </div>
-</div></div>
 
 <div id="adminModal" class="modal"><div class="modalbox" style="width:min(1180px,100%)">
 <button class="close" onclick="closeModal('adminModal')">×</button>
@@ -300,76 +310,233 @@ function scoreActivity(a){
 }
 
 
-let aiConversation=[];
+let aiConversationHistory=[];
+
 function openAIAssistant(){
-  openModal("aiModal");
-  setTimeout(()=>$("aiPrompt")?.focus(),80);
-  renderAIConversation();
-}
-function renderAIConversation(){
-  const box=$("aiConversation");
-  if(!box)return;
-  if(!aiConversation.length){
-    box.innerHTML='<div class="muted">Merhaba. Ne yapmak istediğini anlat; sana uygun deneyimleri seçip nedenlerini açıklayayım.</div>';
+  if(!state.user){
+    toast("AI asistanını kullanmak için önce giriş yap.");
+    openAuth("login");
     return;
   }
-  box.innerHTML=aiConversation.map(m=>`
+  openModal("aiAssistantModal");
+  renderAIAssistant();
+  setTimeout(()=>$("aiPrompt")?.focus(),80);
+}
+
+function clearAIAssistant(){
+  aiConversationHistory=[];
+  renderAIAssistant();
+  if($("aiStatus"))$("aiStatus").textContent="";
+}
+
+function renderAIAssistant(){
+  const box=$("aiConversation");
+  if(!box)return;
+  if(!aiConversationHistory.length){
+    box.innerHTML='<div class="muted">Merhaba. Bana nasıl bir gün istediğini anlat; mevcut deneyimler arasından sana en uygun seçenekleri bulayım.</div>';
+    return;
+  }
+  box.innerHTML=aiConversationHistory.map(m=>`
     <div style="padding:10px 12px;margin:8px 0;border-radius:14px;${m.role==="user"?"background:#211332":"background:#0d0a12;border:1px solid var(--line)"}">
       <b>${m.role==="user"?"Sen":"DISCOVER AI"}</b>
-      <div class="muted" style="margin-top:5px;white-space:pre-wrap">${esc(m.text)}</div>
-    </div>`).join("");
+      <div class="muted" style="margin-top:5px;white-space:pre-wrap;line-height:1.55">${esc(m.text)}</div>
+    </div>
+  `).join("");
   box.scrollTop=box.scrollHeight;
 }
-function clearAIChat(){aiConversation=[];renderAIConversation()}
-function aiContext(){
-  const candidates=lastResults?.length?lastResults:activities.map(a=>({...a,score:scoreActivity(a)})).filter(a=>a.score>=0).slice(0,12);
-  return {
-    budget:currentBudget(),
-    time_minutes:currentTime(),
-    mode:state.mode,
-    query:$("mood").value.trim(),
-    premium:!!state.premium,
-    candidates:candidates.slice(0,12).map(a=>({
-      id:String(a.id),title:a.title,price:a.price,rating:a.rating,city:a.city,
-      duration_min:a.time,moods:a.moods,tag:a.tag,description:a.description,score:a.score
-    }))
-  };
+
+function parseBudgetFromText(text){
+  const s=String(text||"").toLocaleLowerCase("tr-TR");
+  const patterns=[
+    /(\d[\d\s.,]*)\s*(?:tl|₺|lira)\b/i,
+    /(?:bütçem|bütçe|harcayacak|harcamak için)\s*(?:de|olarak|)?\s*(\d[\d\s.,]*)/i
+  ];
+  for(const rex of patterns){
+    const m=s.match(rex);
+    if(!m)continue;
+    let raw=String(m[1]).replace(/\s/g,"").replace(/[₺]/g,"");
+    if(raw.includes(".")&&raw.includes(",")){
+      raw=raw.replace(/\./g,"").replace(",",".");
+    }else if(raw.includes(",")&&raw.split(",")[1]?.length<=2){
+      raw=raw.replace(",",".");
+    }else{
+      raw=raw.replace(/\./g,"");
+    }
+    const n=Number(raw);
+    if(Number.isFinite(n)&&n>=0&&n<=1000000)return Math.round(n);
+  }
+  return null;
 }
-async function sendAIRequest(){
-  const input=$("aiPrompt"),btn=$("aiSendBtn");
-  const prompt=(input.value||"").trim();
-  if(!prompt)return toast("AI'ya göndermek için bir istek yaz.");
-  if(!state.user)return toast("AI asistanı için önce giriş yap.");
-  if(btn.disabled)return;
-  aiConversation.push({role:"user",text:prompt});
-  input.value="";renderAIConversation();btn.disabled=true;btn.textContent="AI düşünüyor…";
+
+function parseTimeFromText(text){
+  const s=String(text||"").toLocaleLowerCase("tr-TR");
+  let m=s.match(/(\d+(?:[.,]\d+)?)\s*(?:saat|sa)\b/i);
+  if(m){
+    const h=Number(String(m[1]).replace(",","."));
+    if(Number.isFinite(h)&&h>0&&h<=72)return Math.round(h*60);
+  }
+  m=s.match(/(\d+)\s*(?:dakika|dk)\b/i);
+  if(m){
+    const min=Number(m[1]);
+    if(Number.isFinite(min)&&min>0&&min<=4320)return min;
+  }
+  return null;
+}
+
+function buildAICandidates(userText){
+  const explicitBudget=parseBudgetFromText(userText);
+  const explicitTime=parseTimeFromText(userText);
+  const budget=explicitBudget??currentBudget();
+  const time=explicitTime??currentTime();
+
+  const ranked=activities
+    .map(a=>({...a,score:scoreActivityWithContext(a,budget,time,userText)}))
+    .filter(a=>a.score>=0 && a.price<=budget && a.time<=time)
+    .sort((a,b)=>b.score-a.score || b.rating-a.rating);
+
+  // Give the model a sufficiently broad candidate set without changing the site results.
+  return ranked.slice(0,18).map(a=>({
+    id:String(a.id),
+    title:a.title,
+    price:Number(a.price||0),
+    rating:Number(a.rating||0),
+    city:a.city||"",
+    duration_min:Number(a.time||0),
+    moods:Array.isArray(a.moods)?a.moods.slice(0,6):[],
+    tag:a.tag||"",
+    description:String(a.description||"").slice(0,300),
+    why:String(a.why||"").slice(0,300),
+    score:Number(a.score||0)
+  }));
+}
+
+function scoreActivityWithContext(a,budget,time,text){
+  const q=normalize(text||"");
+  const words=q.split(/\s+/).filter(w=>w.length>2);
+  const hay=normalize([a.title,a.tag,a.description,a.why,...(a.moods||[])].join(" "));
+  const matched=words.filter(w=>hay.includes(w)).length;
+  const moodFit=Math.min(1,matched/Math.max(1,Math.min(4,words.length)));
+  const budgetFit=budget<=0?(a.price===0?1:0):Math.max(0,1-Math.abs(a.price-budget)/Math.max(budget,1));
+  const timeFit=Math.max(0,1-Math.max(0,a.time-time)/Math.max(time,1));
+  const ratingFit=Math.max(0,Math.min(1,(a.rating||0)/5));
+  return Math.round(Math.min(100,budgetFit*28+timeFit*22+moodFit*32+ratingFit*18));
+}
+
+async function getFunctionErrorDetails(err){
+  const direct=String(err?.message||"");
   try{
+    const res=err?.context;
+    if(res && typeof res.json==="function"){
+      const body=await res.clone().json();
+      if(body?.error)return String(body.error);
+      if(body?.message)return String(body.message);
+    }
+  }catch(_){}
+  return direct;
+}
+
+function aiFriendlyError(code){
+  const c=String(code||"");
+  if(c.includes("AI_DAILY_LIMIT")||c.includes("429"))
+    return "Ücretsiz AI kullanım limitine ulaşıldı. Biraz sonra tekrar dene.";
+  if(c.includes("OPENROUTER_API_KEY_MISSING"))
+    return "OpenRouter API anahtarı Edge Function'a bağlı değil.";
+  if(c.includes("OPENROUTER_AUTH_ERROR")||c.includes("401"))
+    return "OpenRouter API anahtarı geçersiz veya yetkisiz.";
+  if(c.includes("OPENROUTER_PROVIDER_ERROR"))
+    return "Ücretsiz AI modeli şu anda yanıt vermedi. Birkaç dakika sonra tekrar dene.";
+  if(c.includes("SUPABASE_ENV_MISSING")||c.includes("AUTH_REQUIRED"))
+    return "Oturum doğrulanamadı. Sayfayı yenileyip tekrar giriş yap.";
+  return "AI şu anda yanıt veremedi. Lütfen tekrar dene.";
+}
+
+async function sendAIAssistant(){
+  if(!state.user){
+    toast("AI asistanını kullanmak için önce giriş yap.");
+    openAuth("login");
+    return;
+  }
+
+  const input=$("aiPrompt");
+  const btn=$("aiSendBtn");
+  const status=$("aiStatus");
+  const text=(input?.value||"").trim();
+  if(text.length<2){
+    toast("AI'ya göndermek için bir istek yaz.");
+    return;
+  }
+  if(btn.disabled)return;
+
+  aiConversationHistory.push({role:"user",text});
+  input.value="";
+  renderAIAssistant();
+  btn.disabled=true;
+  btn.textContent="AI düşünüyor…";
+  if(status)status.textContent="Ücretsiz AI modeli çalışıyor…";
+
+  const candidates=buildAICandidates(text);
+
+  try{
+    const recent=aiConversationHistory.slice(-8).map(m=>({role:m.role,content:m.text}));
     const {data,error}=await sb.functions.invoke("discover-ai-assistant",{
-      body:{message:prompt,context:aiContext()}
+      body:{
+        message:text,
+        conversation:recent,
+        context:{
+          requested_budget:parseBudgetFromText(text),
+          requested_time_minutes:parseTimeFromText(text),
+          budget:parseBudgetFromText(text)??currentBudget(),
+          time_minutes:parseTimeFromText(text)??currentTime(),
+          mode:state.mode,
+          query:$("mood")?.value?.trim()||"",
+          premium:!!state.premium,
+          candidates
+        }
+      }
     });
-    if(error)throw error;
-    const answer=data?.answer||"Şu anda bir yanıt oluşturamadım.";
-    aiConversation.push({role:"assistant",text:answer});
+
+    if(error){
+      const detail=await getFunctionErrorDetails(error);
+      throw new Error(detail||"FUNCTION_ERROR");
+    }
+
+    const answer=String(data?.answer||"").trim();
+    if(!answer)throw new Error("EMPTY_AI_RESPONSE");
+
+    aiConversationHistory.push({role:"assistant",text:answer});
+
     if(Array.isArray(data?.recommended_ids)&&data.recommended_ids.length){
       const byId=new Map(activities.map(a=>[String(a.id),a]));
       const ranked=data.recommended_ids.map(id=>byId.get(String(id))).filter(Boolean);
       if(ranked.length){
-        lastResults=ranked.map(a=>({...a,score:scoreActivity(a)}));
-        render(lastResults);
+        const visible=ranked.map(a=>({...a,score:scoreActivityWithContext(a,currentBudget(),currentTime(),text)}));
+        lastResults=visible;
+        render(visible.slice(0,6));
+        $("resultSummary").textContent="✦ AI tarafından seçildi · İsteğin ve mevcut deneyimler birlikte değerlendirildi.";
         scrollToId("explore");
       }
     }
-    renderAIConversation();
-  }catch(e){
-    console.error("AI ASSISTANT ERROR",e);
-    const msg=String(e?.message||"");
-    aiConversation.push({role:"assistant",text:msg.includes("429")?"Ücretsiz AI kullanım limitine ulaşıldı. Daha sonra tekrar dene.":"AI servisine bağlanamadım. Edge Function, OpenRouter anahtarı veya ücretsiz model limitini kontrol et."});
-    renderAIConversation();
+
+    if(status)status.textContent="Hazır.";
+    renderAIAssistant();
+  }catch(err){
+    console.error("DISCOVER AI ERROR",err);
+    const friendly=aiFriendlyError(await getFunctionErrorDetails(err));
+    aiConversationHistory.push({role:"assistant",text:friendly});
+    if(status)status.textContent=friendly;
+    renderAIAssistant();
   }finally{
-    btn.disabled=false;btn.textContent="✦ AI'ya sor";
+    btn.disabled=false;
+    btn.textContent="✦ AI'ya sor";
   }
 }
 
+
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter" && !e.shiftKey && e.target?.id==="aiPrompt"){
+    e.preventDefault();sendAIAssistant();
+  }
+});
 function recommend(silent=false){
   if(!activities.length){$("results").innerHTML='<div class="empty">Şu anda gösterilecek aktif deneyim bulunamadı.</div>';return}
   betterOffset=0;
@@ -1221,7 +1388,7 @@ async function saveSiteSettings(){
   updatePublicPrices();
   toast("Sistem ayarları kaydedildi.");
 }
-["authModal","profileModal","routeModal","reportModal","banModal","aiModal","adminModal"].forEach(id=>$(id).addEventListener("click",e=>{if(id==="adminModal"&&document.querySelector("#banModal.open"))return;if(e.target.classList.contains("modal"))closeModal(id)}));
+["authModal","profileModal","routeModal","reportModal","banModal","adminModal"].forEach(id=>$(id).addEventListener("click",e=>{if(id==="adminModal"&&document.querySelector("#banModal.open"))return;if(e.target.classList.contains("modal"))closeModal(id)}));
 
 (async()=>{
   updateAuthUI();updateLevels();
