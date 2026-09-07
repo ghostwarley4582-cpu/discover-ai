@@ -633,18 +633,28 @@ function adminUserRow(u){
   return `<div class="admin-item" data-search="${esc(normalize(u.username||""))}">
     <div><b>${esc(u.username||"Kaşif")}</b><small>Seviye ${Number(u.level||1)} · ${Number(u.xp||0)} XP · ${u.is_admin?"Yönetici":"Kullanıcı"} · ${premium?"Premium":"Free"}</small></div>
     <div class="admin-actions">
-      <button class="btn mini" onclick="editUserStats(${JSON.stringify(u.id)},${Number(u.level||1)},${Number(u.xp||0)})">XP/Seviye</button>
-      <button class="btn mini" onclick="toggleUserPremium(${JSON.stringify(u.id)},${premium})">${premium?"Premium kaldır":"Premium ver"}</button>
-      ${u.id!==state.user.id?`<button class="btn mini" onclick="toggleAdminRole(${JSON.stringify(u.id)},${u.is_admin!==true})">${u.is_admin?"Adminliği kaldır":"Admin yap"}</button>`:""}
-      ${u.id!==state.user.id?`<button class="btn mini" onclick="toggleUserBan(${JSON.stringify(u.id)},${u.is_banned!==true})">${u.is_banned?"Yasağı kaldır":"Engelle"}</button>`:""}
+      <button class="btn mini" onclick='editUserStats(${JSON.stringify(u.id)},${Number(u.level||1)},${Number(u.xp||0)})'>XP/Seviye</button>
+      <button class="btn mini" onclick='toggleUserPremium(${JSON.stringify(u.id)},${premium})'>${premium?"Premium kaldır":"Premium ver"}</button>
+      ${u.id!==state.user.id?`<button class="btn mini" onclick='toggleAdminRole(${JSON.stringify(u.id)},${u.is_admin!==true})'>${u.is_admin?"Adminliği kaldır":"Admin yap"}</button>`:""}
+      ${u.id!==state.user.id?`<button class="btn mini" onclick='toggleUserBan(${JSON.stringify(u.id)},${u.is_banned!==true})'>${u.is_banned?"Yasağı kaldır":"Engelle"}</button>`:""}
     </div>
   </div>`;
 }
 async function callAdminRpc(fn,args){
   if(!isAdmin()){toast("Bu işlem için yönetici yetkisi gerekli.");return null}
-  const {data,error}=await sb.rpc(fn,args);
-  if(error){console.error(fn,error);toast("İşlem başarısız: "+(error.message||"Sunucu hatası"));return null}
-  return data;
+  try{
+    const {data,error}=await sb.rpc(fn,args);
+    if(error){
+      console.error("ADMIN RPC ERROR",fn,error,args);
+      toast("İşlem başarısız: "+(error.message||error.details||error.hint||"Sunucu hatası"));
+      return null;
+    }
+    return data;
+  }catch(e){
+    console.error("ADMIN RPC EXCEPTION",fn,e,args);
+    toast("İşlem başarısız: "+(e.message||"Sunucu hatası"));
+    return null;
+  }
 }
 async function editUserStats(id,level,xp){
   const nl=prompt("Yeni seviye (1-10):",level);if(nl===null)return;
@@ -694,9 +704,9 @@ async function renderAdminReports(body){
         <div style="flex:1"><b>${esc(r.type||"Bildirim")}</b><small>${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""} · Durum: ${esc(r.status||"open")}</small>
         <div style="margin-top:8px">${esc(r.description||"")}</div>${r.admin_note?`<div class="muted" style="margin-top:7px">Not: ${esc(r.admin_note)}</div>`:""}</div>
         <div class="admin-actions">
-          ${r.status!=="resolved"?`<button class="btn mini" onclick="resolveReport(${JSON.stringify(r.id)})">Çözüldü</button>`:`<button class="btn mini" onclick="reopenReport(${JSON.stringify(r.id)})">Aç</button>`}
-          <button class="btn mini" onclick="noteReport(${JSON.stringify(r.id)},${JSON.stringify(r.admin_note||"")})">Not ekle</button>
-          <button class="btn mini" onclick="deleteReport(${JSON.stringify(r.id)})">Sil</button>
+          ${r.status!=="resolved"?`<button class="btn mini" onclick='resolveReport(${JSON.stringify(r.id)})'>Çözüldü</button>`:`<button class="btn mini" onclick='reopenReport(${JSON.stringify(r.id)})'>Aç</button>`}
+          <button class="btn mini" onclick='noteReport(${JSON.stringify(r.id)},${JSON.stringify(r.admin_note||)})'>Not ekle</button>
+          <button class="btn mini" onclick='deleteReport(${JSON.stringify(r.id)})'>Sil</button>
         </div>
       </div>`).join("")||'<div class="empty">Şikayet kuyruğu boş.</div>'}</div>`;
 }
@@ -728,7 +738,7 @@ async function renderAdminPremium(body){
   if(error){body.innerHTML='<div class="empty">Premium verileri yüklenemedi: '+esc(error.message)+'</div>';return}
   body.innerHTML=`
     <div class="admin-card"><h3 style="margin-top:0">Premium kullanıcılar</h3><p class="muted">Süre dolduğunda hesap otomatik olarak Free kabul edilir.</p>
-    <div class="admin-list">${(data||[]).map(u=>`<div class="admin-item"><div><b>${esc(u.username||"Kaşif")}</b><small>${esc(u.premium_plan||"Premium")} · ${new Date(u.premium_until).toLocaleString("tr-TR")}</small></div><button class="btn mini" onclick="toggleUserPremium(${JSON.stringify(u.id)},true)">Premium kaldır</button></div>`).join("")||'<div class="empty">Premium kullanıcı yok.</div>'}</div></div>`;
+    <div class="admin-list">${(data||[]).map(u=>`<div class="admin-item"><div><b>${esc(u.username||"Kaşif")}</b><small>${esc(u.premium_plan||"Premium")} · ${new Date(u.premium_until).toLocaleString("tr-TR")}</small></div><button class="btn mini" onclick='toggleUserPremium(${JSON.stringify(u.id)},true)'>Premium kaldır</button></div>`).join("")||'<div class="empty">Premium kullanıcı yok.</div>'}</div></div>`;
 }
 
 async function renderAdminAI(body){
