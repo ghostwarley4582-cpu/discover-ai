@@ -58,7 +58,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 <div class="ai-box">
 <div class="prompt">
 <input id="mood" placeholder="Örn: Sevgilimle sakin ama özel bir gün geçirmek istiyorum...">
-<button class="btn primary" onclick="recommend()">✦ Bana Öner</button>
+<button class="btn primary" onclick="recommend()">✦ Bana Öner</button><button class="btn" onclick="openAIAssistant()">🧠 AI ile konuş</button>
 </div>
 <div class="chips">
 <button class="chip" onclick="setMood('Romantik',this)">❤️ Romantik</button>
@@ -178,6 +178,24 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 <div class="row" style="margin-top:10px;justify-content:flex-end;gap:8px"><button type="button" class="btn" onclick="closeModal('banModal')">Vazgeç</button><button type="button" class="btn primary" onclick="submitBan()">Banı uygula</button></div>
 </div></div></div>
 
+
+<div id="aiModal" class="modal"><div class="modalbox" style="width:min(760px,100%)">
+<button class="close" onclick="closeModal('aiModal')">×</button>
+<div class="eyebrow">✦ DISCOVER AI ASSISTANT</div>
+<h2 style="margin-bottom:6px">Bugününü AI ile tasarla</h2>
+<p class="muted" style="margin-top:0">Bütçe, zaman, mod ve seçtiğin deneyimler birlikte değerlendirilir.</p>
+<div id="aiConversation" class="glass" style="max-height:420px;overflow:auto;margin-top:12px">
+  <div class="muted">Merhaba. Ne yapmak istediğini anlat; sana uygun deneyimleri seçip nedenlerini açıklayayım.</div>
+</div>
+<div class="form" style="margin-top:12px">
+  <textarea id="aiPrompt" rows="3" placeholder="Örn: Cumartesi sevgilimle 1500 TL bütçeyle sakin, romantik ve çok kalabalık olmayan bir gün istiyorum."></textarea>
+  <div class="row" style="justify-content:flex-end;gap:8px">
+    <button type="button" class="btn" onclick="clearAIChat()">Temizle</button>
+    <button type="button" class="btn primary" id="aiSendBtn" onclick="sendAIRequest()">✦ AI'ya sor</button>
+  </div>
+</div>
+</div></div>
+
 <div id="adminModal" class="modal"><div class="modalbox" style="width:min(1180px,100%)">
 <button class="close" onclick="closeModal('adminModal')">×</button>
 <div class="eyebrow">PRIVATE CONTROL</div>
@@ -279,6 +297,76 @@ function scoreActivity(a){
   score=budgetFit*Number(w.budget_weight||0)+timeFit*Number(w.time_weight||0)+moodFit*Number(w.mood_weight||0)+modeFit*Number(w.mode_weight||0)+ratingFit*Number(w.rating_weight||0)+distanceFit*Number(w.distance_weight||0);
   if(a.price===0 && budget<=300)score+=4;
   return Math.round(Math.min(100,score));
+}
+
+
+let aiConversation=[];
+function openAIAssistant(){
+  openModal("aiModal");
+  setTimeout(()=>$("aiPrompt")?.focus(),80);
+  renderAIConversation();
+}
+function renderAIConversation(){
+  const box=$("aiConversation");
+  if(!box)return;
+  if(!aiConversation.length){
+    box.innerHTML='<div class="muted">Merhaba. Ne yapmak istediğini anlat; sana uygun deneyimleri seçip nedenlerini açıklayayım.</div>';
+    return;
+  }
+  box.innerHTML=aiConversation.map(m=>`
+    <div style="padding:10px 12px;margin:8px 0;border-radius:14px;${m.role==="user"?"background:#211332":"background:#0d0a12;border:1px solid var(--line)"}">
+      <b>${m.role==="user"?"Sen":"DISCOVER AI"}</b>
+      <div class="muted" style="margin-top:5px;white-space:pre-wrap">${esc(m.text)}</div>
+    </div>`).join("");
+  box.scrollTop=box.scrollHeight;
+}
+function clearAIChat(){aiConversation=[];renderAIConversation()}
+function aiContext(){
+  const candidates=lastResults?.length?lastResults:activities.map(a=>({...a,score:scoreActivity(a)})).filter(a=>a.score>=0).slice(0,12);
+  return {
+    budget:currentBudget(),
+    time_minutes:currentTime(),
+    mode:state.mode,
+    query:$("mood").value.trim(),
+    premium:!!state.premium,
+    candidates:candidates.slice(0,12).map(a=>({
+      id:String(a.id),title:a.title,price:a.price,rating:a.rating,city:a.city,
+      duration_min:a.time,moods:a.moods,tag:a.tag,description:a.description,score:a.score
+    }))
+  };
+}
+async function sendAIRequest(){
+  const input=$("aiPrompt"),btn=$("aiSendBtn");
+  const prompt=(input.value||"").trim();
+  if(!prompt)return toast("AI'ya göndermek için bir istek yaz.");
+  if(!state.user)return toast("AI asistanı için önce giriş yap.");
+  if(btn.disabled)return;
+  aiConversation.push({role:"user",text:prompt});
+  input.value="";renderAIConversation();btn.disabled=true;btn.textContent="AI düşünüyor…";
+  try{
+    const {data,error}=await sb.functions.invoke("discover-ai-assistant",{
+      body:{message:prompt,context:aiContext()}
+    });
+    if(error)throw error;
+    const answer=data?.answer||"Şu anda bir yanıt oluşturamadım.";
+    aiConversation.push({role:"assistant",text:answer});
+    if(Array.isArray(data?.recommended_ids)&&data.recommended_ids.length){
+      const byId=new Map(activities.map(a=>[String(a.id),a]));
+      const ranked=data.recommended_ids.map(id=>byId.get(String(id))).filter(Boolean);
+      if(ranked.length){
+        lastResults=ranked.map(a=>({...a,score:scoreActivity(a)}));
+        render(lastResults);
+        scrollToId("explore");
+      }
+    }
+    renderAIConversation();
+  }catch(e){
+    console.error("AI ASSISTANT ERROR",e);
+    aiConversation.push({role:"assistant",text:"AI servisine bağlanamadım. Edge Function ve OPENAI_API_KEY ayarlarını kontrol et."});
+    renderAIConversation();
+  }finally{
+    btn.disabled=false;btn.textContent="✦ AI'ya sor";
+  }
 }
 
 function recommend(silent=false){
@@ -1132,7 +1220,7 @@ async function saveSiteSettings(){
   updatePublicPrices();
   toast("Sistem ayarları kaydedildi.");
 }
-["authModal","profileModal","routeModal","reportModal","banModal","adminModal"].forEach(id=>$(id).addEventListener("click",e=>{if(id==="adminModal"&&document.querySelector("#banModal.open"))return;if(e.target.classList.contains("modal"))closeModal(id)}));
+["authModal","profileModal","routeModal","reportModal","banModal","aiModal","adminModal"].forEach(id=>$(id).addEventListener("click",e=>{if(id==="adminModal"&&document.querySelector("#banModal.open"))return;if(e.target.classList.contains("modal"))closeModal(id)}));
 
 (async()=>{
   updateAuthUI();updateLevels();
