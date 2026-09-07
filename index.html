@@ -934,6 +934,7 @@ function bannedUserRow(u){
     <div class="admin-actions">
       ${canEdit?`<button class="btn mini" onclick='openBanDialog(${JSON.stringify(u.id)},${JSON.stringify(u.username||"Kullanıcı")},${JSON.stringify({ban_scope:u.ban_scope,ban_until:u.ban_until,ban_reason:u.ban_reason})})'>Banı düzenle</button>`:""}
       ${canEdit?`<button class="btn mini" onclick='removeUserBan(${JSON.stringify(u.id)})'>Banı kaldır</button>`:`<span class="muted">Owner korumalı</span>`}
+    ${isOwner()?`<button class="btn mini" onclick='openUserModerationHistory(${JSON.stringify(u.username||"")})'>Geçmiş</button>`:""}
     </div>
   </div>`;
 }
@@ -1006,11 +1007,77 @@ function managerRow(u){
 // Backward-compatible name used by existing navigation code.
 async function renderAdminAdmins(body){return renderAdminManagers(body)}
 
-async function renderAdminLogs(body){
+let adminLogsCache=[];
+function adminLogCategory(action){
+  const a=String(action||"").toUpperCase();
+  if(a.includes("BAN"))return "ban";
+  if(a.includes("PREMIUM"))return "premium";
+  if(a.includes("ROLE"))return "role";
+  if(a.includes("XP"))return "xp";
+  return "other";
+}
+function adminLogActionLabel(action){
+  const map={
+    ACCOUNT_BANNED:"Hesap banlandı",
+    DEVICE_BANNED:"Cihaz banlandı",
+    BAN_CLEARED:"Ban kaldırıldı",
+    PREMIUM_GRANTED:"Premium verildi",
+    PREMIUM_REMOVED:"Premium kaldırıldı",
+    ROLE_CHANGED:"Rol değiştirildi",
+    XP_CHANGED:"XP / Seviye değiştirildi"
+  };
+  return map[action]||action||"ADMIN_ACTION";
+}
+function filterAdminLogs(){
+  const q=normalize($("adminLogSearch")?.value||"");
+  const cat=$("adminLogCategory")?.value||"all";
+  const rows=adminLogsCache.filter(r=>{
+    const hay=normalize([r.action,r.actor_email,r.target_email,r.details].filter(Boolean).join(" "));
+    return (!q||hay.includes(q)) && (cat==="all"||adminLogCategory(r.action)===cat);
+  });
+  $("adminLogsList").innerHTML=rows.map(r=>`<div class="admin-item" style="align-items:flex-start">
+    <div style="flex:1">
+      <b>${esc(adminLogActionLabel(r.action))}</b>
+      <small>${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""} · ${esc(r.actor_email||"")} ${r.target_email?"→ "+esc(r.target_email):""}</small>
+      <div class="muted" style="margin-top:7px">${esc(r.details||"")}</div>
+    </div>
+    <span class="badge ${adminLogCategory(r.action)==="ban"?"bad":"good"}">${adminLogCategory(r.action).toUpperCase()}</span>
+  </div>`).join("")||'<div class="empty">Filtreye uyan log bulunamadı.</div>';
+}
+async function renderAdminLogs(body,focusTarget=""){
   if(!isOwner())return;
-  const {data,error}=await sb.from("admin_audit_logs").select("id,actor_email,action,target_email,details,created_at").order("created_at",{ascending:false}).limit(300);
+  const {data,error}=await sb.from("admin_audit_logs")
+    .select("id,actor_email,action,target_email,details,created_at")
+    .order("created_at",{ascending:false}).limit(500);
   if(error){body.innerHTML='<div class="empty">Admin logları yüklenemedi: '+esc(error.message)+'</div>';return}
-  body.innerHTML=`<div class="admin-card"><h3 style="margin-top:0">Gizli Admin Logları</h3><p class="muted">Bu ekranı yalnızca Owner görebilir.</p><div class="admin-list">${(data||[]).map(r=>`<div class="admin-item" style="align-items:flex-start"><div><b>${esc(r.action||"ADMIN_ACTION")}</b><small>${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""} · ${esc(r.actor_email||"")} ${r.target_email?"→ "+esc(r.target_email):""}</small><div class="muted" style="margin-top:7px">${esc(r.details||"")}</div></div></div>`).join("")||'<div class="empty">Henüz log yok.</div>'}</div></div>`;
+  adminLogsCache=data||[];
+  body.innerHTML=`
+    <div class="admin-card">
+      <div class="row" style="gap:10px;flex-wrap:wrap;align-items:center">
+        <div>
+          <h3 style="margin:0">🔐 Gizli Admin Logları</h3>
+          <p class="muted" style="margin:6px 0 0">Ban geçmişi dahil tüm yönetici hareketleri yalnızca Owner tarafından görülebilir.</p>
+        </div>
+        <button class="btn" onclick="renderAdminLogs($('adminPanelBody'))">↻ Yenile</button>
+      </div>
+      <div class="admin-toolbar" style="margin-top:14px">
+        <input id="adminLogSearch" placeholder="Yönetici, kullanıcı, işlem veya detay ara..." oninput="filterAdminLogs()" value="${esc(focusTarget)}">
+        <select id="adminLogCategory" onchange="filterAdminLogs()" style="background:#09070d;color:#fff;border:1px solid var(--line);border-radius:12px;padding:12px">
+          <option value="all">Tüm işlemler</option>
+          <option value="ban">⛔ Ban işlemleri</option>
+          <option value="premium">💎 Premium</option>
+          <option value="role">🛡️ Rol</option>
+          <option value="xp">⭐ XP / Seviye</option>
+          <option value="other">Diğer</option>
+        </select>
+      </div>
+      <div id="adminLogsList" class="admin-list"></div>
+    </div>`;
+  filterAdminLogs();
+}
+async function openUserModerationHistory(targetEmail=""){
+  if(!isOwner())return toast("Bu bölüm yalnızca Owner içindir.");
+  await renderAdminLogs($("adminPanelBody"),targetEmail||"");
 }
 
 async function renderAdminAI(body){
@@ -1076,4 +1143,3 @@ async function saveSiteSettings(){
 </script>
 </body>
 </html>
-
