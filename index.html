@@ -59,7 +59,21 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
 }
 #locationMini.show{display:block}
 
+
+#liveLocationMap{height:420px;border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-top:12px;background:#09070d}
+.live-location-layout{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,.7fr);gap:12px}
+.live-location-list{max-height:420px;overflow:auto}
+.live-location-card{padding:12px 14px;border:1px solid var(--line);border-radius:14px;margin-bottom:8px;background:#0d0a12}
+.live-location-card .loc-head{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.live-location-dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:6px;background:#f05d5d}
+.live-location-dot.live{background:#59e6bb;box-shadow:0 0 12px rgba(89,230,187,.55)}
+.live-location-dot.recent{background:#f3c969}
+@media(max-width:900px){.live-location-layout{grid-template-columns:1fr}#liveLocationMap{height:340px}}
+
 </style>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3pM9m9H8QZ5Z7Vx3dJQzjN4n5cR8w=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </head>
 
 <body class="location-locked">
@@ -269,6 +283,7 @@ body.location-locked>nav,body.location-locked>main,body.location-locked>footer{v
     <button class="btn admin-nav" data-admin-section="users" onclick="loadAdminSection('users')">👥 Kullanıcılar</button>
     <button class="btn admin-nav" data-admin-section="reports" onclick="loadAdminSection('reports')">🚨 Moderasyon</button>
     <button class="btn admin-nav" data-admin-section="banned" onclick="loadAdminSection('banned')">⛔ Engellenen Kullanıcılar</button>
+    <button class="btn admin-nav" data-admin-section="locations" onclick="loadAdminSection('locations')">📍 Canlı Konumlar</button>
     <button class="btn admin-nav" data-admin-section="admins" onclick="loadAdminSection('admins')">🛡️ Yöneticiler</button>
     <button class="btn admin-nav owner-only" data-admin-section="logs" onclick="loadAdminSection('logs')">🔐 Admin Logları</button>
     <button class="btn admin-nav owner-only" data-admin-section="ai" onclick="loadAdminSection('ai')">🧠 AI Motoru</button>
@@ -296,7 +311,7 @@ const SUPABASE_PUBLISHABLE_KEY="sb_publishable_b_srPWflLRrFV4ayykMa-g_mFb3Z8rz";
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 
 let activities=[];
-let state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel",aiSettings:null,siteSettings:{},location:null,locationReady:false};
+let state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel",aiSettings:null,siteSettings:{},location:null,locationReady:false,locationWatchId:null,locationHeartbeatId:null};
 let lastResults=[];
 let betterOffset=0;
 
@@ -393,18 +408,14 @@ async function requestRequiredLocation(userAction=false){
 
     // Oturum açmış kullanıcı varsa konumu Supabase'e güvenli RPC ile kaydet.
     if(state.user){
-      const {error}=await sb.rpc("update_user_location",{
-        p_latitude:state.location.latitude,
-        p_longitude:state.location.longitude,
-        p_accuracy:state.location.accuracy
-      });
-      if(error)console.warn("Location profile sync:",error.message);
-      else if(state.profile){
+      await syncLocationToProfile();
+      if(state.profile){
         state.profile.location_lat=state.location.latitude;
         state.profile.location_lng=state.location.longitude;
         state.profile.location_accuracy=state.location.accuracy;
         state.profile.location_updated_at=new Date().toISOString();
       }
+      startLocationTracking();
     }
 
     return true;
@@ -435,6 +446,49 @@ async function ensureRequiredLocation(){
     return requestRequiredLocation(false);
   }
   return requestRequiredLocation(false);
+}
+
+
+function stopLocationTracking(){
+  if(state.locationWatchId!==null && navigator.geolocation){
+    navigator.geolocation.clearWatch(state.locationWatchId);
+  }
+  state.locationWatchId=null;
+  if(state.locationHeartbeatId){
+    clearInterval(state.locationHeartbeatId);
+    state.locationHeartbeatId=null;
+  }
+}
+
+async function syncLocationToProfile(){
+  if(!state.user||!state.locationReady||!state.location)return;
+  try{
+    const {error}=await sb.rpc("update_user_location",{
+      p_latitude:state.location.latitude,
+      p_longitude:state.location.longitude,
+      p_accuracy:state.location.accuracy
+    });
+    if(error)console.warn("Location heartbeat:",error.message);
+  }catch(e){console.warn("Location heartbeat exception",e)}
+}
+
+function startLocationTracking(){
+  if(!navigator.geolocation||!state.locationReady)return;
+  stopLocationTracking();
+
+  state.locationWatchId=navigator.geolocation.watchPosition(
+    async position=>{
+      saveLocationSession(position);
+      await syncLocationToProfile();
+      if(document.querySelector('[data-admin-section="locations"].active')){
+        renderAdminLocations($("adminPanelBody"),true);
+      }
+    },
+    err=>console.warn("Live location watch:",err),
+    {enableHighAccuracy:true,maximumAge:15000,timeout:15000}
+  );
+
+  state.locationHeartbeatId=setInterval(()=>syncLocationToProfile(),30000);
 }
 
 function requireLocation(featureName="Bu özellik"){
@@ -982,7 +1036,7 @@ function openProfile(){
   $("profileXP").textContent=state.xp;$("profileFav").textContent=state.favorites.length;$("profileRoutes").textContent=state.routes.length;
   openModal("profileModal");
 }
-async function logout(){await sb.auth.signOut();state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel",aiSettings:null,siteSettings:{}};updateAuthUI();updateLevels();recommend(true);closeModal("profileModal");toast("Çıkış yapıldı.")}
+async function logout(){stopLocationTracking();await sb.auth.signOut();state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel",aiSettings:null,siteSettings:{},location:state.location,locationReady:state.locationReady,locationWatchId:null,locationHeartbeatId:null};updateAuthUI();updateLevels();recommend(true);closeModal("profileModal");toast("Çıkış yapıldı.")}
 
 async function toggleFavorite(id){
   if(!requireLocation("Favoriler")){return;}
@@ -1135,6 +1189,7 @@ async function loadAdminSection(section){
   if(section==="users")return renderAdminUsers(body);
   if(section==="reports")return renderAdminReports(body);
   if(section==="banned")return renderAdminBanned(body);
+  if(section==="locations")return renderAdminLocations(body);
   if(section==="admins")return renderAdminAdmins(body);
   if(section==="logs")return renderAdminLogs(body);
   if(section==="ai")return renderAdminAI(body);
@@ -1353,6 +1408,124 @@ async function promoteUserToAdminByUsername(){
   toast(target.username+" artık Admin.");await renderAdminAdmins($("adminPanelBody"));
 }
 
+
+
+let liveLocationMap=null;
+let liveLocationMarkers={};
+let liveLocationRefreshTimer=null;
+let liveLocationsCache=[];
+
+function liveLocationAge(updatedAt){
+  if(!updatedAt)return Infinity;
+  return Math.max(0,Date.now()-new Date(updatedAt).getTime());
+}
+function liveLocationStatus(updatedAt){
+  const age=liveLocationAge(updatedAt);
+  if(age<=60000)return {label:"CANLI",cls:"live"};
+  if(age<=300000)return {label:"YAKIN ZAMANDA",cls:"recent"};
+  return {label:"ÇEVRİMDIŞI",cls:""};
+}
+function destroyLiveLocationMap(){
+  if(liveLocationRefreshTimer){clearInterval(liveLocationRefreshTimer);liveLocationRefreshTimer=null;}
+  if(liveLocationMap){liveLocationMap.remove();liveLocationMap=null;}
+  liveLocationMarkers={};
+}
+async function fetchLiveLocations(){
+  const {data,error}=await sb.rpc("admin_get_live_locations");
+  if(error)throw error;
+  return Array.isArray(data)?data:[];
+}
+function adminLocationPopup(u){
+  const status=liveLocationStatus(u.location_updated_at);
+  return `<b>${esc(u.username||"Kullanıcı")}</b><br>${status.label}<br>Son güncelleme: ${u.location_updated_at?new Date(u.location_updated_at).toLocaleString("tr-TR"):"-"}`;
+}
+function drawLiveLocationMap(rows){
+  const mapEl=$("liveLocationMap");
+  if(!mapEl)return;
+  if(!liveLocationMap){
+    liveLocationMap=L.map(mapEl,{zoomControl:true,attributionControl:true}).setView([39,35],5);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(liveLocationMap);
+  }
+  Object.values(liveLocationMarkers).forEach(m=>m.remove());
+  liveLocationMarkers={};
+  const bounds=[];
+  rows.forEach(u=>{
+    const lat=Number(u.location_lat),lng=Number(u.location_lng);
+    if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
+    const status=liveLocationStatus(u.location_updated_at);
+    const marker=L.marker([lat,lng]).addTo(liveLocationMap).bindPopup(adminLocationPopup(u));
+    liveLocationMarkers[u.id]=marker;
+    bounds.push([lat,lng]);
+  });
+  if(bounds.length===1)liveLocationMap.setView(bounds[0],13);
+  else if(bounds.length>1)liveLocationMap.fitBounds(bounds,{padding:[30,30]});
+}
+function renderLiveLocationCards(rows){
+  const list=$("liveLocationList");
+  if(!list)return;
+  list.innerHTML=rows.map(u=>{
+    const status=liveLocationStatus(u.location_updated_at);
+    const role=u.admin_role==="owner"?"OWNER":u.admin_role==="admin"?"ADMIN":"Kullanıcı";
+    const age=liveLocationAge(u.location_updated_at);
+    const minutes=Number.isFinite(age)?Math.floor(age/60000):null;
+    return `<div class="live-location-card">
+      <div class="loc-head">
+        <div><b>${esc(u.username||"Kullanıcı")}</b><small>${role}</small></div>
+        <span class="badge ${status.cls==="live"?"good":status.cls==="recent"?"":"bad"}"><span class="live-location-dot ${status.cls}"></span>${status.label}</span>
+      </div>
+      <div class="muted" style="margin-top:7px">
+        📍 ${Number(u.location_lat).toFixed(5)}, ${Number(u.location_lng).toFixed(5)}
+        · ±${Math.round(Number(u.location_accuracy||0))} m
+      </div>
+      <small>${u.location_updated_at?"Son güncelleme: "+new Date(u.location_updated_at).toLocaleString("tr-TR"):"Konum yok"}${minutes!==null?" · "+minutes+" dk önce":""}</small>
+      <div class="admin-actions" style="margin-top:8px">
+        <button class="btn mini" onclick='focusLiveLocation(${JSON.stringify(u.id)})'>Haritada göster</button>
+        <a class="btn mini" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat=${encodeURIComponent(u.location_lat)}&mlon=${encodeURIComponent(u.location_lng)}#map=16/${encodeURIComponent(u.location_lat)}/${encodeURIComponent(u.location_lng)}">Haritada aç</a>
+      </div>
+    </div>`;
+  }).join("")||'<div class="empty">Henüz konum gönderen kullanıcı yok.</div>';
+}
+function focusLiveLocation(id){
+  const u=liveLocationsCache.find(x=>String(x.id)===String(id));
+  if(!u||!liveLocationMap)return;
+  const lat=Number(u.location_lat),lng=Number(u.location_lng);
+  liveLocationMap.setView([lat,lng],15);
+  liveLocationMarkers[id]?.openPopup();
+}
+async function renderAdminLocations(body,refreshOnly=false){
+  if(!isAdmin())return;
+  if(!refreshOnly){
+    destroyLiveLocationMap();
+    body.innerHTML=`
+      <div class="admin-card">
+        <div class="section-head" style="margin-bottom:10px">
+          <div><h3 style="margin:0">📍 Canlı Konumlar</h3><p class="muted" style="margin:6px 0 0">Konum izni vermiş ve siteyi aktif kullanan kullanıcıların son konumları burada görünür.</p></div>
+          <button class="btn" onclick="renderAdminLocations($('adminPanelBody'))">↻ Yenile</button>
+        </div>
+        <div class="live-location-layout">
+          <div id="liveLocationMap"></div>
+          <div id="liveLocationList" class="live-location-list"><div class="empty">Konumlar yükleniyor…</div></div>
+        </div>
+        <p class="muted" style="font-size:12px;margin-bottom:0">Canlı = son 60 saniyede güncellendi. Konumlar site açıkken kullanıcı cihazından güncellenir.</p>
+      </div>`;
+  }
+  try{
+    liveLocationsCache=await fetchLiveLocations();
+    renderLiveLocationCards(liveLocationsCache);
+    drawLiveLocationMap(liveLocationsCache);
+    if(!liveLocationRefreshTimer){
+      liveLocationRefreshTimer=setInterval(async()=>{
+        try{
+          if(document.querySelector('[data-admin-section="locations"].active'))await renderAdminLocations($("adminPanelBody"),true);
+          else destroyLiveLocationMap();
+        }catch(e){console.warn("Live location refresh:",e.message)}
+      },10000);
+    }
+  }catch(e){
+    const list=$("liveLocationList");
+    if(list)list.innerHTML='<div class="empty">Canlı konumlar yüklenemedi: '+esc(e.message||"Sunucu hatası")+'</div>';
+  }
+}
 
 async function renderAdminBanned(body){
   if(!isAdmin())return;
