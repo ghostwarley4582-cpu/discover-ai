@@ -165,7 +165,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 <button class="close" onclick="closeModal('adminModal')">×</button>
 <div class="eyebrow">PRIVATE CONTROL</div>
 <h2 style="margin-bottom:6px">DISCOVER AI Command Center</h2>
-<p class="muted" style="margin-top:0">Yalnızca yetkili yönetici hesabı tarafından kullanılabilir.</p>
+<p class="muted" style="margin-top:0">Yalnızca Owner ve Admin hesapları tarafından kullanılabilir.</p>
 
 <div class="admin-shell">
   <aside class="admin-sidebar">
@@ -173,8 +173,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
     <button class="btn admin-nav" data-admin-section="activities" onclick="loadAdminSection('activities')">📍 Deneyimler</button>
     <button class="btn admin-nav" data-admin-section="users" onclick="loadAdminSection('users')">👥 Kullanıcılar</button>
     <button class="btn admin-nav" data-admin-section="reports" onclick="loadAdminSection('reports')">🚨 Moderasyon</button>
-    <button class="btn admin-nav" data-admin-section="premium" onclick="loadAdminSection('premium')">💎 Premium</button>
-    <button class="btn admin-nav owner-only" data-admin-section="admins" onclick="loadAdminSection('admins')">🛡️ Admin Yönetimi</button>
+    <button class="btn admin-nav" data-admin-section="admins" onclick="loadAdminSection('admins')">🛡️ Yöneticiler</button>
     <button class="btn admin-nav owner-only" data-admin-section="logs" onclick="loadAdminSection('logs')">🔐 Admin Logları</button>
     <button class="btn admin-nav owner-only" data-admin-section="ai" onclick="loadAdminSection('ai')">🧠 AI Motoru</button>
     <button class="btn admin-nav owner-only" data-admin-section="settings" onclick="loadAdminSection('settings')">⚙️ Sistem</button>
@@ -359,9 +358,16 @@ async function syncUser(){
     let p=await sb.from("profiles").select("*").eq("id",user.id).maybeSingle();
     if(p.error)throw p.error;
     if(!p.data){
-      const username=user.user_metadata?.username||user.email?.split("@")[0]||"Kaşif";
+      const username=(user.user_metadata?.username||user.user_metadata?.full_name||user.email?.split("@")[0]||"Kaşif").trim();
       const ins=await sb.from("profiles").insert({id:user.id,username,level:1,xp:0}).select().single();
       if(ins.error)throw ins.error;p=ins;
+    }else{
+      const metaUsername=(user.user_metadata?.username||user.user_metadata?.full_name||"").trim();
+      const currentUsername=(p.data.username||"").trim();
+      if(metaUsername && (!currentUsername || /^Kaşif_[a-z0-9]+$/i.test(currentUsername)) && currentUsername!==metaUsername){
+        const upd=await sb.from("profiles").update({username:metaUsername}).eq("id",user.id).select().single();
+        if(!upd.error && upd.data)p=upd;
+      }
     }
     state.profile=p.data;state.xp=Number(p.data.xp||0);state.premium=!!(p.data.premium_until&&new Date(p.data.premium_until)>new Date());
     state.premium=!!(p.data.premium_until && new Date(p.data.premium_until)>new Date());
@@ -527,12 +533,11 @@ async function loadAdminSection(section){
   setAdminSectionActive(section);
   const body=$("adminPanelBody");
   body.innerHTML='<div class="empty loading">Yükleniyor...</div>';
-  if(["admins","logs","ai","settings"].includes(section)&&!isOwner()){toast("Bu bölüm yalnızca Owner'a açıktır.");return loadAdminSection("overview")}
+  if(["logs","ai","settings"].includes(section)&&!isOwner()){toast("Bu bölüm yalnızca Owner'a açıktır.");return loadAdminSection("overview")}
   if(section==="overview")return renderAdminOverview(body);
   if(section==="activities")return renderAdminActivities(body);
   if(section==="users")return renderAdminUsers(body);
   if(section==="reports")return renderAdminReports(body);
-  if(section==="premium")return renderAdminPremium(body);
   if(section==="admins")return renderAdminAdmins(body);
   if(section==="logs")return renderAdminLogs(body);
   if(section==="ai")return renderAdminAI(body);
@@ -541,7 +546,7 @@ async function loadAdminSection(section){
 
 async function renderAdminOverview(body){
   const [users,activities,reports]=await Promise.all([
-    sb.from("profiles").select("username,level,xp,is_admin,premium_until").order("username").limit(8),
+    sb.from("profiles").select("username,level,xp,is_admin,admin_role,premium_until").order("username").limit(8),
     sb.from("activities").select("id,title,city,price,rating,is_active").order("title").limit(8),
     sb.from("reports").select("id,type,status,description,created_at").neq("status","resolved").order("created_at",{ascending:false}).limit(5)
   ]);
@@ -635,24 +640,24 @@ async function renderAdminUsers(body){
   const {data,error}=await sb.from("profiles").select("id,username,level,xp,is_admin,admin_role,premium_plan,premium_until,is_banned").order("username").limit(200);
   if(error){body.innerHTML='<div class="empty">Kullanıcılar yüklenemedi: '+esc(error.message)+'</div>';return}
   body.innerHTML=`
-    <div class="admin-toolbar"><input id="userSearch" placeholder="Kullanıcı ara..." oninput="filterAdminList('userSearch','userAdminList')"></div>
+    <div class="admin-toolbar"><input id="userSearch" placeholder="Kullanıcı adı ara..." oninput="filterAdminList('userSearch','userAdminList')"></div>
     <div id="userAdminList" class="admin-list">${(data||[]).map(u=>adminUserRow(u)).join("")||'<div class="empty">Kullanıcı yok.</div>'}</div>`;
 }
+function getRole(u){return u.admin_role || (u.is_admin===true?"admin":null)}
+function roleLabelFor(u){const r=getRole(u);return r==="owner"?"OWNER":r==="admin"?"ADMIN":"Kullanıcı"}
 function adminUserRow(u){
   const premium=u.premium_until&&new Date(u.premium_until)>new Date();
-  const role=u.admin_role|| (u.is_admin?"admin":null);
-  const roleLabel=role==="owner"?"OWNER":role==="admin"?"ADMIN":"Kullanıcı";
-  // Adminler kendi hesapları ve diğer adminler dahil tüm operasyonel alanlara müdahale edebilir.
-  // Owner hedefi ise Admin için tamamen kilitlidir. Owner her hedefte tam yetkilidir.
+  const role=getRole(u);
+  const roleLabel=roleLabelFor(u);
   const canOps=isOwner() || (adminRole()==="admin" && role!=="owner");
-  const canBan=canOps;
+  const canRole=isOwner()?u.id!==state.user.id:((adminRole()==="admin") && role!=="owner");
   return `<div class="admin-item" data-search="${esc(normalize(u.username||""))}">
-    <div><b>${esc(u.username||"Kaşif")}</b><small>Seviye ${Number(u.level||1)} · ${Number(u.xp||0)} XP · ${roleLabel} · ${premium?"Premium":"Free"}${u.is_banned?" · ENGELLİ":""}</small></div>
+    <div><b>${esc(u.username||"Kullanıcı adı yok")}</b><small>Seviye ${Number(u.level||1)} · ${Number(u.xp||0)} XP · ${roleLabel} · ${premium?"Premium":"Free"}${u.is_banned?" · ENGELLİ":""}</small></div>
     <div class="admin-actions">
       ${canOps?`<button class="btn mini" onclick='editUserStats(${JSON.stringify(u.id)},${Number(u.level||1)},${Number(u.xp||0)})'>XP/Seviye</button>`:""}
       ${canOps?`<button class="btn mini" onclick='toggleUserPremium(${JSON.stringify(u.id)},${premium})'>${premium?"Premium kaldır":"Premium ver"}</button>`:""}
-      ${isOwner()&&u.id!==state.user.id?`<button class="btn mini" onclick='setUserRolePrompt(${JSON.stringify(u.id)},${JSON.stringify(role||"user")})'>Rol</button>`:""}
-      ${canBan?`<button class="btn mini" onclick='toggleUserBan(${JSON.stringify(u.id)},${u.is_banned!==true})'>${u.is_banned?"Yasağı kaldır":"Engelle"}</button>`:""}
+      ${canRole?`<button class="btn mini" onclick='setUserRolePrompt(${JSON.stringify(u.id)},${JSON.stringify(role||"user")})'>Rol</button>`:""}
+      ${canOps?`<button class="btn mini" onclick='toggleUserBan(${JSON.stringify(u.id)},${u.is_banned!==true})'>${u.is_banned?"Yasağı kaldır":"Engelle"}</button>`:""}
     </div>
   </div>`;
 }
@@ -668,7 +673,7 @@ async function callAdminRpc(fn,args){
   }
 }
 async function editUserStats(id,level,xp){
-  if(!isOwner() && adminRole()!=="admin")return toast("Bu işlem için yetkiniz yok.");
+  if(!isAdmin())return toast("Bu işlem için yetkiniz yok.");
   const nl=prompt("Yeni seviye (1-10):",level);if(nl===null)return;
   const nx=prompt("Yeni XP:",xp);if(nx===null)return;
   const ok=await callAdminRpc("admin_set_user_stats",{target_user_id:id,new_level:Math.max(1,Math.min(10,Number(nl)||1)),new_xp:Math.max(0,Number(nx)||0)});
@@ -676,18 +681,27 @@ async function editUserStats(id,level,xp){
   toast("Kullanıcı XP/seviye güncellendi.");await renderAdminUsers($("adminPanelBody"));await refreshAdminStats();
 }
 async function setUserRolePrompt(id,current){
-  if(!isOwner())return toast("Bu işlem yalnızca Owner içindir.");
-  const role=prompt("Rol: user / admin / owner",current||"user");if(role===null)return;
+  if(!isAdmin())return toast("Bu işlem için yönetici yetkisi gerekli.");
+  const targetRole=(await getTargetRole(id))||current||"user";
+  if(adminRole()==="admin" && targetRole==="owner")return toast("Owner hesabının rolü değiştirilemez.");
+  const promptText=adminRole()==="owner"?"Rol: user / admin / owner":"Rol: user / admin";
+  const role=prompt(promptText,current||"user");if(role===null)return;
   const r=role.trim().toLowerCase();
-  if(!["user","admin","owner"].includes(r))return toast("Geçersiz rol.");
+  const allowed=adminRole()==="owner"?["user","admin","owner"]:["user","admin"];
+  if(!allowed.includes(r))return toast("Bu yetkiyle seçilebilecek rol: "+allowed.join(" / "));
   const ok=await callAdminRpc("admin_set_user_role",{target_user_id:id,new_role:r});
   if(ok===null)return;
-  toast(r==="user"?"Kullanıcı rolü verildi.":r==="admin"?"Admin yetkisi verildi.":"Owner yetkisi verildi.");
-  await renderAdminUsers($("adminPanelBody"));
+  toast(r==="user"?"Kullanıcı rolüne alındı.":r==="admin"?"Admin yetkisi verildi.":"Owner yetkisi verildi.");
+  await renderAdminUsers($("adminPanelBody"));await renderAdminAdmins($("adminPanelBody"));
 }
-
+async function getTargetRole(id){
+  const {data}=await sb.from("profiles").select("admin_role,is_admin").eq("id",id).maybeSingle();
+  return data?.admin_role || (data?.is_admin===true?"admin":"user");
+}
 async function toggleUserPremium(id,isPremium){
-  if(!isOwner() && adminRole()!=="admin")return;
+  if(!isAdmin())return;
+  const targetRole=await getTargetRole(id);
+  if(adminRole()==="admin" && targetRole==="owner")return toast("Owner hesabına müdahale edilemez.");
   if(isPremium){
     const ok=await callAdminRpc("admin_set_user_premium",{target_user_id:id,plan:null,duration_days:0});
     if(ok===null)return;
@@ -705,10 +719,32 @@ async function toggleUserPremium(id,isPremium){
   await refreshAdminStats();await renderAdminUsers($("adminPanelBody"));
 }
 async function toggleUserBan(id,ban){
-  if(!isOwner() && adminRole()!=="admin")return;
+  if(!isAdmin())return;
+  const targetRole=await getTargetRole(id);
+  if(adminRole()==="admin" && targetRole==="owner")return toast("Owner hesabına müdahale edilemez.");
   const ok=await callAdminRpc("admin_set_user_ban",{target_user_id:id,ban_user:ban});
   if(ok===null)return;
   toast(ban?"Kullanıcı engellendi.":"Kullanıcının engeli kaldırıldı.");await renderAdminUsers($("adminPanelBody"));
+}
+async function promoteUserToAdminByUsername(){
+  if(!isAdmin())return;
+  const username=prompt("Admin yapılacak mevcut kullanıcının KULLANICI ADI:");
+  if(username===null)return;
+  const q=username.trim();if(!q)return toast("Kullanıcı adı gerekli.");
+  const {data,error}=await sb.from("profiles").select("id,username,admin_role,is_admin").ilike("username",q).limit(5);
+  if(error)return toast("Kullanıcı aranamadı: "+error.message);
+  const rows=(data||[]);
+  if(!rows.length)return toast("Bu kullanıcı adıyla hesap bulunamadı.");
+  const exact=rows.find(x=>normalize(x.username||"")===normalize(q));
+  if(rows.length>1 && !exact)return toast("Birden fazla eşleşme var. Tam kullanıcı adını yaz.");
+  const target=exact||rows[0];
+  const role=target.admin_role || (target.is_admin===true?"admin":"user");
+  if(role==="owner")return toast("Bu hesap zaten Owner.");
+  if(role==="admin")return toast("Bu hesap zaten Admin.");
+  if(!confirm(target.username+" kullanıcısına ADMIN yetkisi verilsin mi?"))return;
+  const ok=await callAdminRpc("admin_set_user_role",{target_user_id:target.id,new_role:"admin"});
+  if(ok===null)return;
+  toast(target.username+" artık Admin.");await renderAdminAdmins($("adminPanelBody"));
 }
 
 async function renderAdminReports(body){
@@ -750,24 +786,35 @@ async function deleteReport(id){
   toast("Şikayet silindi.");await refreshAdminStats();await renderAdminReports($("adminPanelBody"));
 }
 
-async function renderAdminPremium(body){
-  const {data,error}=await sb.from("profiles").select("id,username,admin_role,is_admin,premium_plan,premium_until").not("premium_until","is",null).gt("premium_until",new Date().toISOString()).order("premium_until",{ascending:false}).limit(200);
-  if(error){body.innerHTML='<div class="empty">Premium verileri yüklenemedi: '+esc(error.message)+'</div>';return}
-  body.innerHTML=`
-    <div class="admin-card"><h3 style="margin-top:0">Premium kullanıcılar</h3><p class="muted">Süre dolduğunda hesap otomatik olarak Free kabul edilir.</p>
-    <div class="admin-list">${(data||[]).map(u=>{
-      const role=u.admin_role || (u.is_admin ? "admin" : null);
-      const canManage=isOwner() || (adminRole()==="admin" && role!=="owner");
-      return `<div class="admin-item"><div><b>${esc(u.username||"Kaşif")}</b><small>${role==="owner"?"OWNER · ":role==="admin"?"ADMIN · ":""}${esc(u.premium_plan||"Premium")} · ${new Date(u.premium_until).toLocaleString("tr-TR")}</small></div>${canManage?`<button class="btn mini" onclick='toggleUserPremium(${JSON.stringify(u.id)},true)'>Premium kaldır</button>`:`<span class="muted">Owner korumalı</span>`}</div>`;
-    }).join("")||'<div class="empty">Premium kullanıcı yok.</div>'}</div></div>`;
+async function renderAdminManagers(body){
+  const {data,error}=await sb.from("profiles").select("id,username,level,xp,is_admin,admin_role,is_banned,premium_plan,premium_until").in("admin_role",["owner","admin"]).order("admin_role",{ascending:true}).order("username");
+  if(error){body.innerHTML='<div class="empty">Yöneticiler yüklenemedi: '+esc(error.message)+'</div>';return}
+  const owners=(data||[]).filter(u=>getRole(u)==="owner");
+  const admins=(data||[]).filter(u=>getRole(u)==="admin");
+  body.innerHTML=`<div class="admin-card">
+    <h3 style="margin-top:0">Yöneticiler</h3>
+    <p class="muted">Yalnızca Owner ve Admin hesapları burada görünür. Adminler yeni Admin atayabilir ve Owner olmayan yöneticilerin operasyonel yetkilerini yönetebilir. Owner yetkisi Admin tarafından verilemez.</p>
+    <div class="admin-actions"><button class="btn primary" onclick="promoteUserToAdminByUsername()">＋ Yeni Admin Ata</button><button class="btn" onclick="renderAdminAdmins($(\'adminPanelBody\'))">↻ Yenile</button></div>
+  </div>
+  <div class="admin-card" style="margin-top:12px"><h3 style="margin-top:0">👑 Owner</h3><div class="admin-list">${owners.map(u=>managerRow(u)).join("")||'<div class="empty">Owner bulunamadı.</div>'}</div></div>
+  <div class="admin-card" style="margin-top:12px"><h3 style="margin-top:0">🛡️ Adminler</h3><div class="admin-list">${admins.map(u=>managerRow(u)).join("")||'<div class="empty">Admin bulunamadı.</div>'}</div></div>`;
 }
+function managerRow(u){
+  const role=getRole(u);const premium=u.premium_until&&new Date(u.premium_until)>new Date();
+  const isTargetOwner=role==="owner";
+  const canOperate=isOwner() || (adminRole()==="admin" && !isTargetOwner);
+  const canRole=isOwner()?u.id!==state.user.id:(adminRole()==="admin"&&!isTargetOwner);
+  return `<div class="admin-item"><div><b>${esc(u.username||"Kullanıcı adı yok")}</b><small>${role==="owner"?"OWNER":"ADMIN"} · ${u.is_banned?"Engelli":"Aktif"} · ${premium?"Premium":"Free"}</small></div><div class="admin-actions">
+    ${canOperate?`<button class="btn mini" onclick='editUserStats(${JSON.stringify(u.id)},${Number(u.level||1)},${Number(u.xp||0)})'>XP/Seviye</button>`:""}
+    ${canOperate?`<button class="btn mini" onclick='toggleUserPremium(${JSON.stringify(u.id)},${premium})'>${premium?"Premium kaldır":"Premium ver"}</button>`:""}
+    ${canRole?`<button class="btn mini" onclick='setUserRolePrompt(${JSON.stringify(u.id)},${JSON.stringify(role)})'>Rol</button>`:""}
+    ${canOperate?`<button class="btn mini" onclick='toggleUserBan(${JSON.stringify(u.id)},${u.is_banned!==true})'>${u.is_banned?"Yasağı kaldır":"Engelle"}</button>`:""}
+    ${!canOperate&&!canRole?'<span class="muted">Owner korumalı</span>':''}
+  </div></div>`;
+}
+// Backward-compatible name used by existing navigation code.
+async function renderAdminAdmins(body){return renderAdminManagers(body)}
 
-async function renderAdminAdmins(body){
-  if(!isOwner())return;
-  const {data,error}=await sb.from("profiles").select("id,username,level,xp,is_admin,admin_role,is_banned,premium_plan,premium_until").eq("admin_role","admin").order("username");
-  if(error){body.innerHTML='<div class="empty">Adminler yüklenemedi: '+esc(error.message)+'</div>';return}
-  body.innerHTML=`<div class="admin-card"><h3 style="margin-top:0">Admin Yönetimi</h3><p class="muted">Yalnızca Owner rolü admin atayabilir, kaldırabilir ve adminleri engelleyebilir.</p><button class="btn primary" onclick="loadAdminSection('users')">Kullanıcılar üzerinden rol yönet</button><div class="admin-list" style="margin-top:12px">${(data||[]).map(u=>`<div class="admin-item"><div><b>${esc(u.username||"Kaşif")}</b><small>ADMIN · ${u.is_banned?"Engelli":"Aktif"}</small></div><div class="admin-actions"><button class="btn mini" onclick='setUserRolePrompt(${JSON.stringify(u.id)},"admin")'>Rol değiştir</button><button class="btn mini" onclick='toggleUserBan(${JSON.stringify(u.id)},${u.is_banned!==true})'>${u.is_banned?"Yasağı kaldır":"Engelle"}</button></div></div>`).join("")||'<div class="empty">Admin yok.</div>'}</div></div>`;
-}
 async function renderAdminLogs(body){
   if(!isOwner())return;
   const {data,error}=await sb.from("admin_audit_logs").select("id,actor_email,action,target_email,details,created_at").order("created_at",{ascending:false}).limit(300);
