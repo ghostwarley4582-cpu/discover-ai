@@ -118,6 +118,35 @@ body.auth-locked #locationMini{display:none!important}
 .owner-profile-field.raw-tc strong{font-size:20px;letter-spacing:1px}
 .owner-profile-warning{margin-top:12px;padding:12px 14px;border-left:3px solid var(--danger);border-radius:12px;background:#190b12;color:#e9d9ee;font-size:12px;line-height:1.55}
 @media(max-width:800px){.owner-profile-grid{grid-template-columns:1fr}}
+
+/* V73 — Türkiye Business Explorer */
+.business-modal .modalbox{width:min(1320px,100%);height:min(92vh,900px);max-height:92vh;padding:18px;display:flex;flex-direction:column}
+.business-shell{display:grid;grid-template-columns:270px minmax(0,1fr) 310px;gap:12px;min-height:0;flex:1}
+.business-shell.business-sidebar-hidden{grid-template-columns:0 minmax(0,1fr) 310px}
+.business-shell.business-sidebar-hidden .business-sidebar{display:none}
+.business-sidebar,.business-details{background:#0b0810;border:1px solid var(--line);border-radius:18px;padding:12px;min-height:0;overflow:auto}
+.business-sidebar h3,.business-details h3{margin:0 0 10px}
+.business-search{display:grid;gap:8px;margin-bottom:10px}
+.business-search input,.business-search select{width:100%;background:#09070d;color:#fff;border:1px solid var(--line);border-radius:12px;padding:11px}
+.business-cats{display:grid;gap:6px}
+.business-cat{display:flex;justify-content:space-between;gap:8px;align-items:center;width:100%;padding:10px 11px;border-radius:12px;border:1px solid var(--line);background:#100c17;color:var(--text);text-align:left}
+.business-cat.active{border-color:#9d62ff;background:#211332}
+.business-cat small{color:var(--muted);font-size:10px}
+.business-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.business-map-wrap{min-width:0;min-height:0;display:flex;flex-direction:column}
+#businessMap{flex:1;min-height:420px;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#08060d}
+.business-map-status{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 2px;color:var(--muted);font-size:12px}
+.business-stat{padding:9px 11px;border:1px solid var(--line);background:#0d0a12;border-radius:12px}
+.business-detail-card{display:grid;gap:10px}
+.business-detail-cover{height:120px;border-radius:15px;background:radial-gradient(circle at 30% 20%,#8b5cf6,#26143f 45%,#0a0710);display:grid;place-items:center;font-size:48px}
+.business-detail-field{padding:10px 11px;border:1px solid var(--line);border-radius:12px;background:#0d0a12}
+.business-detail-field small{display:block;color:var(--muted);font-size:11px;margin-bottom:4px}
+.business-detail-field strong{display:block;word-break:break-word}
+.business-pin{font-size:12px}
+.business-loading{display:grid;place-items:center;height:100%;min-height:260px}
+.business-list-hint{padding:10px 11px;border:1px dashed #4a355c;border-radius:12px;color:var(--muted);font-size:12px;line-height:1.5;margin-top:10px}
+@media(max-width:1100px){.business-shell{grid-template-columns:240px minmax(0,1fr)}.business-details{grid-column:1/-1;max-height:240px}}
+@media(max-width:800px){.business-modal .modalbox{height:96vh;max-height:96vh;padding:12px}.business-shell{grid-template-columns:1fr;overflow:auto}.business-sidebar{max-height:260px}.business-map-wrap{min-height:480px}.business-details{max-height:320px}#businessMap{min-height:420px}.business-cats{grid-template-columns:1fr 1fr}}
 </style>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3pM9m9H8QZ5Z7Vx3dJQzjN4n5cR8w=" crossorigin=""/>
@@ -166,6 +195,7 @@ body.auth-locked #locationMini{display:none!important}
 <div class="brand">✦ DISCOVER <span>AI</span></div>
 <div class="navlinks">
 <button class="btn desktop" onclick="scrollToId('explore')">Keşfet</button>
+<button class="btn desktop" type="button" onclick="openBusinessExplorer()">İşletmeler</button>
 <button class="btn" id="loginBtn" onclick="openAuth('login')">Giriş</button>
 <button class="btn primary" id="joinBtn" onclick="openAuth('join')">Katıl</button>
 </div>
@@ -224,6 +254,7 @@ body.auth-locked #locationMini{display:none!important}
 <div class="glass"><b>💰 Hard Budget</b><p class="muted">Belirlediğin bütçenin dışına çıkmayan plan.</p></div>
 <div class="glass"><b>🗺️ Bugünüm</b><p class="muted">Tek tek mekan değil, uygulanabilir rota.</p></div>
 <div class="glass"><b>🛡️ Güven</b><p class="muted">Şikayet ve moderasyon sistemiyle daha güvenli keşif.</p></div>
+<div class="glass"><b>📍 Türkiye İşletmeleri</b><p class="muted">Yakınındaki gerçek işletmeleri kategori, şehir ve ilçe ile keşfet.</p><button type="button" class="btn primary" style="margin-top:6px;width:100%" onclick="openBusinessExplorer()">İşletmeleri haritada aç</button></div>
 </div>
 </section>
 
@@ -598,6 +629,59 @@ body.auth-locked #locationMini{display:none!important}
       <button type="button" class="btn primary" onclick="saveActivityFromEditor()">Kaydet</button>
     </div>
     <div id="aeError" class="required-note" style="min-height:18px;margin-top:8px"></div>
+  </div>
+</div>
+
+
+<div id="businessExplorerModal" class="modal business-modal">
+  <div class="modalbox">
+    <button class="close" type="button" onclick="closeBusinessExplorer()">×</button>
+    <div class="eyebrow">📍 TÜRKİYE İŞLETME HARİTASI</div>
+    <div class="row" style="margin-top:10px;align-items:flex-start;gap:12px;flex-wrap:wrap">
+      <div>
+        <h2 style="margin:0 0 5px">Gerçek işletmeleri keşfet</h2>
+        <p class="muted" style="margin:0">OpenStreetMap'ten aktarılan işletmeler. Haritayı hareket ettirdikçe görünür alandaki kayıtlar yeniden sorgulanır.</p>
+      </div>
+      <div class="business-stat"><b id="businessTotalCount">—</b><br><span class="muted">aktif işletme</span></div>
+    </div>
+
+    <div class="business-shell" style="margin-top:12px">
+      <aside class="business-sidebar" id="businessSidebar">
+        <div class="row" style="align-items:center"><h3 style="margin:0">Filtreler</h3><button type="button" class="btn mini" onclick="toggleBusinessSidebar()">◀ Gizle</button></div>
+        <div class="business-search">
+          <input id="businessSearch" placeholder="İşletme adı veya adres ara..." oninput="debouncedLoadBusinesses()">
+          <select id="businessCity" onchange="onBusinessCityChange()"><option value="">Tüm şehirler</option></select>
+          <select id="businessDistrict" onchange="loadBusinessesForMap(true)"><option value="">Tüm ilçeler</option></select>
+          <button type="button" class="btn" onclick="useMyBusinessLocation()">📍 Konumuma git</button>
+          <button type="button" class="btn" onclick="showAllTurkeyBusinesses()">🇹🇷 Türkiye'yi göster</button>
+        </div>
+        <div class="muted" style="font-size:11px;margin:8px 0">Kategori</div>
+        <div id="businessCategoryList" class="business-cats"></div>
+        <div class="business-list-hint">
+          Harita tek seferde sınırlı sayıda nokta gösterir. Yakınlaştırdıkça daha ayrıntılı işletme kayıtları yüklenir; böylece yüz binlerce kaydın tamamı tarayıcıya aynı anda indirilmez.
+        </div>
+      </aside>
+
+      <div class="business-map-wrap">
+        <div class="business-toolbar">
+          <button type="button" class="btn mini" id="businessSidebarToggle" onclick="toggleBusinessSidebar()">☰ Panel</button>
+          <span id="businessMapStatus" class="muted">Harita hazırlanıyor…</span>
+          <button type="button" class="btn mini" onclick="loadBusinessesForMap(true)">↻ Yenile</button>
+        </div>
+        <div id="businessMap"><div class="business-loading muted">Harita yükleniyor…</div></div>
+        <div class="business-map-status">
+          <span id="businessVisibleCount">—</span>
+          <span>ⓘ Kayıtlar Supabase üzerinden sorgulanır.</span>
+        </div>
+      </div>
+
+      <aside class="business-details">
+        <h3>İşletme profili</h3>
+        <div id="businessDetailBody" class="business-detail-card">
+          <div class="empty">Haritadaki bir işletmeye dokun.</div>
+        </div>
+      </aside>
+    </div>
   </div>
 </div>
 
@@ -1133,6 +1217,177 @@ async function sendAIAssistant(){
   }
 }
 
+
+
+/* V73 — Business Explorer */
+const BUSINESS_CATEGORY_META = [
+  ["all","📍","Tümü"],
+  ["shopping","🛒","Market & Alışveriş"],
+  ["hardware","🔧","Nalbur & Hırdavat"],
+  ["food","🍽️","Yeme & İçme"],
+  ["pharmacy","💊","Eczane"],
+  ["health","🏥","Sağlık"],
+  ["education","🎓","Eğitim"],
+  ["finance","🏦","Banka & Finans"],
+  ["fuel","⛽","Akaryakıt"],
+  ["auto","🚗","Otomotiv"],
+  ["beauty","💇","Güzellik"],
+  ["hotel","🏨","Konaklama"],
+  ["public","🏛️","Kamu"],
+  ["sport","🏋️","Spor"],
+  ["culture","🎭","Kültür & Sanat"],
+  ["services","🛠️","Hizmetler"],
+  ["other","📌","Diğer"]
+];
+let businessMap=null;
+let businessMarkers=[];
+let businessSelectedCategory="all";
+let businessSearchTimer=null;
+let businessCityCache=[];
+let businessDistrictCache=[];
+
+function businessCategoryLabel(key){return BUSINESS_CATEGORY_META.find(x=>x[0]===key)?.[2]||key||"Diğer"}
+function businessCategoryEmoji(key){return BUSINESS_CATEGORY_META.find(x=>x[0]===key)?.[1]||"📍"}
+function normalizeBusinessRow(r){
+  return {
+    id:r.id,name:r.name||"İsimsiz işletme",description:r.description||"",
+    category:r.category||"other",city:r.city||"",district:r.district||"",
+    address:r.address||"",latitude:Number(r.latitude),longitude:Number(r.longitude),
+    phone:r.phone||"",website:r.website||"",rating:r.rating===null?null:Number(r.rating),
+    review_count:Number(r.review_count||0)
+  };
+}
+function businessEscapeUrl(url){
+  const s=String(url||"").trim();
+  if(!s)return "";
+  return /^https?:\/\//i.test(s)?s:"https://"+s.replace(/^\/+/,"");
+}
+function businessDetailHtml(b){
+  const phone=b.phone?`<div class="business-detail-field"><small>Telefon</small><strong>${esc(b.phone)}</strong></div>`:"";
+  const web=b.website?`<div class="business-detail-field"><small>Web sitesi</small><strong><a href="${esc(businessEscapeUrl(b.website))}" target="_blank" rel="noopener" style="color:#d9c6ff">${esc(b.website)}</a></strong></div>`:"";
+  const rating=(b.rating!==null&&Number.isFinite(b.rating))?`★ ${b.rating.toFixed(1)} · ${b.review_count||0} değerlendirme`:"OSM puanı mevcut değil";
+  const origin=state.location?`&origin=${encodeURIComponent(Number(state.location.latitude)+","+Number(state.location.longitude))}`:"";
+  const maps=`https://www.google.com/maps/dir/?api=1${origin}&destination=${encodeURIComponent(b.latitude+","+b.longitude)}`;
+  return `<div class="business-detail-cover">${businessCategoryEmoji(b.category)}</div>
+    <div><span class="tag">${esc(businessCategoryLabel(b.category))}</span><h3 style="margin:8px 0 3px">${esc(b.name)}</h3><div class="meta">${esc(b.city||"Türkiye")}${b.district?" · "+esc(b.district):""}</div></div>
+    <div class="business-detail-field"><small>Adres</small><strong>${esc(b.address||"Adres bilgisi bulunmuyor")}</strong></div>
+    <div class="business-detail-field"><small>Puan</small><strong>${rating}</strong></div>
+    ${phone}${web}
+    <div class="business-detail-field"><small>Koordinat</small><strong>${b.latitude.toFixed(6)}, ${b.longitude.toFixed(6)}</strong></div>
+    <div class="card-actions">
+      <button type="button" class="btn primary" onclick='window.open(${JSON.stringify(maps)},"_blank","noopener,noreferrer")'>🗺️ Rotaya git</button>
+      <button type="button" class="btn" onclick='copyBusinessCoords(${JSON.stringify(b.latitude+","+b.longitude)})'>📋 Konumu kopyala</button>
+    </div>`;
+}
+function showBusinessDetail(b){
+  const box=$("businessDetailBody");if(!box)return;
+  box.innerHTML=businessDetailHtml(b);box.dataset.id=String(b.id);
+}
+function toggleBusinessSidebar(){
+  const shell=document.querySelector(".business-shell"),btn=$("businessSidebarToggle");
+  if(!shell)return;
+  const hidden=shell.classList.toggle("business-sidebar-hidden");
+  if(btn)btn.textContent=hidden?"☰ Paneli aç":"☰ Panel";
+  setTimeout(()=>businessMap?.invalidateSize(),80);
+}
+function clearBusinessMarkers(){businessMarkers.forEach(m=>m.remove());businessMarkers=[]}
+async function businessCounts(){
+  try{
+    const {data,error}=await sb.rpc("business_category_counts");if(error)throw error;
+    const map=Object.fromEntries((data||[]).map(x=>[x.category,Number(x.count||0)]));
+    const list=$("businessCategoryList");if(!list)return;
+    const total=Object.values(map).reduce((a,b)=>a+b,0);
+    list.innerHTML=BUSINESS_CATEGORY_META.map(([key,emoji,label])=>{
+      const count=key==="all"?total:(map[key]||0);
+      return `<button type="button" class="business-cat ${key===businessSelectedCategory?"active":""}" onclick='selectBusinessCategory(${JSON.stringify(key)})'><span>${emoji} ${label}</span><small>${count.toLocaleString("tr-TR")}</small></button>`;
+    }).join("");
+    if($("businessTotalCount"))$("businessTotalCount").textContent=total.toLocaleString("tr-TR");
+  }catch(e){
+    const list=$("businessCategoryList");if(list)list.innerHTML=BUSINESS_CATEGORY_META.map(([key,emoji,label])=>`<button type="button" class="business-cat ${key===businessSelectedCategory?"active":""}" onclick='selectBusinessCategory(${JSON.stringify(key)})'><span>${emoji} ${label}</span></button>`).join("");
+    console.warn("BUSINESS COUNTS",e);
+  }
+}
+async function loadBusinessCities(){
+  try{
+    const {data,error}=await sb.rpc("business_city_list");if(error)throw error;businessCityCache=data||[];
+  }catch(e){
+    const {data}=await sb.from("businesses").select("city").eq("is_active",true).eq("is_blocked",false).not("city","is",null).limit(5000);
+    businessCityCache=[...new Set((data||[]).map(x=>x.city).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"tr")).map(city=>({city}));
+  }
+  const s=$("businessCity");if(!s)return;const old=s.value;
+  s.innerHTML='<option value="">Tüm şehirler</option>'+businessCityCache.map(x=>`<option value="${esc(x.city)}">${esc(x.city)}</option>`).join("");s.value=old;
+}
+async function loadBusinessDistricts(city){
+  const s=$("businessDistrict");if(!s)return;s.innerHTML='<option value="">Tüm ilçeler</option>';
+  if(!city){businessDistrictCache=[];return}
+  try{
+    const {data,error}=await sb.rpc("business_district_list",{p_city:city});if(error)throw error;
+    businessDistrictCache=data||[];
+    s.innerHTML='<option value="">Tüm ilçeler</option>'+businessDistrictCache.map(x=>`<option value="${esc(x.district)}">${esc(x.district)}</option>`).join("");
+  }catch(e){console.warn("BUSINESS DISTRICTS",e)}
+}
+async function onBusinessCityChange(){await loadBusinessDistricts($("businessCity")?.value||"");await loadBusinessesForMap(true)}
+async function selectBusinessCategory(cat){businessSelectedCategory=cat||"all";await businessCounts();await loadBusinessesForMap(true)}
+function debouncedLoadBusinesses(){clearTimeout(businessSearchTimer);businessSearchTimer=setTimeout(()=>loadBusinessesForMap(true),350)}
+function businessBounds(){
+  if(!businessMap)return null;const b=businessMap.getBounds();
+  return {minLat:b.getSouth(),maxLat:b.getNorth(),minLng:b.getWest(),maxLng:b.getEast()};
+}
+async function loadBusinessesForMap(force=false){
+  if(!businessMap)return;
+  const status=$("businessMapStatus");if(status)status.textContent="İşletmeler yükleniyor…";
+  const bounds=businessBounds();if(!bounds)return;
+  clearBusinessMarkers();
+  try{
+    const p={
+      p_min_lat:bounds.minLat,p_max_lat:bounds.maxLat,p_min_lng:bounds.minLng,p_max_lng:bounds.maxLng,
+      p_category:businessSelectedCategory==="all"?"":businessSelectedCategory,
+      p_city:$("businessCity")?.value||"",
+      p_district:$("businessDistrict")?.value||"",
+      p_search:$("businessSearch")?.value?.trim()||"",
+      p_limit:businessMap.getZoom()<7?600:1000,
+      p_center_lat:businessMap.getCenter().lat,p_center_lng:businessMap.getCenter().lng
+    };
+    const {data,error}=await sb.rpc("search_businesses_map",p);if(error)throw error;
+    const rows=(data||[]).map(normalizeBusinessRow).filter(x=>Number.isFinite(x.latitude)&&Number.isFinite(x.longitude));
+    rows.forEach(b=>{
+      const marker=L.marker([b.latitude,b.longitude]).addTo(businessMap);
+      marker.bindTooltip(`<span class="business-pin">${esc(b.name)}</span>`,{direction:"top",opacity:.92});
+      marker.on("click",()=>showBusinessDetail(b));businessMarkers.push(marker);
+    });
+    if($("businessVisibleCount"))$("businessVisibleCount").textContent=`${rows.length.toLocaleString("tr-TR")} işletme gösteriliyor`;
+    if(status)status.textContent=rows.length?`${rows.length.toLocaleString("tr-TR")} işletme haritaya yüklendi.`:"Bu filtre ve görünümde kayıt bulunamadı.";
+  }catch(e){
+    console.error("BUSINESS MAP",e);
+    if(status)status.textContent="İşletmeler yüklenemedi.";
+    if($("businessDetailBody"))$("businessDetailBody").innerHTML=`<div class="empty">İşletmeler yüklenemedi.<br><small>${esc(e.message||"Supabase RPC hatası")}</small></div>`;
+  }
+}
+function showAllTurkeyBusinesses(){if(!businessMap)return;businessMap.setView([39,35],6);setTimeout(()=>loadBusinessesForMap(true),300)}
+function useMyBusinessLocation(){
+  if(!state.locationReady||!state.location){requireLocation("İşletme haritası");return}
+  businessMap?.setView([state.location.latitude,state.location.longitude],14);setTimeout(()=>loadBusinessesForMap(true),250)
+}
+async function copyBusinessCoords(value){
+  try{await navigator.clipboard.writeText(String(value));toast("Koordinat kopyalandı.")}catch(_){toast("Koordinat: "+String(value))}
+}
+async function openBusinessExplorer(){
+  if(state.user&&!requireProfileComplete("İşletmeler"))return;
+  if(!requireLocation("İşletme haritası"))return;
+  if(!state.user){toast("İşletmeleri görmek için giriş yap.");return openAuth("login")}
+  openModal("businessExplorerModal");
+  setTimeout(async()=>{
+    if(!businessMap){
+      const center=state.location?[state.location.latitude,state.location.longitude]:[39,35];
+      businessMap=L.map("businessMap",{preferCanvas:true,zoomControl:true}).setView(center,state.location?13:6);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap contributors"}).addTo(businessMap);
+      businessMap.on("moveend",()=>loadBusinessesForMap());
+    }
+    await loadBusinessCities();await loadBusinessDistricts($("businessCity")?.value||"");await businessCounts();
+    businessMap.invalidateSize();await loadBusinessesForMap(true);
+  },100);
+}
+function closeBusinessExplorer(){closeModal("businessExplorerModal")}
 
 document.addEventListener("keydown",e=>{
   if(e.key==="Enter" && !e.shiftKey && e.target?.id==="aiPrompt"){
@@ -2771,7 +3026,7 @@ async function saveSiteSettings(){
   updatePublicPrices();
   toast("Sistem ayarları kaydedildi.");
 }
-["authModal","profileModal","ownerProfileModal","routeModal","reportModal","banModal","adminModal"].forEach(id=>$(id).addEventListener("click",e=>{if(id==="adminModal"&&document.querySelector("#banModal.open"))return;if(e.target.classList.contains("modal"))closeModal(id)}));
+["authModal","profileModal","ownerProfileModal","routeModal","reportModal","banModal","adminModal","businessExplorerModal"].forEach(id=>$(id)?.addEventListener("click",e=>{if(id==="adminModal"&&document.querySelector("#banModal.open"))return;if(e.target.classList.contains("modal")){if(id==="businessExplorerModal")closeBusinessExplorer();else closeModal(id)}}));
 
 (async()=>{
   document.body.classList.add("auth-loading");
