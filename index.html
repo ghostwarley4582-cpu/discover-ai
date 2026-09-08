@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#09060d">
 <meta name="description" content="DISCOVER AI — bütçene, zamanına ve moduna göre kişisel deneyimler keşfet.">
-<title>DISCOVER AI — Kişisel Deneyim Motoru · V77.1</title>
+<title>DISCOVER AI — Kişisel Deneyim Motoru · V78.1</title>
 <style>
 :root{--bg:#08060d;--panel:#100b18;--panel2:#151020;--text:#f7f3ff;--muted:#aaa0b7;--purple:#8b5cf6;--purple2:#c084fc;--line:#2a2139;--green:#69e7b7;--danger:#ff6b8a}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 70% 5%,#261343 0,#10091a 34%,#08060d 75%);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
@@ -184,6 +184,8 @@ body{background:radial-gradient(circle at 72% 0%,#342052 0,#170d22 38%,#0c0813 7
 @media(max-width:900px){.search-top,.search-bottom{grid-template-columns:1fr}.business-grid,.sponsored-grid{grid-template-columns:1fr}.discover-hero{padding-top:38px}.search-actions{flex-direction:column}.business-actions{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.business-grid{grid-template-columns:1fr}.discover-brand{letter-spacing:-2px}.search-engine{padding:12px}.sponsored-head{align-items:flex-start;flex-direction:column}.menu-drawer .modalbox{width:92vw;height:auto;max-height:88vh;border-radius:24px}}
 
+
+.username-display{font-weight:800;word-break:break-word}
 </style>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3pM9m9H8QZ5Z7Vx3dJQzjN4n5cR8w=" crossorigin=""/>
@@ -239,7 +241,7 @@ body{background:radial-gradient(circle at 72% 0%,#342052 0,#170d22 38%,#0c0813 7
   <button class="close" type="button" onclick="closeModal('appMenuModal')">×</button>
   <div class="eyebrow">☰ DISCOVER AI</div>
   <h2 style="margin:14px 0 5px">Menü</h2>
-  <p id="menuUserLabel" class="muted" style="margin-top:0">Kaşif</p>
+  <p id="menuUserLabel" class="muted" style="margin-top:0">Kullanıcı</p>
   <div class="menu-list">
     <button class="menu-item primary" type="button" onclick="closeModal('appMenuModal');openProfile()">👤 Profil</button>
     <button class="menu-item" type="button" id="menuLoginItem" onclick="closeModal('appMenuModal');openAuth('login')">🔐 Giriş yap</button>
@@ -389,7 +391,7 @@ body{background:radial-gradient(circle at 72% 0%,#342052 0,#170d22 38%,#0c0813 7
 
 <div id="profileModal" class="modal"><div class="modalbox">
 <button class="close" onclick="closeModal('profileModal')">×</button><div class="eyebrow">PROFILE</div>
-<h2 id="profileName">Kaşif</h2><p id="profileEmail" class="muted"></p>
+<h2 id="profileName">Kullanıcı</h2><p id="profileEmail" class="muted"></p>
 <div class="glass"><b id="profileLevel">Seviye 1</b><p>XP: <span id="profileXP">0</span></p><p>Favoriler: <span id="profileFav">0</span></p><p>Rotalar: <span id="profileRoutes">0</span></p></div>
 <div class="glass" style="margin-top:12px">
   <b>🔐 Kişisel bilgilerim</b>
@@ -807,7 +809,7 @@ let requiredLocationBusy=false;
 let locationMiniTimer=null;
 
 function updateMenuUI(){
-  const p=state.profile||{};if($("menuUserLabel"))$("menuUserLabel").textContent=p.username||state.user?.email||"Kaşif";const lvl=state.profile?.level||1,cur=Number(state.xp||0)%750,pct=Math.min(100,Math.round(cur/750*100));if($("menuLevel"))$("menuLevel").textContent=lvl;if($("menuXpText"))$("menuXpText").textContent=`${cur} / 750 XP`;if($("menuXpBar"))$("menuXpBar").style.width=pct+"%";
+  const p=state.profile||{};if($("menuUserLabel"))$("menuUserLabel").textContent=displayUsername(p,state.user);const lvl=state.profile?.level||1,cur=Number(state.xp||0)%750,pct=Math.min(100,Math.round(cur/750*100));if($("menuLevel"))$("menuLevel").textContent=lvl;if($("menuXpText"))$("menuXpText").textContent=`${cur} / 750 XP`;if($("menuXpBar"))$("menuXpBar").style.width=pct+"%";
 }
 function openAppMenu(){updateMenuUI();const m=$("appMenuModal");if(m){m.classList.add("open");}const b=$("appMenuButton");if(b)b.setAttribute("aria-expanded","true");}
 
@@ -1048,6 +1050,16 @@ function openModal(id){$(id).classList.add("open")}
 function closeModal(id){const el=$(id);if(!el)return;el.classList.remove("open");if(id==="appMenuModal"){const b=$("appMenuButton");if(b)b.setAttribute("aria-expanded","false");}}
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function normalize(s){return String(s||"").toLocaleLowerCase("tr-TR").replace(/ı/g,"i").replace(/ş/g,"s").replace(/ğ/g,"g").replace(/ü/g,"u").replace(/ö/g,"o").replace(/ç/g,"c")}
+function canonicalUsername(profile,stateUser){
+  const p=profile||{};
+  const meta=String(stateUser?.user_metadata?.username||"").trim();
+  const current=String(p.username||"").trim();
+  const legacy=/^Kaşif(?:_[a-z0-9]+)?$/i.test(current);
+  return meta || (current && !legacy ? current : "");
+}
+function displayUsername(profile,stateUser){
+  return canonicalUsername(profile,stateUser) || "Kullanıcı";
+}
 function currentBudget(){return Number($("businessBudget")?.value||0)}
 function currentTime(){return discoveryTimeMinutes()}
 function queryText(){return normalize($("mood").value)}
@@ -2333,7 +2345,7 @@ async function loadSponsoredBusinesses(){
 
 async function openBusinessReviews(b){
   if(!state.user){openAuth("login");return;}currentReviewBusiness=b;$("reviewsTitle").textContent=b.name;$("reviewsMeta").textContent=`${Number(b.rating||5).toFixed(1)} · ${Number(b.review_count||0)} değerlendirme · ${Number(b.distance_km||0).toFixed(1)} km`;$("reviewsList").innerHTML='<div class="empty loading">Yorumlar yükleniyor...</div>';openModal("businessReviewsModal");
-  try{const {data,error}=await sb.rpc("get_business_reviews",{p_business_id:b.id});if(error)throw error;const rows=data||[];const avg=rows.length?rows.reduce((s,r)=>s+Number(r.overall_rating||0),0)/rows.length:Number(b.rating||5);$("reviewsSummary").innerHTML=`<b>${avg.toFixed(1)} / 5</b> · ${rows.length} doğrulanmış kullanıcı değerlendirmesi`;$("reviewsList").innerHTML=rows.length?rows.map(r=>`<div class="review-item"><div class="review-item-head"><div><b>${esc(r.display_name||"Kaşif")}</b><div class="stars">${starsHtml(r.overall_rating)}</div></div><small class="muted">${new Date(r.created_at).toLocaleDateString("tr-TR")}</small></div><p>${esc((r.review_text ?? r.review_text === "" ? r.review_text : (r.comment||"")))}</p><div class="meta">${esc((r.criteria_labels||[]).join(" · "))}</div></div>`).join(""):'<div class="empty">Henüz yorum yok.</div>'}catch(e){$("reviewsList").innerHTML=`<div class="empty">Yorumlar alınamadı.<br><small>${esc(e.message||"")}</small></div>`}
+  try{const {data,error}=await sb.rpc("get_business_reviews",{p_business_id:b.id});if(error)throw error;const rows=data||[];const avg=rows.length?rows.reduce((s,r)=>s+Number(r.overall_rating||0),0)/rows.length:Number(b.rating||5);$("reviewsSummary").innerHTML=`<b>${avg.toFixed(1)} / 5</b> · ${rows.length} doğrulanmış kullanıcı değerlendirmesi`;$("reviewsList").innerHTML=rows.length?rows.map(r=>`<div class="review-item"><div class="review-item-head"><div><b>${esc(r.display_name||"Kullanıcı")}</b><div class="stars">${starsHtml(r.overall_rating)}</div></div><small class="muted">${new Date(r.created_at).toLocaleDateString("tr-TR")}</small></div><p>${esc((r.review_text ?? r.review_text === "" ? r.review_text : (r.comment||"")))}</p><div class="meta">${esc((r.criteria_labels||[]).join(" · "))}</div></div>`).join(""):'<div class="empty">Henüz yorum yok.</div>'}catch(e){$("reviewsList").innerHTML=`<div class="empty">Yorumlar alınamadı.<br><small>${esc(e.message||"")}</small></div>`}
 }
 function openBusinessReviewEditor(b){
   if(!state.user){openAuth("login");return;}
@@ -2521,7 +2533,8 @@ async function submitAuth(){
     if(mode==="join"){
       const first=$("authFirstName").value;
       const last=$("authLastName").value;
-      const username=$("authUsername").value;
+      const username=$("authUsername").value.trim();
+      if(!/^[A-Za-z0-9._-]{3,32}$/.test(username)) throw new Error("Kullanıcı adı 3–32 karakter olmalı; harf, rakam, nokta, alt çizgi veya tire kullanılabilir.");
       const phone=$("authPhone").value;
       const tc=$("authTc").value;
       const day=$("authBirthDay").value,month=$("authBirthMonth").value,year=$("authBirthYear").value;
@@ -2559,26 +2572,39 @@ async function syncUser(){
     }
     const ok=await ensureRequiredLocation();
     if(!ok)return;
+    // Kayıt sırasında girilen kullanıcı adını her oturum açılışında canonical olarak senkronize et.
+    // RPC yoksa/henüz uygulanmadıysa mevcut profile verisiyle devam ederiz.
+    try{
+      const us=await sb.rpc("sync_my_username_from_auth");
+      if(us.error)console.warn("USERNAME SYNC",us.error.message||us.error);
+    }catch(usernameSyncError){
+      console.warn("USERNAME SYNC",usernameSyncError?.message||usernameSyncError);
+    }
     let p=await sb.rpc("get_my_profile_private");
     if(p.error)throw p.error;
     let pdata=p.data||null;
     if(!pdata){
-      const username=(user.user_metadata?.username||user.user_metadata?.full_name||user.email?.split("@")[0]||"Kullanıcı").trim();
+      const username=String(user.user_metadata?.username||"").trim();
+      if(!username) throw new Error("Kullanıcı adı bulunamadı. Profil bilgilerini tamamlayarak devam et.");
       const ins=await sb.from("profiles").insert({id:user.id,username,level:1,xp:0,device_id:getDeviceId()});
       if(ins.error)throw ins.error;
       p=await sb.rpc("get_my_profile_private");
       if(p.error)throw p.error;
       pdata=p.data||{};
     }else{
-      const metaUsername=(user.user_metadata?.username||"").trim();
-      const currentUsername=(pdata.username||"").trim();
-      if(metaUsername && (!currentUsername || /^Kaşif(?:_[a-z0-9]+)?$/i.test(currentUsername)) && currentUsername!==metaUsername){
-        const upd=await sb.from("profiles").update({username:metaUsername}).eq("id",user.id);
-        if(!upd.error)pdata={...pdata,username:metaUsername};
+      const metaUsername=String(user.user_metadata?.username||"").trim();
+      const currentUsername=String(pdata.username||"").trim();
+      const currentIsLegacy=!currentUsername || /^Kaşif(?:_[a-z0-9]+)?$/i.test(currentUsername);
+      if(metaUsername && currentIsLegacy && currentUsername!==metaUsername){
+        const taken=await sb.from("profiles").select("id").ilike("username",metaUsername).neq("id",user.id).limit(1);
+        if(!taken.error && !(taken.data||[]).length){
+          const upd=await sb.from("profiles").update({username:metaUsername}).eq("id",user.id);
+          if(!upd.error)pdata={...pdata,username:metaUsername};
+        }
       }
     }
     if(pdata.device_id!==getDeviceId()){const d=await sb.rpc("register_device_id",{p_device_id:getDeviceId()});if(!d.error)pdata.device_id=getDeviceId();}
-    state.profile=pdata;state.xp=Number(pdata.xp||0);state.profileComplete=isProfileComplete(pdata);state.premium=!!(pdata.premium_until&&new Date(pdata.premium_until)>new Date());
+    state.profile=pdata;state.profile.username=canonicalUsername(pdata,user);state.xp=Number(pdata.xp||0);state.profileComplete=isProfileComplete(state.profile);state.premium=!!(pdata.premium_until&&new Date(pdata.premium_until)>new Date());
     state.premium=!!(p.data.premium_until && new Date(p.data.premium_until)>new Date());
     const accountBanActive=isProfileBanned(p.data)&&p.data.ban_scope!=="device";
     const deviceBan=await checkDeviceBan(getDeviceId());
@@ -2610,7 +2636,7 @@ function updateAuthUI(){
   $("menuLogoutItem")?.classList.toggle("hidden",!logged);
   if($("menuUserLabel")){
     const p=state.profile||{};
-    $("menuUserLabel").textContent=logged?(p.username||state.user.email||"Kaşif"):"Misafir";
+    $("menuUserLabel").textContent=logged?displayUsername(p,state.user):"Misafir";
   }
 }
 function maskHalf(value,keep="ends"){
@@ -2646,7 +2672,7 @@ function maskTc(value){
 }
 function renderMyMaskedProfile(){
   const p=state.profile||{};
-  $("profileName").textContent=p.username||"Kaşif";
+  $("profileName").textContent=displayUsername(p,state.user);
   $("profileEmail").textContent=state.user?.email||"";
   $("profileFirstNameMasked").textContent=maskHalf(p.first_name,"end");
   $("profileLastNameMasked").textContent=maskHalf(p.last_name,"end");
@@ -2907,7 +2933,7 @@ async function renderAdminOverview(body){
     <div class="admin-card" style="margin-top:12px">
       <h3 style="margin-top:0">Son kullanıcılar</h3>
       <div class="admin-list">${(users.data||[]).map(u=>`
-        <div class="admin-item"><div><b>${esc(u.username||"Kaşif")}</b><small>Seviye ${Number(u.level||1)} · ${Number(u.xp||0)} XP · ${u.admin_role==="owner"?"OWNER":u.admin_role==="admin"||u.is_admin?"ADMIN":"Kullanıcı"}</small></div>
+        <div class="admin-item"><div><b>${esc(displayUsername(u,null))}</b><small>Seviye ${Number(u.level||1)} · ${Number(u.xp||0)} XP · ${u.admin_role==="owner"?"OWNER":u.admin_role==="admin"||u.is_admin?"ADMIN":"Kullanıcı"}</small></div>
         <span class="badge ${u.premium_until&&new Date(u.premium_until)>new Date()?"good":""}">${u.premium_until&&new Date(u.premium_until)>new Date()?"Premium":"Free"}</span></div>`).join("")||'<div class="empty">Kullanıcı bulunamadı.</div>'}</div>
     </div>`;
 }
@@ -3384,7 +3410,8 @@ async function saveRequiredProfile(){
   const btn=$("pcSaveBtn"),err=$("pcError");
   const first=$("pcFirstName").value;
   const last=$("pcLastName").value;
-  const username=$("pcUsername").value;
+  const username=$("pcUsername").value.trim();
+  if(!/^[A-Za-z0-9._-]{3,32}$/.test(username)){ $("pcError").textContent="Kullanıcı adı 3–32 karakter olmalı; harf, rakam, nokta, alt çizgi veya tire kullanılabilir."; return; }
   const email=$("pcEmail").value;
   const phone=$("pcPhone").value;
   const birth=$("pcBirthDate").value || null;
