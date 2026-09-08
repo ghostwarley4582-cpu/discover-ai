@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#09060d">
 <meta name="description" content="DISCOVER AI — bütçene, zamanına ve moduna göre kişisel deneyimler keşfet.">
-<title>DISCOVER AI — Kişisel Deneyim Motoru · V78.1</title>
+<meta name="app-version" content="V80"><title>DISCOVER AI — Kişisel Deneyim Motoru · V78.1</title>
 <style>
 :root{--bg:#08060d;--panel:#100b18;--panel2:#151020;--text:#f7f3ff;--muted:#aaa0b7;--purple:#8b5cf6;--purple2:#c084fc;--line:#2a2139;--green:#69e7b7;--danger:#ff6b8a}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 70% 5%,#261343 0,#10091a 34%,#08060d 75%);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
@@ -2612,6 +2612,7 @@ async function submitAuth(){
         options:{data:{full_name:`${first} ${last}`.trim(),username,first_name:first,last_name:last}}
       });
       if(error)throw error;
+      if(!data?.user) throw new Error('Kayıt işlemi kullanıcı hesabı oluşturmadan tamamlandı. Lütfen tekrar dene.');
 
       // E-posta doğrulaması kapalıysa session gelir ve profil aynı anda tamamlanır.
       // Doğrulama açıksa kullanıcı oturum açtıktan sonra syncUser üzerinden tamamlanır.
@@ -2646,7 +2647,10 @@ async function submitAuth(){
     const raw=String(e?.message||'Bilinmeyen hata');
     const friendly=raw.includes('Invalid login credentials')?'E-posta/kullanıcı adı veya şifre hatalı.':
       raw.includes('User already registered')?'Bu e-posta adresi zaten kayıtlı. Giriş yapmayı dene.':
-      raw.includes('USERNAME_ALREADY_USED')?'Bu kullanıcı adı zaten kullanılıyor.':raw;
+      raw.includes('USERNAME_ALREADY_USED')?'Bu kullanıcı adı zaten kullanılıyor.':
+      raw.includes('USERNAME_INVALID')?'Kullanıcı adı 3–32 karakter olmalı; yalnızca harf, rakam, nokta, alt çizgi veya tire kullanabilirsin.':
+      raw.includes('TC_NUMBER_INVALID')?'T.C. Kimlik No 11 haneli olmalı ve 0 ile başlayamaz.':
+      raw.includes('IDENTITY_FIELDS_SERVER_ONLY')?'Profil kimlik alanları sunucu üzerinden güvenli kayıt akışıyla güncellenmeli. Lütfen tekrar dene.':raw;
     toast('İşlem başarısız: '+friendly);
   }
 }
@@ -2769,7 +2773,7 @@ function renderMyMaskedProfile(){
   $("profileEmailMasked").textContent=maskEmail(state.user?.email||p.email);
   $("profilePhoneMasked").textContent=maskPhone(p.phone);
   $("profileBirthMasked").textContent=maskBirthDate(p.birth_date);
-  $("profileTcMasked").textContent=maskTc(p.tc_identity_number||p.tc_last4);
+  $("profileTcMasked").textContent=maskTc(p.tc_last4);
   const vs=$("profileVerificationStatus");
   if(vs){vs.textContent=p.profile_completed?"Kayıtlı":"Eksik";vs.classList.toggle("ok",!!p.profile_completed);vs.classList.toggle("bad",!p.profile_completed);}
 }
@@ -3519,7 +3523,7 @@ async function saveRequiredProfile(){
       p_phone:phone,p_birth_date:birth,p_tc_identity_number:tc
     });
     state.profile={...(state.profile||{}),...(result?.profile||{}),first_name:first,last_name:last,username,
-      email:email,phone,birth_date:birth,tc_last4:String(tc||"").slice(-4),tc_identity_number:tc,
+      email:email,phone,birth_date:birth,tc_last4:String(tc||"").slice(-4),tc_identity_number:null,
       profile_completed:true,identity_verified:false,identity_verification_method:"not_verified"};
     state.profileComplete=true;
     closeModal("profileCompletionModal");
@@ -3842,7 +3846,7 @@ async function openOwnerProfile(userId){
       ["E-posta",u.email||"-"],
       ["Telefon",u.phone||"-"],
       ["Doğum tarihi",fmtDate(u.birth_date)],
-      ["T.C. Kimlik No",u.tc_identity_number||"KAYITLI DEĞİL",true],
+      ["T.C. Kimlik No",u.tc_last4?`•••••••${esc(u.tc_last4)}`:"KAYITLI DEĞİL",true],
       ["T.C. Kimlik son 4",u.tc_last4||"-"],
       ["Hesap rolü",role],
       ["Hesap durumu",ban],
@@ -3899,7 +3903,7 @@ async function renderAdminPrivateUsers(body){
   }
 }
 function privateUserCard(u){
-  const hay=normalize([u.first_name,u.last_name,u.username,u.email,u.phone,u.birth_date,u.tc_identity_number,u.tc_last4,u.id].join(" "));
+  const hay=normalize([u.first_name,u.last_name,u.username,u.email,u.phone,u.birth_date,u.tc_last4,u.id].join(" "));
   const fullName=[u.first_name,u.last_name].filter(Boolean).join(" ")||"İsim yok";
   const role=u.admin_role==="owner"?"OWNER":u.admin_role==="admin"||u.is_admin?"ADMIN":"Kullanıcı";
   const ban=isProfileBanned(u)?(u.ban_scope==="device"?"CİHAZ BANLI":"HESAP BANLI"):"Aktif";
@@ -3907,7 +3911,7 @@ function privateUserCard(u){
   return `<article class="owner-private-card" data-private-search="${esc(hay)}">
     <b>${esc(fullName)}</b>
     <small>${esc(u.username||"Kullanıcı adı yok")} · ${esc(u.email||"E-posta yok")}</small>
-    <div class="owner-raw-field"><span>T.C. Kimlik No</span><strong>${u.tc_identity_number?esc(u.tc_identity_number):"KAYITLI DEĞİL — YENİDEN GİRİLMELİ"}</strong></div>
+    <div class="owner-raw-field"><span>T.C. Kimlik No</span><strong>${u.tc_last4?`•••••••${esc(u.tc_last4)}`:"KAYITLI DEĞİL"}</strong></div>
     <div class="meta" style="margin-top:10px">📞 ${esc(u.phone||"-")} · 🎂 ${u.birth_date?new Date(u.birth_date+"T00:00:00").toLocaleDateString("tr-TR"):"-"}</div>
     <div class="meta" style="margin-top:5px">👤 ${role} · ${ban} · ${premium?"Premium":"Free"}</div>
     <div class="meta" style="margin-top:5px">📱 Telefon: kayıtlı · SMS doğrulaması şimdilik kapalı · 🪪 Kimlik doğrulaması: geçici olarak kapalı</div>
@@ -4077,6 +4081,17 @@ async function saveSiteSettings(){
   updateAuthUI();
   if(state.user && state.locationReady && state.aiSettings) loadSponsoredBusinesses();
 })();
+</script>
+
+<script>
+/* V80 AUTH HARDENING
+   - Kullanıcı adı canonical kaynağı: kayıt metadata/profile
+   - T.C. düz metin frontend state'inde tutulmaz
+   - Giriş: e-posta veya kullanıcı adı
+*/
+window.addEventListener('error', function(e){
+  if(String(e?.message||'').includes('tc_identity_number')) console.warn('V80: plaintext TC alanı erişimi engellendi.');
+});
 </script>
 </body>
 </html>
