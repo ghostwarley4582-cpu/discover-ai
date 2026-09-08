@@ -64,11 +64,11 @@ body.auth-locked #locationMini{display:none!important}
 #authAccessGate .auth-gate-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
 @media(max-width:640px){#authAccessGate .auth-gate-actions{grid-template-columns:1fr}}
 #locationMini{
-  display:none;position:fixed;right:18px;top:18px;z-index:80;
+  display:none!important;position:fixed;right:18px;top:18px;z-index:80;
   background:#17101f;border:1px solid #49325f;border-radius:999px;
   padding:8px 12px;font-size:12px;color:var(--muted)
 }
-#locationMini.show{display:block}
+#locationMini.show{display:none!important}
 
 
 #liveLocationMap{height:420px;border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-top:12px;background:#09070d}
@@ -168,6 +168,18 @@ body{background:radial-gradient(circle at 72% 0%,#342052 0,#170d22 38%,#0c0813 7
 .rating-grid{display:grid;gap:10px}.rating-row{padding:10px;border:1px solid var(--line);border-radius:12px;background:#0d0913}.rating-row-head{display:flex;justify-content:space-between;gap:8px;align-items:center}.star-picker{display:flex;gap:3px;margin-top:7px}.star-picker button{background:none;border:0;padding:2px;font-size:24px;color:#4f4258}.star-picker button.active{color:#ffd64d}
 .menu-drawer{place-items:stretch start;padding:0;z-index:200}.menu-drawer .modalbox{width:min(420px,92vw);height:100%;max-height:100vh;margin:0;justify-self:start;align-self:stretch;border-radius:0 24px 24px 0;padding:20px;background:#120c19;box-shadow:30px 0 80px rgba(0,0,0,.35);overflow:auto}.menu-drawer.open{display:grid}.menu-list{display:grid;gap:8px;margin-top:16px}.menu-item{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;background:#0d0913;border:1px solid var(--line);color:#fff;border-radius:14px;padding:13px 14px;text-align:left}.menu-item.primary{background:linear-gradient(135deg,#7d42ec,#b14eff);border-color:#a66cff}.menu-xp{padding:12px;border:1px solid #48335d;border-radius:14px;background:#0d0913}.menu-xp-bar{height:8px;border-radius:99px;background:#271c33;overflow:hidden;margin-top:8px}.menu-xp-bar>div{height:100%;width:0;background:linear-gradient(90deg,#7c3aed,#c084fc);border-radius:99px}
 .hidden-for-v75{display:none!important}
+/* V78 — precision discovery / global relevance feedback */
+.irrelevant-btn{flex:0 0 auto;width:30px;height:30px;padding:0;border-radius:999px;display:grid;place-items:center;background:#160c14;border:1px solid #4c2940;color:#ffb0c0;font-weight:950;font-size:16px;line-height:1}
+.irrelevant-btn:hover{border-color:var(--danger);background:#24101a;transform:translateY(-1px)}
+.quality-badge{font-size:10px;padding:4px 7px;border-radius:999px;border:1px solid #3f3150;background:#110b17;color:#cfc1dc}
+.quality-badge.good{border-color:#2d5c4c;background:#0e201a;color:#92f0ca}
+.quality-badge.warn{border-color:#705327;background:#21190b;color:#ffd98d}
+.business-purpose{margin-top:8px;padding:8px 10px;border-radius:11px;background:#110b17;border:1px solid #2b2137;color:#cfc5d7;font-size:11px;line-height:1.5}
+.filter-note{margin-top:9px;padding:8px 10px;border-radius:10px;background:#130c1a;border:1px solid #39274a;color:#afa4b8;font-size:11px;line-height:1.45}
+.menu-drawer{place-items:stretch start!important;padding:0!important}
+.menu-drawer .modalbox{width:min(560px,52vw)!important;max-width:560px!important;height:100vh!important;max-height:none!important;margin:0!important;justify-self:start!important;align-self:stretch!important;border-radius:0 24px 24px 0!important;padding:24px!important;background:#120c19!important;box-shadow:30px 0 100px rgba(0,0,0,.5)!important;overflow:auto!important}
+.menu-drawer .close{position:sticky;top:0;float:right;z-index:2}
+@media(max-width:900px){.menu-drawer .modalbox{width:min(92vw,520px)!important}}
 #businessExplorerModal{display:none!important}
 @media(max-width:900px){.search-top,.search-bottom{grid-template-columns:1fr}.business-grid,.sponsored-grid{grid-template-columns:1fr}.discover-hero{padding-top:38px}.search-actions{flex-direction:column}.business-actions{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.business-grid{grid-template-columns:1fr}.discover-brand{letter-spacing:-2px}.search-engine{padding:12px}.sponsored-head{align-items:flex-start;flex-direction:column}.menu-drawer .modalbox{width:92vw;height:auto;max-height:88vh;border-radius:24px}}
@@ -304,13 +316,13 @@ body{background:radial-gradient(circle at 72% 0%,#342052 0,#170d22 38%,#0c0813 7
         <button class="btn" type="button" onclick="clearBusinessDiscovery()">Temizle</button>
       </div>
     </div>
-    <div class="location-line"><span class="location-dot-small"></span><span>Arama alanı konumunun çevresindeki maksimum <b>20 km</b> ile sınırlandırılır.</span></div>
+    <div class="location-line"><span class="location-dot-small"></span><span>Arama sonuçları konumunun çevresindeki maksimum <b>10 km</b> ile sınırlandırılır.</span></div>
   </div>
 </section>
 
 <section id="explore" class="wrap">
   <div class="section-head">
-    <div><div class="eyebrow">DISCOVER BUSINESS MATCH</div><h2>Senin için seçilen işletmeler</h2><p id="resultSummary" class="muted">Kriterlerini doldurup “Bana Öner” dediğinde 20 km içindeki uygun işletmeler özenle sıralanır.</p></div>
+    <div><div class="eyebrow">DISCOVER BUSINESS MATCH</div><h2>Senin için seçilen işletmeler</h2><p id="resultSummary" class="muted">Kriterlerini doldurup “Bana Öner” dediğinde 10 km içindeki gerçekten ilgili işletmeler özenle sıralanır.</p></div>
   </div>
   <div class="result-toolbar">
     <div id="businessSearchState" class="muted">Henüz arama yapılmadı.</div>
@@ -324,7 +336,7 @@ body{background:radial-gradient(circle at 72% 0%,#342052 0,#170d22 38%,#0c0813 7
 </section>
 
 <section class="wrap sponsored-section">
-  <div class="sponsored-head"><div><div class="eyebrow">SPONSORED DISCOVERY</div><h2 style="margin:7px 0 4px">Önerilen işletmeler</h2><p class="muted" style="margin:0">Sponsor olan işletmeler ayrı tutulur ve bulunduğun konuma göre en fazla 6 işletme gösterilir.</p></div><span class="sponsor-badge">Aylık sponsorlu görünürlük: ₺3.000</span></div>
+  <div class="sponsored-head"><div><div class="eyebrow">SPONSORED DISCOVERY</div><h2 style="margin:7px 0 4px">Önerilen işletmeler</h2><p class="muted" style="margin:0">Yalnızca aktif sponsor işletmeler burada gösterilir; sonuçlar mevcut konumuna göre en fazla 6 kartta sıralanır.</p></div><span class="sponsor-badge">Aylık sponsorlu görünürlük: ₺3.000</span></div>
   <div id="sponsoredResults" class="sponsored-grid"><div class="empty">Önerilen işletmeler yükleniyor...</div></div>
 </section>
 
@@ -1036,8 +1048,8 @@ function openModal(id){$(id).classList.add("open")}
 function closeModal(id){const el=$(id);if(!el)return;el.classList.remove("open");if(id==="appMenuModal"){const b=$("appMenuButton");if(b)b.setAttribute("aria-expanded","false");}}
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function normalize(s){return String(s||"").toLocaleLowerCase("tr-TR").replace(/ı/g,"i").replace(/ş/g,"s").replace(/ğ/g,"g").replace(/ü/g,"u").replace(/ö/g,"o").replace(/ç/g,"c")}
-function currentBudget(){return Number($("budget").value)}
-function currentTime(){return Number($("time").value)*60}
+function currentBudget(){return Number($("businessBudget")?.value||0)}
+function currentTime(){return discoveryTimeMinutes()}
 function queryText(){return normalize($("mood").value)}
 function priceText(p){return Number(p||0)===0?"Ücretsiz":"₺"+Number(p).toLocaleString("tr-TR")}
 function emojiFor(a){const t=normalize(a.title+" "+a.tag);if(t.includes("sanat"))return"🎨";if(t.includes("yuruyus"))return"🌅";if(t.includes("kahve"))return"☕";if(t.includes("lezzet"))return"🍽️";if(t.includes("oyun")||t.includes("eglence"))return"🎉";if(t.includes("muz")||t.includes("kultur"))return"🏛️";if(t.includes("foto"))return"📸";if(t.includes("manzara"))return"🌃";return a.emoji||"✨"}
@@ -1493,6 +1505,47 @@ document.addEventListener("keydown",e=>{
     e.preventDefault();sendAIAssistant();
   }
 });
+const DISCOVERY_CATEGORY_LABELS={
+  food:"Yeme & İçme",shopping:"Market & Alışveriş",hardware:"Nalbur & Hırdavat",
+  nightlife:"Gece Hayatı",culture:"Kültür & Sanat",sport:"Spor",outdoor:"Doğa & Açık Alan",
+  hotel:"Konaklama",beauty:"Güzellik",health:"Sağlık",education:"Eğitim",finance:"Banka & Finans",
+  fuel:"Akaryakıt",auto:"Otomotiv",services:"Hizmetler",religious:"İbadethane",
+  public:"Kamu",pharmacy:"Eczane",other:"Diğer"
+};
+
+const DISCOVERY_MOOD_RULES={
+  romantik:{
+    blocked:["religious","fuel","hardware","finance","auto","pharmacy","education","public"],
+    preferred:["food","culture","outdoor","hotel","beauty"],
+    positive:["romantik","sevgili","cift","çift","akşam yemegi","aksam yemegi","restoran","restaurant","cafe","kafe","kahve","manzara","sahil","gün batımı","gun batimi","spa","sinema","tiyatro"],
+    negative:["cami","mescit","kilise","sinagog","ibadethane","üniversite","universite","araştırma merkezi","arastirma merkezi","uygulama ve araştırma","uygulama ve arastirma","malzeme bilimleri","konsolosluk","başkonsolosluk","baskonsolosluk","belediye","okul","kaymakamlık","kaymakamlik","karakol","hastane","eczane","benzin","akaryakıt","akaryakit","nalbur","hırdavat","hirdavat","fabrika","sanayi","depo","mezarlık","mezarlik"]
+  },
+  sakin:{
+    blocked:["religious","nightlife","fuel","hardware","finance","auto","public"],
+    preferred:["outdoor","food","hotel","culture","beauty","education"],
+    positive:["sessiz","sakin","huzur","park","bahçe","bahce","sahil","orman","manzara","kahve","cafe","kafe","çay","cay","kitap","kütüphane","kutuphane","spa","wellness","teras"],
+    negative:["gece kulübü","gece kulubu","night club","nightclub","bar","pub","disco","disko","cami","mescit","araştırma merkezi","arastirma merkezi","uygulama ve araştırma","uygulama ve arastirma","malzeme bilimleri","konsolosluk","belediye","karakol","hastane","eczane","sanayi","fabrika","depo"]
+  },
+  eglenceli:{
+    blocked:["religious","pharmacy","finance","education","fuel","hardware","health","public"],
+    preferred:["nightlife","sport","culture","food","shopping","outdoor"],
+    positive:["club","gece","bar","pub","bowling","oyun","sinema","luna","konser","etkinlik","festival","karaoke","dans","eğlence","eglence","paintball","karting"],
+    negative:["cami","mescit","araştırma merkezi","arastirma merkezi","uygulama ve araştırma","uygulama ve arastirma","malzeme bilimleri","üniversite","universite","konsolosluk","başkonsolosluk","baskonsolosluk","belediye","okul","hastane","eczane","akaryakıt","akaryakit","nalbur","sanayi","fabrika"]
+  },
+  gezmek:{
+    blocked:["religious","finance","pharmacy","hardware","public"],
+    preferred:["outdoor","culture","shopping","food","hotel","sport"],
+    positive:["park","sahil","müze","muze","çarşı","carsi","pazar","meydan","manzara","seyir","kule","tarihi","tarih","galeri","bahçe","bahce","adalar","sokak","festival"],
+    negative:["araştırma merkezi","arastirma merkezi","uygulama ve araştırma","uygulama ve arastirma","malzeme bilimleri","konsolosluk","başkonsolosluk","baskonsolosluk","belediye","kaymakamlık","kaymakamlik","karakol","hastane","eczane","sanayi","fabrika","depo"]
+  },
+  sanat:{
+    blocked:["religious","fuel","finance","hardware","auto","pharmacy","health","public"],
+    preferred:["culture","food"],
+    positive:["sanat","galeri","müze","muze","tiyatro","sergi","konser","atölye","atolye","opera","bale","sinema","kültür","kultur","sahne"],
+    negative:["araştırma merkezi","arastirma merkezi","uygulama ve araştırma","uygulama ve arastirma","malzeme bilimleri","konsolosluk","başkonsolosluk","baskonsolosluk","belediye","okul","üniversite","universite","hastane","eczane","akaryakıt","akaryakit","nalbur","sanayi","fabrika"]
+  }
+};
+
 let businessDiscoveryMood="";
 let businessDiscoverySort="match";
 let businessDiscoveryResults=[];
@@ -1500,41 +1553,98 @@ let sponsoredBusinessResults=[];
 let currentReviewBusiness=null;
 let currentReviewCriteria={};
 
-const DISCOVERY_CATEGORY_LABELS={
-  food:"Yeme & İçme",shopping:"Market & Alışveriş",hardware:"Nalbur & Hırdavat",nightlife:"Gece Hayatı",culture:"Kültür & Sanat",sport:"Spor",outdoor:"Doğa & Açık Alan",hotel:"Konaklama",beauty:"Güzellik",health:"Sağlık",education:"Eğitim",finance:"Banka & Finans",fuel:"Akaryakıt",auto:"Otomotiv",services:"Hizmetler",religious:"İbadethane",other:"Diğer"
-};
-const DISCOVERY_MOOD_RULES={
-  romantik:{blocked:["religious","fuel","hardware","finance","auto","pharmacy","education"],preferred:["food","hotel","beauty","culture"],keywords:["restoran","restaurant","cafe","kafe","kahve","manzara","spa","sinema","tiyatro","otel","sahil"]},
-  sakin:{blocked:["religious","nightlife","fuel","hardware","finance","auto"],preferred:["outdoor","food","hotel","culture","education"],keywords:["park","bahce","bahçe","sahil","orman","kutuphane","kütüphane","kahve","cafe","kafe","spa"]},
-  eglenceli:{blocked:["religious","pharmacy","finance","education","fuel","hardware"],preferred:["nightlife","sport","culture","food","shopping"],keywords:["club","gece","bar","pub","bowling","oyun","sinema","luna","konser","etkinlik"]},
-  gezmek:{blocked:["religious","finance","pharmacy","hardware"],preferred:["outdoor","culture","shopping","food","hotel"],keywords:["park","sahil","müze","muze","çarşı","carsi","pazar","meydan","manzara","seyir"]},
-  sanat:{blocked:["religious","fuel","finance","hardware","auto","pharmacy"],preferred:["culture","education","food"],keywords:["sanat","galeri","müze","muze","tiyatro","sergi","konser","atölye","atolye"]}
-};
-function setDiscoveryMood(mood,el){businessDiscoveryMood=mood;document.querySelectorAll("#discoveryMoodRow .mood-chip").forEach(x=>x.classList.remove("active"));if(el)el.classList.add("active")}
-function discoveryTimeMinutes(){const v=Number($("businessTimeValue")?.value||0),u=Number($("businessTimeUnit")?.value||60);return Math.max(1,Math.round(v*u))}
-function discoveryBudget(){const raw=$("businessBudget")?.value;return raw===""||raw==null?null:Number(raw)}
+const V78_NEGATIVE_GLOBAL_THRESHOLD=0.80;
+const V78_MIN_GLOBAL_FEEDBACK=20;
+
+function setDiscoveryMood(mood,el){
+  businessDiscoveryMood=mood;
+  document.querySelectorAll("#discoveryMoodRow .mood-chip").forEach(x=>x.classList.remove("active"));
+  if(el)el.classList.add("active");
+}
+function discoveryTimeMinutes(){
+  const v=Number($("businessTimeValue")?.value||0),u=Number($("businessTimeUnit")?.value||60);
+  return Math.max(1,Math.round(v*u));
+}
+function discoveryBudget(){
+  const raw=$("businessBudget")?.value;
+  if(raw===""||raw==null)return null;
+  const n=Number(raw);
+  return Number.isFinite(n)&&n>=0?n:null;
+}
 function discoveryCategory(){return String($("businessDiscoveryCategory")?.value||"").trim()}
 function discoveryQuery(){return String($("mood")?.value||"").trim()}
+
 function businessEffectiveCategory(name,category){
   const s=normalize(String(name||""));
-  if(/(?:^|\s)(cami|mescit|masjid|kilise|sinagog|ibadethane|turbe|türbe|church|mosque)(?:\s|$)/.test(s)||s.includes("cami")||s.includes("mescit"))return "religious";
+  if(/(cami|mescit|masjid|kilise|sinagog|ibadethane|turbe|türbe|church|mosque)/.test(s))return "religious";
   if(/(gece kulubu|gece kulübü|night club|nightclub|bar|pub|disco|disko|casino)/.test(s))return "nightlife";
   if(/(park|bahce|bahçe|koru|sahil|mesire|piknik|orman|seyir tepesi|meydan)/.test(s))return "outdoor";
-  return category||"other";
+  if(/(müze|muze|galeri|tiyatro|opera|bale|sergi|kültür merkezi|kultur merkezi)/.test(s))return "culture";
+  if(/(benzin|akaryakit|akaryakıt|petrol istasyon|opet|shell|bp)/.test(s))return "fuel";
+  return normalize(category||"")||"other";
+}
+
+function businessSemanticProfile(row){
+  const cat=businessEffectiveCategory(row.name,row.category);
+  const hay=normalize([
+    row.name,row.description,row.address,row.city,row.district,row.category,
+    row.effective_category,Array.isArray(row.mood_tags)?row.mood_tags.join(" "):row.mood_tags,
+    row.tags,row.operator
+  ].filter(Boolean).join(" "));
+  const negativePurpose=[
+    "arastirma merkezi","uygulama ve arastirma","uygulama ve arastirma merkezi","malzeme bilimleri",
+    "bilimleri ve uretim teknolojileri","konsolosluk","baskonsolosluk","universite","fakulte",
+    "belediye","kaymakamlik","karakol","emniyet","hastane","poliklinik","eczane","fabrika",
+    "sanayi","depo","lojistik","antrepo","mezarlik","ibadethane","cami","mescit","kilise","sinagog"
+  ];
+  const purposeFlags=negativePurpose.filter(k=>hay.includes(normalize(k)));
+  const genericFunctionTerms=["cafe","kafe","restoran","restaurant","lokanta","park","muzik","sinema","tiyatro","muze","müze","galeri","spa","otel","hotel","bar","pub","club","bowling","spor","fitness","gym","market","magaza","mağaza","sahil","bahce","bahçe","koru","piknik"];
+  const functionHits=genericFunctionTerms.filter(k=>hay.includes(normalize(k)));
+  return {cat,hay,purposeFlags,functionHits,hasClearConsumerPurpose:functionHits.length>0};
+}
+
+function inferMoodsFromQuery(query){
+  const q=normalize(String(query||""));
+  const map={
+    romantik:["romantik","sevgili","date","cift","çift","aşk","ask"],
+    sakin:["sakin","sessiz","huzur","huzurlu","kafa dinle","rahat","dingin"],
+    eglenceli:["eğlence","eglence","eğlenceli","eglenceli","gece","dans","parti","oyun","club","kulüp","kulup"],
+    gezmek:["gez","gezelim","gezmek","dolaş","dolas","keşif","kesif","tur","manzara","tarihi"],
+    sanat:["sanat","müze","muze","galeri","tiyatro","sergi","opera","bale","konser"]
+  };
+  return Object.entries(map).filter(([,words])=>words.some(w=>q.includes(normalize(w)))).map(([m])=>m);
+}
+function activeDiscoveryMoods(){
+  const out=[];
+  if(businessDiscoveryMood)out.push(businessDiscoveryMood);
+  inferMoodsFromQuery(discoveryQuery()).forEach(m=>{if(!out.includes(m))out.push(m)});
+  return out;
 }
 function businessMoodFit(row){
-  const mood=businessDiscoveryMood;
-  if(!mood)return {score:40,reason:"Ruh hali belirtilmedi; kategori, bütçe, mesafe ve süre birlikte değerlendirildi."};
-  const rules=DISCOVERY_MOOD_RULES[mood]||{blocked:[],preferred:[],keywords:[]};
-  const cat=businessEffectiveCategory(row.name,row.category);
-  const hay=normalize([row.name,row.description,row.address,row.city,row.district].join(" "));
-  if(rules.blocked.includes(cat))return {score:-100,reason:"Bu ruh hali için uygun olmayan bir kategori."};
-  let score=rules.preferred.includes(cat)?70:25;
-  const hits=rules.keywords.filter(k=>hay.includes(normalize(k))).length;
-  score+=Math.min(25,hits*8);
-  if(cat==="religious")score=-100;
-  return {score,reason:score>=80?`${mood} ruh haliyle güçlü eşleşiyor.`:score>=55?`${mood} ruh haliyle uyumlu.`:`${mood} için sınırlı ama olası bir eşleşme.`};
+  const moods=activeDiscoveryMoods();
+  if(!moods.length)return {score:55,reason:"Ruh hali belirtilmedi; işletmenin gerçek kullanım amacı, kategori, bütçe, mesafe ve süre birlikte değerlendirildi."};
+  const p=businessSemanticProfile(row), scores=[], reasons=[];
+  for(const mood of moods){
+    const rules=DISCOVERY_MOOD_RULES[mood]||{blocked:[],preferred:[],positive:[],negative:[]};
+    if(rules.blocked.includes(p.cat))return {score:-100,reason:`${mood} ruh hali için uygun olmayan işletme türü.`};
+    const negHits=rules.negative.filter(k=>p.hay.includes(normalize(k))).length;
+    if(negHits>=1)return {score:-100,reason:`İşletmenin kullanım amacı ${mood} aramanla uyuşmuyor.`};
+    let s=rules.preferred.includes(p.cat)?68:15;
+    const positiveHits=rules.positive.filter(k=>p.hay.includes(normalize(k))).length;
+    s+=Math.min(35,positiveHits*8);
+    if(p.functionHits.length)s+=5;
+    if(p.purposeFlags.length)s-=35;
+    if(!p.hasClearConsumerPurpose && !rules.preferred.includes(p.cat))s-=20;
+    scores.push(Math.max(-100,Math.min(100,s)));
+    reasons.push(s>=85?`${mood} ile güçlü eşleşiyor`:s>=65?`${mood} ile uyumlu`:`${mood} için zayıf eşleşme`);
+  }
+  const score=scores.reduce((a,b)=>a+b,0)/scores.length;
+  // Birden fazla ruh hali istendiyse zayıf halkayı gizlemek yerine ortalamayı
+  // zorunlu tutuyoruz: ör. romantik+sakin aramasında sadece romantik olması yetmez.
+  if(moods.length>1 && scores.some(s=>s<55))return {score:-100,reason:"İstenen ruh hallerinin tamamıyla yeterince güçlü eşleşmiyor."};
+  return {score,reason:reasons.join(" · ")};
 }
+
 function businessCriteriaLabels(business){
   const c=businessEffectiveCategory(business?.name||"",business?.effective_category||business?.category||"");
   if(c==="food")return ["Titizlik","Lezzet","Karşılama"];
@@ -1554,39 +1664,378 @@ function businessCriteriaLabels(business){
   if(c==="auto")return ["Titizlik","İşçilik","Karşılama"];
   return ["Titizlik","Hizmet","Karşılama"];
 }
-function starsHtml(rating){const r=Math.max(0,Math.min(5,Number(rating||0)));const full=Math.round(r);return "★★★★★".split("").map((s,i)=>`<span style="opacity:${i<full?1:.22}">${s}</span>`).join("")}
+function starsHtml(rating){
+  const r=Math.max(0,Math.min(5,Number(rating||0))),full=Math.round(r);
+  return "★★★★★".split("").map((s,i)=>`<span style="opacity:${i<full?1:.22}">${s}</span>`).join("");
+}
 function formatBusinessPrice(row){
-  const a=Number(row.price_from),b=Number(row.price_to);if(Number.isFinite(a)&&a>0&&Number.isFinite(b)&&b>a)return `₺${Math.round(a).toLocaleString("tr-TR")}–₺${Math.round(b).toLocaleString("tr-TR")}`;
+  const a=Number(row.price_from),b=Number(row.price_to);
+  if(Number.isFinite(a)&&a>0&&Number.isFinite(b)&&b>a)return `₺${Math.round(a).toLocaleString("tr-TR")}–₺${Math.round(b).toLocaleString("tr-TR")}`;
   if(Number.isFinite(a)&&a>0)return `₺${Math.round(a).toLocaleString("tr-TR")}`;
   if(Number.isFinite(b)&&b>0)return `₺${Math.round(b).toLocaleString("tr-TR")}`;
+  const parsed=extractPriceFromText(row.menu_text)||extractPriceFromText(row.price_note);
+  if(Number.isFinite(parsed))return `₺${Math.round(parsed).toLocaleString("tr-TR")}+`;
   return "Fiyat bilgisi yok";
 }
-function businessPriceValue(row){const a=Number(row.price_from),b=Number(row.price_to);if(Number.isFinite(a)&&a>=0)return a;if(Number.isFinite(b)&&b>=0)return b;return null}
-function clientDiscoveryScore(row){
-  const mf=businessMoodFit(row);if(mf.score<0)return -1;
-  const budget=discoveryBudget(),time=discoveryTimeMinutes(),price=businessPriceValue(row);
-  const dist=Number(row.distance_km),travel=Number(row.travel_minutes||Math.ceil(dist*3)),visit=Number(row.visit_minutes||0),total=Number(row.total_time_minutes||travel+visit);
-  if(!Number.isFinite(budget)||!Number.isFinite(time)||price==null||price>budget||total>time||travel>Math.floor(time*.40))return -1;
-  const budgetScore=Math.max(0,100-Math.abs(budget-price)/Math.max(1,budget)*100);
-  const distanceScore=Math.max(0,100-Math.min(100,dist*5));
-  const timeSlack=Math.max(0,time-total);
-  const timeScore=Math.max(0,100-(timeSlack/Math.max(1,time))*55);
-  const q=discoveryQuery(),hay=normalize([row.name,row.address,row.description,row.city,row.district].join(" "));
-  const words=normalize(q).split(/\s+/).filter(w=>w.length>2);const hits=words.filter(w=>hay.includes(w)).length;
-  const queryScore=words.length?Math.min(100,hits/Math.min(words.length,4)*100):35;
-  const cat=discoveryCategory();const categoryScore=cat&&businessEffectiveCategory(row.name,row.category)===cat?100:45;
-  return mf.score*.40+budgetScore*.22+distanceScore*.13+timeScore*.15+queryScore*.06+categoryScore*.04;
+function extractPriceFromText(value){
+  const s=String(value||"");
+  if(!s)return null;
+  const hits=[...s.matchAll(/(?:₺|TL|TRY)\s*([0-9][0-9.\s]*(?:,[0-9]{1,2})?)/gi)]
+    .map(m=>String(m[1]).replace(/\s/g,"").replace(/\./g,"").replace(",","."))
+    .map(Number).filter(n=>Number.isFinite(n)&&n>=0&&n<=1000000);
+  if(hits.length)return Math.min(...hits);
+  return null;
 }
+function businessPriceValue(row){
+  const a=Number(row.price_from),b=Number(row.price_to);
+  if(Number.isFinite(a)&&a>=0)return a;
+  if(Number.isFinite(b)&&b>=0)return b;
+  const parsed=extractPriceFromText(row.menu_text)||extractPriceFromText(row.price_note);
+  return Number.isFinite(parsed)?parsed:null;
+}
+
+async function getBusinessFeedbackStats(ids,mood,category){
+  if(!ids.length)return new Map();
+  try{
+    const {data,error}=await sb.rpc("get_business_relevance_feedback",{p_business_ids:ids,p_mood:mood||"",p_category:category||""});
+    if(error)throw error;
+    return new Map((Array.isArray(data)?data:[]).map(x=>[String(x.business_id),{
+      total:Number(x.total_feedback||0),negative:Number(x.negative_feedback||0),
+      rate:Number(x.negative_rate||0)
+    }]));
+  }catch(e){
+    console.warn("RELEVANCE FEEDBACK RPC unavailable:",e.message||e);
+    return new Map();
+  }
+}
+
+async function fetchDiscoveryCandidates(lat,lng){
+  const radiusKm=10;
+  const latDelta=radiusKm/110.574;
+  const lngDelta=radiusKm/(111.320*Math.max(0.2,Math.cos(lat*Math.PI/180)));
+  const minLat=lat-latDelta,maxLat=lat+latDelta,minLng=lng-lngDelta,maxLng=lng+lngDelta;
+  const fields="id,name,description,category,city,district,address,latitude,longitude,phone,website,rating,review_count,is_active,is_blocked,menu_url,menu_text,price_from,price_to,price_note,price_updated_at,mood_tags";
+  const pageSize=1000;
+  async function fetchBox(a,b,c,d){
+    const out=[];
+    for(let page=0;page<20;page++){
+      const {data,error}=await sb.from("businesses").select(fields)
+        .eq("is_active",true).eq("is_blocked",false)
+        .gte("latitude",a).lte("latitude",b).gte("longitude",c).lte("longitude",d)
+        .range(page*pageSize,(page+1)*pageSize-1);
+      if(error)throw error;
+      const rows=data||[];
+      out.push(...rows);
+      if(rows.length<pageSize)break;
+    }
+    return out;
+  }
+  try{
+    const midLat=(minLat+maxLat)/2,midLng=(minLng+maxLng)/2;
+    const boxes=[
+      [minLat,midLat,minLng,midLng],[minLat,midLat,midLng,maxLng],
+      [midLat,maxLat,minLng,midLng],[midLat,maxLat,midLng,maxLng]
+    ];
+    const parts=await Promise.all(boxes.map(x=>fetchBox(...x)));
+    const seen=new Set(),out=[];
+    for(const r of parts.flat()){
+      if(!r?.id||seen.has(String(r.id)))continue;
+      seen.add(String(r.id));out.push(r);
+    }
+    return out;
+  }catch(e){
+    console.warn("Direct business query failed, using map RPC:",e.message||e);
+    const latDelta20=10/111.32;
+    const lngDelta10=10/(111.32*Math.max(.15,Math.cos(lat*Math.PI/180)));
+    const boxes=[
+      [lat-latDelta20,lat,lng-lngDelta10,lng],
+      [lat-latDelta20,lat,lng,lng+lngDelta10],
+      [lat,lat+latDelta20,lng-lngDelta10,lng],
+      [lat,lat+latDelta20,lng,lng+lngDelta10]
+    ];
+    const settled=await Promise.allSettled(boxes.map(([a,b,c,d])=>sb.rpc("search_businesses_map",{
+      p_min_lat:a,p_max_lat:b,p_min_lng:c,p_max_lng:d,p_category:"",p_city:"",p_district:"",p_search:"",
+      p_limit:2000,p_center_lat:lat,p_center_lng:lng
+    })));
+    const rows=settled.flatMap(x=>x.status==="fulfilled"?(x.value.data||[]):[]);
+    if(!rows.length)throw new Error(e.message||"Yakın işletme verisi alınamadı.");
+    return rows;
+  }
+}
+
+function enrichDiscoveryCandidate(r,feedbackMap){
+  const x={...r};
+  const lat=Number(state.location.latitude),lng=Number(state.location.longitude);
+  if(Number.isFinite(Number(x.latitude))&&Number.isFinite(Number(x.longitude))){
+    const R=6371,la1=lat*Math.PI/180,la2=Number(x.latitude)*Math.PI/180;
+    const dla=la2-la1,dlo=(Number(x.longitude)-lng)*Math.PI/180;
+    const h=Math.sin(dla/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dlo/2)**2;
+    x.distance_km=R*2*Math.atan2(Math.sqrt(h),Math.sqrt(Math.max(0,1-h)));
+  }else{x.distance_km=999}
+  x.effective_category=businessEffectiveCategory(x.name,x.category);
+  const visitByCategory={food:75,shopping:45,hardware:30,nightlife:120,culture:90,sport:90,outdoor:90,hotel:120,beauty:75,health:45,education:60,finance:30,fuel:25,auto:45,services:45,religious:30,public:35,pharmacy:20,other:45};
+  x.visit_minutes=Number.isFinite(Number(x.visit_minutes))?Number(x.visit_minutes):(visitByCategory[x.effective_category]||45);
+  x.travel_minutes=Number.isFinite(Number(x.travel_minutes))?Number(x.travel_minutes):Math.max(3,Math.ceil(Number(x.distance_km||0)*4.0));
+  x.total_time_minutes=x.travel_minutes+x.visit_minutes;
+
+  const profile=businessSemanticProfile(x);
+  const mf=businessMoodFit(x);
+  const q=discoveryQuery(),qNorm=normalize(q);
+  const queryWords=qNorm.split(/\s+/).filter(w=>w.length>=3);
+  const qHits=wordHits(q,profile.hay);
+  x.query_hits=qHits;
+  x.query_match=qNorm?Math.min(100,Math.round(qHits/Math.max(1,queryWords.length)*100)):50;
+
+  const selectedCat=discoveryCategory();
+  x.category_match=!selectedCat||x.effective_category===selectedCat;
+  const inferred=inferQueryCategories(q);
+  x.query_category_match=!inferred.length||inferred.includes(x.effective_category);
+
+  const budget=discoveryBudget(),price=businessPriceValue(x);
+  x.price_known=price!==null&&Number.isFinite(price);
+  x.price_source=x.price_known?(x.price_updated_at?"fiyat verisi":"menü/metin fiyatı"):"";
+  x.budget_fit=budget!==null&&x.price_known&&price<=budget;
+  const time=discoveryTimeMinutes();
+  x.time_fit=x.total_time_minutes<=time && x.travel_minutes<=Math.max(1,Math.floor(time*.40));
+
+  const fb=feedbackMap?.get(String(x.id))||{total:0,negative:0,rate:0};
+  x.feedback_total=fb.total;x.feedback_negative=fb.negative;x.feedback_negative_rate=fb.rate;
+
+  if(x.distance_km>10)return {...x,client_match_score:-1,client_reason:"10 km dışında."};
+  if(!x.category_match)return {...x,client_match_score:-1,client_reason:"Seçtiğin kategoriyle eşleşmiyor."};
+  if(inferred.length && qHits===0)return {...x,client_match_score:-1,client_reason:"Arama ifadesinin anlamıyla eşleşmiyor."};
+  if(mf.score<45 && businessDiscoveryMood)return {...x,client_match_score:-1,client_reason:mf.reason};
+  if(!profile.hasClearConsumerPurpose && profile.purposeFlags.length>=1)return {...x,client_match_score:-1,client_reason:"İşletmenin ana kullanım amacı aradığın deneyim değil."};
+  if(!x.time_fit)return {...x,client_match_score:-1,client_reason:"Yol + ziyaret süresi verdiğin toplam zamanı aşıyor."};
+  if(budget!==null && !x.price_known)return {...x,client_match_score:-1,client_reason:"Bütçe karşılaştırması için doğrulanmış fiyat verisi bulunmuyor."};
+  if(budget!==null && x.price_known && price>budget)return {...x,client_match_score:-1,client_reason:"Bütçeni aşıyor."};
+
+  if(fb.total>=V78_MIN_GLOBAL_FEEDBACK && fb.rate>=V78_NEGATIVE_GLOBAL_THRESHOLD){
+    return {...x,client_match_score:-1,client_reason:"Kullanıcı geri bildirimleri bu ruh hali/kategori eşleşmesinin zayıf olduğunu gösteriyor."};
+  }
+
+  const moodScore=Math.max(0,Math.min(100,mf.score));
+  const distScore=Math.max(0,100-Math.min(100,x.distance_km*7));
+  const slack=Math.max(0,time-x.total_time_minutes);
+  const timeScore=Math.max(0,100-(slack/Math.max(1,time))*100);
+  const budgetScore=budget===null?50:Math.max(0,100-Math.abs(budget-price)/Math.max(1,budget)*100);
+  const ratingScore=Math.max(0,Math.min(100,(Number(x.rating||0)/5)*100));
+  const qScore=queryWords.length?x.query_match:40;
+  const catScore=selectedCat?100:50;
+  const feedbackPenalty=fb.total?Math.min(30,fb.rate*30):0;
+
+  x.client_match_score=Math.round(
+    moodScore*.32+distScore*.16+timeScore*.17+budgetScore*.14+ratingScore*.10+qScore*.07+catScore*.04-feedbackPenalty
+  );
+
+  const reasons=[];
+  if(mf.score>=80)reasons.push("ruh hali güçlü biçimde eşleşiyor");
+  else if(mf.score>=65)reasons.push("ruh haliyle uyumlu");
+  if(selectedCat)reasons.push("kategori filtresiyle eşleşiyor");
+  if(queryWords.length)reasons.push(`arama ifadesiyle %${x.query_match} eşleşme`);
+  reasons.push(`${x.distance_km.toFixed(1)} km uzaklıkta`);
+  reasons.push(`${x.travel_minutes} dk tahmini yol`);
+  reasons.push(`${x.visit_minutes} dk önerilen kullanım`);
+  reasons.push(`${x.price_source||"doğrulanmış fiyat"} bütçe içinde`);
+  if(fb.total)reasons.push(`kullanıcı geri bildirim dengesi ${Math.round((1-fb.rate)*100)}%`);
+  x.client_reason=reasons.join(" · ");
+  x.unknown_price_warning=false;
+  x.menu_url=x.menu_url||"";
+  x.consumer_purpose=profile.hasClearConsumerPurpose?profile.functionHits.slice(0,3).join(", "):"Belirsiz";
+  x.quality_score=Math.round((moodScore*.5)+(ratingScore*.2)+(qScore*.3));
+  return x;
+}
+
+function inferQueryCategories(query){
+  const q=normalize(String(query||""));
+  const groups=[
+    ["food",["restoran","restaurant","lokanta","yemek","kahve","kafe","cafe","pasta","tatli","burger","pizza","kahvalti"]],
+    ["shopping",["market","migros","bim","a101","alisveris","magaza","dukkan","pazar"]],
+    ["hardware",["nalbur","hirdavat","boya","tesisat","elektrikci"]],
+    ["nightlife",["gece","kulup","night club","bar","pub","disco","eglence","konser","dans","club"]],
+    ["culture",["sinema","tiyatro","muze","galeri","sergi","sanat","konser","atolye","opera","bale"]],
+    ["sport",["spor","fitness","gym","havuz","yuzme","futbol","basketbol","bowling","paintball","karting"]],
+    ["outdoor",["park","sahil","orman","piknik","mesire","bahce","manzara","meydan","doga","seyir"]],
+    ["hotel",["otel","hotel","pansiyon","konaklama","resort"]],
+    ["beauty",["kuafor","berber","guzellik","spa","masaj","tirnak"]],
+    ["health",["hastane","klinik","doktor","dis","saglik","poliklinik"]],
+    ["pharmacy",["eczane","eczaci","ilac"]],
+    ["education",["okul","kurs","dershane","egitim","universite","kutuphane"]],
+    ["finance",["banka","atm","finans","sigorta"]],
+    ["fuel",["akaryakit","benzin","mazot","petrol","istasyon"]],
+    ["auto",["oto","otomotiv","lastik","servis","yikama"]],
+    ["religious",["cami","mescit","kilise","sinagog","ibadethane","turbe"]],
+    ["services",["tamir","servis","tesisat","kurye","kargo","terzi","temizlik"]],
+    ["public",["belediye","kaymakamlik","devlet","kamu","polis","postane"]]
+  ];
+  return [...new Set(groups.filter(([cat,words])=>words.some(w=>q.includes(normalize(w)))).map(x=>x[0]))];
+}
+function wordHits(query,haystack){
+  const words=normalize(String(query||"")).split(/\s+/).filter(w=>w.length>=3);
+  if(!words.length)return 0;
+  return words.filter(w=>haystack.includes(w)).length;
+}
+
+async function runBusinessDiscovery(){
+  if(state.user&&!requireProfileComplete("Bana Öner"))return;
+  if(!requireLocation("Bana Öner"))return;
+  if(!state.user){openAuth("login");return}
+  const budget=discoveryBudget(),time=discoveryTimeMinutes(),category=discoveryCategory(),query=discoveryQuery(),mood=businessDiscoveryMood;
+  if(budget==null){toast("Bütçeni rakam olarak gir.");$("businessBudget")?.focus();return}
+  if(!Number.isFinite(time)||time<1){toast("Geçerli bir süre gir.");$("businessTimeValue")?.focus();return}
+  const status=$("businessSearchState");
+  if(status)status.textContent="10 km içindeki işletmeler derin uygunluk analiziyle taranıyor…";
+  $("results").innerHTML='<div class="empty loading">İşletmeler; gerçek kullanım amacı, ruh hali, kategori, bütçe, mesafe, yol süresi, toplam süre ve kullanıcı geri bildirimleriyle değerlendiriliyor…</div>';
+  try{
+    await ensureFreshLocationForDiscovery();
+    const raw=await fetchDiscoveryCandidates(Number(state.location.latitude),Number(state.location.longitude));
+    const ids=raw.map(x=>x?.id).filter(Boolean).map(String);
+    const feedback=await getBusinessFeedbackStats(ids,mood,category);
+    let rows=raw.map(x=>enrichDiscoveryCandidate(x,feedback)).filter(x=>x.client_match_score>=0&&Number(x.distance_km)<=10);
+    rows.sort((a,b)=>Number(b.client_match_score)-Number(a.client_match_score)||Number(a.distance_km)-Number(b.distance_km)||String(a.name).localeCompare(String(b.name),"tr"));
+    businessDiscoveryResults=rows;
+    renderBusinessCards(sortBusinessResults(businessDiscoveryResults));
+    if(status)status.textContent=`${rows.length} gerçekten uygun aday · 10 km · ₺${Number(budget).toLocaleString("tr-TR")} · ${time} dk`;
+    if($("resultSummary"))$("resultSummary").textContent=`${rows.length} gerçekten uygun aday bulundu. 10 km içindeki işletmeler; gerçek kullanım amacı, ruh hali, kategori, bütçe, mesafe, yol, süre ve kullanıcı geri bildirimleri birlikte değerlendirilerek sıralandı.`;
+    await loadSponsoredBusinesses();
+    scrollToId("explore");
+  }catch(e){
+    console.error("DISCOVERY BUSINESSES",e);
+    if(status)status.textContent="İşletme araması yapılamadı.";
+    $("results").innerHTML=`<div class="empty"><b>İşletme araması başarısız oldu.</b><br><small>${esc(e.message||"Yakın işletme verisi alınamadı.")}</small><p class="muted">Veriler silinmedi. Arama katmanı doğrudan işletme tablosunu veya mevcut harita RPC'sini kullanmayı denedi.</p></div>`;
+  }
+}
+
+async function ensureFreshLocationForDiscovery(){
+  if(!state.locationReady)throw new Error("LOCATION_REQUIRED");
+  const captured=state.location?.captured_at?new Date(state.location.captured_at).getTime():0;
+  if(!captured||Date.now()-captured>120000){
+    await requestRequiredLocation(false);
+  }
+  if(!state.locationReady)throw new Error("LOCATION_REQUIRED");
+}
+
+function clearBusinessDiscovery(){
+  businessDiscoveryMood="";
+  $("mood").value="";
+  $("businessDiscoveryCategory").value="";
+  $("businessBudget").value="";
+  $("businessTimeValue").value="2";
+  $("businessTimeUnit").value="60";
+  document.querySelectorAll("#discoveryMoodRow .mood-chip").forEach(x=>x.classList.toggle("active",x.dataset.mood===""));
+  businessDiscoveryResults=[];
+  $("results").innerHTML='<div class="empty">Arama sonucunu burada göreceksin.</div>';
+  $("businessSearchState").textContent="Henüz arama yapılmadı.";
+}
+
+async function submitIrrelevantBusinessFeedback(b){
+  if(!state.user){openAuth("login");return}
+  if(!b?.id)return;
+  const mood=businessDiscoveryMood||"";
+  const cat=discoveryCategory()||businessEffectiveCategory(b.name,b.category)||"";
+  try{
+    const {data,error}=await sb.rpc("submit_business_relevance_feedback",{
+      p_business_id:b.id,p_mood:mood,p_category:cat,p_reason:"Kullanıcı aradığı sonuçla alakasız olarak işaretledi."
+    });
+    if(error)throw error;
+    const total=Number(data?.total_feedback||0),negative=Number(data?.negative_feedback||0),rate=Number(data?.negative_rate||0);
+    toast(total>=V78_MIN_GLOBAL_FEEDBACK&&rate>=V78_NEGATIVE_GLOBAL_THRESHOLD
+      ? "Geri bildirimin kaydedildi. Bu eşleşme yeterli kanıt oluştuğu için bu bağlamdan çıkarıldı."
+      : "Geri bildirimin kaydedildi. Öneri modeli bunu sonraki sıralamalarda dikkate alacak.");
+    businessDiscoveryResults=businessDiscoveryResults.filter(x=>String(x.id)!==String(b.id));
+    renderBusinessCards(sortBusinessResults(businessDiscoveryResults));
+  }catch(e){
+    console.error("BUSINESS RELEVANCE FEEDBACK",e);
+    try{
+      const key=`discover_irrelevant_${b.id}_${mood}_${cat}`;
+      localStorage.setItem(key,"1");
+      await sb.rpc("create_activity_report_v67",{p_type:"business_relevance_feedback",p_description:JSON.stringify({business_id:b.id,business_name:b.name,mood,category:cat,reason:"Kullanıcı aradığı sonuçla alakasız olarak işaretledi."})});
+      toast("Geri bildirimin kaydedildi; bu işletme senin sonuçlarından çıkarıldı.");
+      businessDiscoveryResults=businessDiscoveryResults.filter(x=>String(x.id)!==String(b.id));
+      renderBusinessCards(sortBusinessResults(businessDiscoveryResults));
+    }catch(fallbackError){
+      console.error("BUSINESS RELEVANCE FALLBACK",fallbackError);
+      toast("Geri bildirim şu anda kaydedilemedi. Lütfen biraz sonra tekrar dene.");
+    }
+  }
+}
+
+function showBusinessProfileFromDiscovery(b){
+  currentReviewBusiness=b;
+  const phone=b.phone?`<div class="business-detail-field"><small>Telefon</small><strong>${esc(b.phone)}</strong></div>`:"";
+  const web=b.website?`<div class="business-detail-field"><small>Web sitesi</small><strong><a href="${esc(businessEscapeUrl(b.website))}" target="_blank" rel="noopener" style="color:#d9c6ff">${esc(b.website)}</a></strong></div>`:"";
+  const menu=b.menu_url?`<button class="btn" type="button" onclick='window.open(${JSON.stringify(b.menu_url)},"_blank","noopener,noreferrer")'>📖 Menüyü gör</button>`:`<button class="btn" type="button" disabled>📖 Menü bulunmuyor</button>`;
+  const origin=state.location?`&origin=${encodeURIComponent(state.location.latitude+","+state.location.longitude)}`:"";
+  const maps=`https://www.google.com/maps/dir/?api=1${origin}&destination=${encodeURIComponent(b.latitude+","+b.longitude)}`;
+  const d=$("businessProfileBody");if(!d)return;
+  d.innerHTML=`<div class="business-detail-card"><div class="business-detail-cover">${businessCategoryEmoji(b.category)}</div>
+  <div><span class="tag">${esc(DISCOVERY_CATEGORY_LABELS[b.effective_category]||b.category)}</span><h3 style="margin:8px 0 2px">${esc(b.name)}</h3>
+  <div class="meta">${esc(b.city||"Türkiye")}${b.district?" · "+esc(b.district):""} · ${Number(b.distance_km||0).toFixed(1)} km</div>
+  <div class="rating-line"><span class="stars">${starsHtml(b.rating)}</span><span>${Number(b.rating||5).toFixed(1)} · ${Number(b.review_count||0)} değerlendirme</span></div></div>
+  <div class="business-detail-field"><small>Adres</small><strong>${esc(b.address||"Adres bilgisi bulunmuyor")}</strong></div>
+  <div class="business-detail-field"><small>Fiyat</small><strong>${esc(formatBusinessPrice(b))}</strong></div>
+  <div class="business-purpose"><b>Bu işletme neden burada?</b><br>${esc(b.consumer_purpose||"Kullanım amacı verisi sınırlı.")}<br><span class="muted">Bu kart, ad/kategori/açıklama/adres gibi işletme verileri birlikte değerlendirilerek oluşturulur.</span></div>
+  ${phone}${web}<div class="card-actions"><button class="btn primary" onclick='window.open(${JSON.stringify(maps)},"_blank","noopener,noreferrer")'>🗺️ Rotaya git</button>${menu}
+  <button class="btn" onclick='openBusinessReviewsFromDiscovery(${JSON.stringify(b)})'>💬 Yorumlar</button>
+  <button class="btn" onclick='openBusinessReviewEditor(${JSON.stringify(b)})'>⭐ Değerlendir</button></div></div>`;
+  openModal("businessProfileModal");
+}
+function openBusinessReviewsFromDiscovery(b){currentReviewBusiness=b;openBusinessReviews(b)}
+function routeToBusiness(lat,lng){
+  if(!requireLocation("Rota"))return;
+  const origin=state.location?encodeURIComponent(state.location.latitude+","+state.location.longitude):"";
+  const url=`https://www.google.com/maps/dir/?api=1${origin?"&origin="+origin:""}&destination=${encodeURIComponent(Number(lat)+","+Number(lng))}`;
+  window.open(url,"_blank","noopener,noreferrer");
+}
+
 function renderBusinessCards(list){
   const box=$("results");if(!box)return;
-  if(!list.length){box.innerHTML='<div class="empty"><b>Bu kriterlerle uygun işletme bulamadık.</b><p class="muted">Bütçeyi veya süreyi artırmayı, başka bir kategori/ruh hali seçmeyi deneyebilirsin. Fiyat verisi olmayan işletmeler bütçe karşılaştırmasına dahil edilmez.</p></div>';return}
+  if(!list.length){
+    box.innerHTML='<div class="empty"><b>Bu kriterlerin tamamını aynı anda karşılayan işletme bulamadık.</b><p class="muted">Sonuçları bilinçli olarak gevşetmedik: 10 km sınırı, seçilen ruh hali/kategori, doğrulanmış fiyat, yol + kullanım süresi ve işletmenin gerçek kullanım amacı korunuyor.</p></div>';
+    return;
+  }
+  const moodContext=activeDiscoveryMoods().join(" + ")||"belirtilmedi";
   box.innerHTML=list.map(b=>{
-    const cat=businessEffectiveCategory(b.name,b.category),score=Math.round(Number(b.client_match_score??b.recommendation_score??0));
-    const price=b.unknown_price_warning?"Fiyat doğrulanmamış":formatBusinessPrice(b),total=Number(b.total_time_minutes||0),travel=Number(b.travel_minutes||0),visit=Number(b.visit_minutes||0);
-    const menu=b.menu_url?`<button class="btn" type="button" onclick='window.open(${JSON.stringify(b.menu_url)},"_blank","noopener,noreferrer")'>📖 Menü</button>`:`<button class="btn" type="button" disabled>📖 Menü yok</button>`;
-    return `<article class="business-card"><div class="business-card-head"><div style="min-width:0"><h3 class="business-name">${esc(b.name)}</h3><div class="rating-line"><span class="stars">${starsHtml(b.rating)}</span><span class="rating-number">${Number(b.rating||5).toFixed(1)} · ${Number(b.review_count||0)} yorum</span></div></div><span class="distance-badge">${Number(b.distance_km||0).toFixed(1)} km</span></div><div class="business-meta">${esc(DISCOVERY_CATEGORY_LABELS[cat]||cat)} · ${esc(b.city||"Türkiye")}${b.district?" · "+esc(b.district):""}</div><div class="price-row"><div><div class="price-main">${esc(price)}</div><div class="price-note">${b.unknown_price_warning?"Bütçe uygunluğu fiyat verisi olmadan garanti edilemez":`Uygunluk: %${score}`}</div></div><div style="text-align:right"><div>${travel} dk yol</div><div class="price-note">${visit} dk ziyaret · ${total} dk toplam</div></div></div><div class="fit-box">🧠 <b>Neden önerildi?</b> ${esc(b.client_reason||b.match_reason||"Kriterlerine göre seçildi.")}</div><div class="business-actions"><button class="btn primary" type="button" onclick='showBusinessProfileFromDiscovery(${JSON.stringify(b)})'>Detaylar</button>${menu}<button class="btn" type="button" onclick='openBusinessReviewsFromDiscovery(${JSON.stringify(b)})'>Yorumlar</button><button class="btn" type="button" onclick='openBusinessReviewEditor(${JSON.stringify(b)})'>⭐ Değerlendir</button><button class="btn" type="button" onclick='toggleBusinessFavorite(${JSON.stringify(b.id)})'>♡ Favori</button><button class="btn wide" type="button" onclick='routeToBusiness(${JSON.stringify(b.latitude)},${JSON.stringify(b.longitude)})'>🗺️ Rotaya git</button></div></article>`;
+    const cat=businessEffectiveCategory(b.name,b.category);
+    const score=Math.round(Number(b.client_match_score??0));
+    const price=formatBusinessPrice(b);
+    const total=Number(b.total_time_minutes||0),travel=Number(b.travel_minutes||0),visit=Number(b.visit_minutes||0);
+    const quality=Number(b.quality_score||0)>=82?"Çok güçlü eşleşme":Number(b.quality_score||0)>=68?"Güçlü eşleşme":"Kontrollü eşleşme";
+    const menu=b.menu_url
+      ?`<button class="btn" type="button" onclick='window.open(${JSON.stringify(b.menu_url)},"_blank","noopener,noreferrer")'>📖 Menü</button>`
+      :`<button class="btn" type="button" disabled>📖 Menü yok</button>`;
+    return `<article class="business-card">
+      <div class="business-card-head">
+        <div style="min-width:0;flex:1">
+          <div style="display:flex;gap:7px;align-items:flex-start">
+            <h3 class="business-name">${esc(b.name)}</h3>
+            <button class="irrelevant-btn" type="button" title="Aradığım sonuçla alakasız" aria-label="${esc(b.name)} için alakasız bildir" onclick='submitIrrelevantBusinessFeedback(${JSON.stringify(b)})'>!</button>
+          </div>
+          <div class="rating-line"><span class="stars">${starsHtml(b.rating)}</span><span class="rating-number">${Number(b.rating||5).toFixed(1)} · ${Number(b.review_count||0)} yorum</span></div>
+        </div>
+        <span class="distance-badge">${Number(b.distance_km||0).toFixed(1)} km</span>
+      </div>
+      <div class="business-meta">${esc(DISCOVERY_CATEGORY_LABELS[cat]||cat)} · ${esc(b.city||"Türkiye")}${b.district?" · "+esc(b.district):""}</div>
+      <div class="filter-note"><span class="quality-badge good">${esc(quality)}</span> · Ruh hali: ${esc(moodContext)}</div>
+      <div class="price-row"><div>
+        <div class="price-main">${esc(price)}</div>
+        <div class="price-note">Bütçe içinde · doğrulanmış fiyat verisi</div>
+      </div><div style="text-align:right">
+        <div>${travel} dk yol</div><div class="price-note">${visit} dk kullanım · ${total} dk toplam</div>
+      </div></div>
+      <div class="business-purpose"><b>Neden önerildi?</b> ${esc(b.client_reason||"Çoklu kriter analiziyle seçildi.")}</div>
+      <div class="business-actions">
+        <button class="btn primary" type="button" onclick='showBusinessProfileFromDiscovery(${JSON.stringify(b)})'>Detaylar</button>
+        ${menu}
+        <button class="btn" type="button" onclick='openBusinessReviewsFromDiscovery(${JSON.stringify(b)})'>Yorumlar</button>
+        <button class="btn" type="button" onclick='openBusinessReviewEditor(${JSON.stringify(b)})'>⭐ Değerlendir</button>
+        <button class="btn" type="button" onclick='toggleBusinessFavorite(${JSON.stringify(b.id)})'>♡ Favori</button>
+        <button class="btn wide" type="button" onclick='routeToBusiness(${JSON.stringify(b.latitude)},${JSON.stringify(b.longitude)})'>🗺️ Rotaya git</button>
+      </div>
+    </article>`;
   }).join("");
 }
+
 function sortBusinessResults(list){
   const a=list.slice();
   if(businessDiscoverySort==="distance")a.sort((x,y)=>Number(x.distance_km)-Number(y.distance_km)||Number(y.client_match_score||0)-Number(x.client_match_score||0));
@@ -1827,12 +2276,12 @@ async function runBusinessDiscovery(){
 
     const unknownCount=businessDiscoveryResults.filter(x=>x.unknown_price_warning).length;
     if(status)status.textContent=
-      `${businessDiscoveryResults.length} uygun aday bulundu · 20 km · ₺${Number(budget).toLocaleString("tr-TR")} · ${time} dk`+
+      `${businessDiscoveryResults.length} uygun aday bulundu · 10 km · ₺${Number(budget).toLocaleString("tr-TR")} · ${time} dk`+
       (unknownCount?` · ${unknownCount} işletmede fiyat doğrulaması bekleniyor`:"");
 
     if($("resultSummary")){
       $("resultSummary").textContent=
-        `${businessDiscoveryResults.length} aday; kategori, ruh hali, bütçe, mesafe, yol ve kullanılabilir zaman birlikte değerlendirildi. Sonuçlar rastgele seçilmez.`;
+        `${businessDiscoveryResults.length} aday; işletmenin kullanım amacı, ruh hali, kategori, bütçe, mesafe, yol, kullanılabilir zaman ve kullanıcı geri bildirimleri birlikte değerlendirildi.`;
     }
 
     await loadSponsoredBusinesses();
@@ -1861,8 +2310,27 @@ function routeToBusiness(lat,lng){if(!requireLocation("Rota"))return;const origi
 async function loadSponsoredBusinesses(){
   const box=$("sponsoredResults");if(!box||!state.location)return;
   box.innerHTML='<div class="empty loading">Önerilen işletmeler hesaplanıyor...</div>';
-  try{const {data,error}=await sb.rpc("get_sponsored_businesses",{p_latitude:Number(state.location.latitude),p_longitude:Number(state.location.longitude),p_limit:6});if(error)throw error;sponsoredBusinessResults=data||[];if(!sponsoredBusinessResults.length){box.innerHTML='<div class="empty">Bu konum çevresinde aktif sponsorlu işletme bulunmuyor.</div>';return}box.innerHTML=sponsoredBusinessResults.map(b=>`<article class="sponsored-card"><span class="sponsor-badge">SPONSORLU</span><h3>${esc(b.name)}</h3><div class="small-meta">${esc(DISCOVERY_CATEGORY_LABELS[b.effective_category]||b.effective_category||b.category||"İşletme")} · ${Number(b.distance_km||0).toFixed(1)} km</div><div class="small-meta" style="margin-top:4px"><span class="stars">${starsHtml(b.rating)}</span> ${Number(b.rating||5).toFixed(1)}</div><button class="btn mini" style="width:100%;margin-top:8px" onclick='showBusinessProfileFromDiscovery(${JSON.stringify(b)})'>Detaylar</button></article>`).join("")}catch(e){console.error(e);box.innerHTML=`<div class="empty">Önerilen işletmeler yüklenemedi.<br><small>${esc(e.message||"")}</small></div>`}
+  try{
+    const {data,error}=await sb.rpc("get_sponsored_businesses",{p_latitude:Number(state.location.latitude),p_longitude:Number(state.location.longitude),p_limit:6});
+    if(error)throw error;
+    sponsoredBusinessResults=(data||[]).slice(0,6);
+    if(!sponsoredBusinessResults.length){
+      box.innerHTML='<div class="empty">Bu konum çevresinde aktif sponsorlu işletme bulunmuyor.</div>';
+      return;
+    }
+    box.innerHTML=sponsoredBusinessResults.map(b=>`<article class="sponsored-card">
+      <span class="sponsor-badge">SPONSORLU</span>
+      <h3>${esc(b.name)}</h3>
+      <div class="small-meta">${esc(DISCOVERY_CATEGORY_LABELS[b.effective_category]||b.effective_category||b.category||"İşletme")} · ${Number(b.distance_km||0).toFixed(1)} km</div>
+      <div class="small-meta" style="margin-top:4px"><span class="stars">${starsHtml(b.rating)}</span> ${Number(b.rating||5).toFixed(1)}</div>
+      <button class="btn mini" style="width:100%;margin-top:8px" onclick='showBusinessProfileFromDiscovery(${JSON.stringify(b)})'>Detaylar</button>
+    </article>`).join("");
+  }catch(e){
+    console.warn("SPONSORED BUSINESS RPC",e.message||e);
+    box.innerHTML='<div class="empty">Şu anda aktif sponsorlu işletme bulunmuyor.</div>';
+  }
 }
+
 async function openBusinessReviews(b){
   if(!state.user){openAuth("login");return;}currentReviewBusiness=b;$("reviewsTitle").textContent=b.name;$("reviewsMeta").textContent=`${Number(b.rating||5).toFixed(1)} · ${Number(b.review_count||0)} değerlendirme · ${Number(b.distance_km||0).toFixed(1)} km`;$("reviewsList").innerHTML='<div class="empty loading">Yorumlar yükleniyor...</div>';openModal("businessReviewsModal");
   try{const {data,error}=await sb.rpc("get_business_reviews",{p_business_id:b.id});if(error)throw error;const rows=data||[];const avg=rows.length?rows.reduce((s,r)=>s+Number(r.overall_rating||0),0)/rows.length:Number(b.rating||5);$("reviewsSummary").innerHTML=`<b>${avg.toFixed(1)} / 5</b> · ${rows.length} doğrulanmış kullanıcı değerlendirmesi`;$("reviewsList").innerHTML=rows.length?rows.map(r=>`<div class="review-item"><div class="review-item-head"><div><b>${esc(r.display_name||"Kaşif")}</b><div class="stars">${starsHtml(r.overall_rating)}</div></div><small class="muted">${new Date(r.created_at).toLocaleDateString("tr-TR")}</small></div><p>${esc((r.review_text ?? r.review_text === "" ? r.review_text : (r.comment||"")))}</p><div class="meta">${esc((r.criteria_labels||[]).join(" · "))}</div></div>`).join(""):'<div class="empty">Henüz yorum yok.</div>'}catch(e){$("reviewsList").innerHTML=`<div class="empty">Yorumlar alınamadı.<br><small>${esc(e.message||"")}</small></div>`}
@@ -1914,19 +2382,7 @@ function better(){if(businessDiscoveryResults.length){setBusinessSort("match",do
 $("businessBudget")?.addEventListener("keydown",e=>{if(e.key==="Enter")runBusinessDiscovery()});
 $("businessTimeValue")?.addEventListener("keydown",e=>{if(e.key==="Enter")runBusinessDiscovery()});
 
-function render(list){
-  // Eski deneyim motoru için uyumluluk. Yeni ana keşif alanı #results'ı
-  // işletme önerileri için kullanır; oturum senkronizasyonu bu alanı ezemez.
-  const target=$("legacyResults");
-  if(!target)return;
-  if(!list?.length){
-    target.innerHTML='<div class="empty"><b>Uygun deneyim bulunamadı.</b></div>';return;
-  }
-  target.innerHTML=list.slice(0,6).map(a=>{
-    const fav=state.favorites.includes(a.id);
-    return `<article class="business-card"><div class="business-card-head"><div><h3 class="business-name">${esc(a.title||"Deneyim")}</h3><div class="rating-line"><span class="stars">${starsHtml(a.rating||0)}</span><span class="rating-number">${Number(a.rating||0).toFixed(1)}</span></div></div><span class="distance-badge">${a.dist?esc(a.dist+" km"):"—"}</span></div><div class="business-meta">${esc(a.tag||"KEŞİF")} · ${esc(a.city||"")}</div><div class="price-row"><div class="price-main">${priceText(a.price)}</div><div class="price-note">${Number(a.time||0)} dk</div></div><div class="fit-box">🧠 ${esc(a.why||"Kriterlerine göre seçildi.")}</div><div class="business-actions"><button class="btn primary" onclick='openActivityDetail(${JSON.stringify(a.id)})'>Detaylar</button><button class="btn" onclick='toggleFavorite(${JSON.stringify(a.id)})'>${fav?"♥ Favoriden çıkar":"♡ Favorile"}</button><button class="btn wide" onclick='goToActivity(${JSON.stringify(a.id)})'>🗺️ Rotaya git</button></div></article>`;
-  }).join("");
-}
+function render(list){ /* legacy compatibility: main UI uses business discovery */ }
 
 function getActivity(id){return activities.find(x=>String(x.id)===String(id))}
 
