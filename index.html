@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#09060d">
 <meta name="description" content="DISCOVER AI — bütçene, zamanına ve moduna göre kişisel deneyimler keşfet.">
-<title>DISCOVER AI — Kişisel Deneyim Motoru · V76</title>
+<title>DISCOVER AI — Kişisel Deneyim Motoru · V77.1</title>
 <style>
 :root{--bg:#08060d;--panel:#100b18;--panel2:#151020;--text:#f7f3ff;--muted:#aaa0b7;--purple:#8b5cf6;--purple2:#c084fc;--line:#2a2139;--green:#69e7b7;--danger:#ff6b8a}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 70% 5%,#261343 0,#10091a 34%,#08060d 75%);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
@@ -166,7 +166,7 @@ body{background:radial-gradient(circle at 72% 0%,#342052 0,#170d22 38%,#0c0813 7
 .sponsored-section{margin-top:34px}.sponsored-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:12px}.sponsored-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.sponsored-card{background:#120d1b;border:1px solid #4b3464;border-radius:16px;padding:11px}.sponsored-card h3{margin:5px 0 4px;font-size:14px}.sponsored-card .small-meta{font-size:11px;color:var(--muted);line-height:1.5}.sponsor-badge{display:inline-block;padding:4px 7px;border-radius:999px;background:#24153a;color:#dbc9f5;font-size:10px;border:1px solid #5a3d78}
 .reviews-list{display:grid;gap:8px;margin-top:10px}.review-item{padding:11px;border:1px solid var(--line);border-radius:13px;background:#0d0913}.review-item-head{display:flex;justify-content:space-between;gap:8px}.review-item p{margin:6px 0 0;white-space:pre-wrap;color:#d7cddf;font-size:12px;line-height:1.5}.review-summary{padding:12px;border:1px solid var(--line);border-radius:14px;background:#120c1b;margin-bottom:10px}
 .rating-grid{display:grid;gap:10px}.rating-row{padding:10px;border:1px solid var(--line);border-radius:12px;background:#0d0913}.rating-row-head{display:flex;justify-content:space-between;gap:8px;align-items:center}.star-picker{display:flex;gap:3px;margin-top:7px}.star-picker button{background:none;border:0;padding:2px;font-size:24px;color:#4f4258}.star-picker button.active{color:#ffd64d}
-.menu-drawer .modalbox{width:min(420px,100%);margin-left:auto;height:100%;max-height:100vh;border-radius:24px 0 0 24px;padding:20px;background:#120c19}.menu-list{display:grid;gap:8px;margin-top:16px}.menu-item{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;background:#0d0913;border:1px solid var(--line);color:#fff;border-radius:14px;padding:13px 14px;text-align:left}.menu-item.primary{background:linear-gradient(135deg,#7d42ec,#b14eff);border-color:#a66cff}.menu-xp{padding:12px;border:1px solid #48335d;border-radius:14px;background:#0d0913}.menu-xp-bar{height:8px;border-radius:99px;background:#271c33;overflow:hidden;margin-top:8px}.menu-xp-bar>div{height:100%;width:0;background:linear-gradient(90deg,#7c3aed,#c084fc);border-radius:99px}
+.menu-drawer{place-items:stretch start;padding:0;z-index:200}.menu-drawer .modalbox{width:min(420px,92vw);height:100%;max-height:100vh;margin:0;justify-self:start;align-self:stretch;border-radius:0 24px 24px 0;padding:20px;background:#120c19;box-shadow:30px 0 80px rgba(0,0,0,.35);overflow:auto}.menu-drawer.open{display:grid}.menu-list{display:grid;gap:8px;margin-top:16px}.menu-item{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;background:#0d0913;border:1px solid var(--line);color:#fff;border-radius:14px;padding:13px 14px;text-align:left}.menu-item.primary{background:linear-gradient(135deg,#7d42ec,#b14eff);border-color:#a66cff}.menu-xp{padding:12px;border:1px solid #48335d;border-radius:14px;background:#0d0913}.menu-xp-bar{height:8px;border-radius:99px;background:#271c33;overflow:hidden;margin-top:8px}.menu-xp-bar>div{height:100%;width:0;background:linear-gradient(90deg,#7c3aed,#c084fc);border-radius:99px}
 .hidden-for-v75{display:none!important}
 #businessExplorerModal{display:none!important}
 @media(max-width:900px){.search-top,.search-bottom{grid-template-columns:1fr}.business-grid,.sponsored-grid{grid-template-columns:1fr}.discover-hero{padding-top:38px}.search-actions{flex-direction:column}.business-actions{grid-template-columns:1fr 1fr}}
@@ -216,13 +216,10 @@ body{background:radial-gradient(circle at 72% 0%,#342052 0,#170d22 38%,#0c0813 7
 </div>
 
 <nav>
-<div class="wrap" style="display:flex;align-items:center;justify-content:space-between;width:100%">
+<div class="wrap" style="display:flex;align-items:center;justify-content:flex-start;width:100%">
   <div style="display:flex;align-items:center;gap:10px">
-    <button class="btn" type="button" aria-label="Menüyü aç" onclick="openAppMenu()" style="font-size:22px;padding:9px 12px">☰</button>
+    <button id="appMenuButton" class="btn" type="button" aria-label="Menüyü aç" aria-controls="appMenuModal" aria-expanded="false" onclick="openAppMenu()" style="font-size:22px;padding:9px 12px;min-width:46px">☰</button>
     <div class="brand">✦ DISCOVER <span>AI</span></div>
-  </div>
-  <div class="navlinks" aria-label="Menü">
-    <button class="btn" type="button" onclick="openAppMenu()">Menü</button>
   </div>
 </div>
 
@@ -244,6 +241,7 @@ body{background:radial-gradient(circle at 72% 0%,#342052 0,#170d22 38%,#0c0813 7
   </div>
 </div></div>
 </nav>
+<script>document.querySelector("#appMenuModal .modalbox")?.addEventListener("click",e=>e.stopPropagation());</script>
 
 <main>
 <section class="discover-hero wrap">
@@ -799,7 +797,7 @@ let locationMiniTimer=null;
 function updateMenuUI(){
   const p=state.profile||{};if($("menuUserLabel"))$("menuUserLabel").textContent=p.username||state.user?.email||"Kaşif";const lvl=state.profile?.level||1,cur=Number(state.xp||0)%750,pct=Math.min(100,Math.round(cur/750*100));if($("menuLevel"))$("menuLevel").textContent=lvl;if($("menuXpText"))$("menuXpText").textContent=`${cur} / 750 XP`;if($("menuXpBar"))$("menuXpBar").style.width=pct+"%";
 }
-function openAppMenu(){updateMenuUI();openModal("appMenuModal")}
+function openAppMenu(){updateMenuUI();const m=$("appMenuModal");if(m){m.classList.add("open");}const b=$("appMenuButton");if(b)b.setAttribute("aria-expanded","true");}
 
 
 // Android Chrome/WebView uyumluluğu: inline onclick'e ek olarak doğrudan
@@ -1035,7 +1033,7 @@ function requireLocation(featureName="Bu özellik"){
 function toast(t){const x=$("toast");x.textContent=t;x.style.display="block";clearTimeout(window.__toast);window.__toast=setTimeout(()=>x.style.display="none",3000)}
 function scrollToId(id){$(id)?.scrollIntoView({behavior:"smooth"})}
 function openModal(id){$(id).classList.add("open")}
-function closeModal(id){$(id).classList.remove("open")}
+function closeModal(id){const el=$(id);if(!el)return;el.classList.remove("open");if(id==="appMenuModal"){const b=$("appMenuButton");if(b)b.setAttribute("aria-expanded","false");}}
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function normalize(s){return String(s||"").toLocaleLowerCase("tr-TR").replace(/ı/g,"i").replace(/ş/g,"s").replace(/ğ/g,"g").replace(/ü/g,"u").replace(/ö/g,"o").replace(/ç/g,"c")}
 function currentBudget(){return Number($("budget").value)}
@@ -1490,6 +1488,7 @@ async function openBusinessExplorer(){
 function closeBusinessExplorer(){closeModal("businessExplorerModal")}
 
 document.addEventListener("keydown",e=>{
+  if(e.key==="Escape" && $("appMenuModal")?.classList.contains("open")){closeModal("appMenuModal");return}
   if(e.key==="Enter" && !e.shiftKey && e.target?.id==="aiPrompt"){
     e.preventDefault();sendAIAssistant();
   }
@@ -2013,6 +2012,7 @@ async function openBanDialog(id,username,existing=null){
   return false;
 }
 document.addEventListener("keydown",e=>{
+  if(e.key==="Escape" && $("appMenuModal")?.classList.contains("open")){closeModal("appMenuModal");return}
   if(e.key==="Enter" && e.target && e.target.closest && e.target.closest("#banModal") && e.target.tagName!=="TEXTAREA"){
     e.preventDefault();
   }
