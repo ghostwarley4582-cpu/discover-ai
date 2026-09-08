@@ -1602,9 +1602,42 @@ async function runBusinessDiscovery(){
   const status=$("businessSearchState");if(status)status.textContent="20 km içindeki adaylar inceleniyor; rastgele seçim yapılmıyor…";
   $("results").innerHTML='<div class="empty loading">Kategori, ruh hali, fiyat, mesafe ve toplam yol/ziyaret süresi birlikte değerlendiriliyor…</div>';
   try{
-    const {data,error}=await sb.rpc("discover_nearby_businesses",{p_latitude:Number(state.location.latitude),p_longitude:Number(state.location.longitude),p_category:category,p_query:query,p_mood:businessDiscoveryMood,p_budget:budget,p_time_minutes:time,p_sort:"match",p_limit:50});
-    if(error)throw error;
-    businessDiscoveryResults=(data||[]).map(r=>{const x={...r};x.effective_category=businessEffectiveCategory(x.name,x.effective_category||x.category);x.client_match_score=clientDiscoveryScore(x);const mf=businessMoodFit(x);x.client_reason=mf.score>=0?`${mf.reason} ${Number(x.travel_minutes||0)} dk yol ve ${Number(x.visit_minutes||0)} dk ziyaret süresi hesaba katıldı.`:"Bu ruh hali için uygun değil.";return x;}).filter(x=>x.client_match_score>=0);
+    let data,error;
+    const rpcResult=await sb.rpc("discover_nearby_businesses",{p_latitude:Number(state.location.latitude),p_longitude:Number(state.location.longitude),p_category:category,p_query:query,p_mood:businessDiscoveryMood,p_budget:budget,p_time_minutes:time,p_sort:"match",p_limit:50});
+    data=rpcResult.data; error=rpcResult.error;
+
+    // RPC henüz veritabanında yoksa veya schema cache güncellenmediyse,
+    // uygulama tamamen kilitlenmesin: 20 km kutusundan adayları çekip
+    // mesafeyi tarayıcıda kesin Haversine hesabıyla yeniden filtreliyoruz.
+    if(error && /discover_nearby_businesses|schema cache|could not find the function/i.test(String(error.message||error.details||""))){
+      const lat=Number(state.location.latitude), lng=Number(state.location.longitude);
+      const latDelta=20/111.32;
+      const lngDelta=20/(111.32*Math.max(0.1,Math.cos(lat*Math.PI/180)));
+      let q=sb.from("businesses").select("id,name,description,category,city,district,address,latitude,longitude,phone,website,image_url,rating,review_count,is_active,is_blocked,menu_url,menu_text,price_from,price_to,price_note,price_updated_at,mood_tags").eq("is_active",true).eq("is_blocked",false).gte("latitude",lat-latDelta).lte("latitude",lat+latDelta).gte("longitude",lng-lngDelta).lte("longitude",lng+lngDelta).limit(1000);
+      if(category) q=q.eq("category",category);
+      if(query){ q=q.ilike("name",`%${query}%`); }
+      const fb=await q;
+      if(fb.error)throw new Error(`Yakın işletme sorgusu başarısız: ${fb.error.message}`);
+      data=fb.data||[]; error=null;
+    } else if(error) {
+      throw error;
+    }
+
+    businessDiscoveryResults=(data||[]).map(r=>{const x={...r};
+      if(x.latitude!=null&&x.longitude!=null){
+        const R=6371,la1=Number(state.location.latitude)*Math.PI/180,la2=Number(x.latitude)*Math.PI/180,dla=la2-la1,dlo=(Number(x.longitude)-Number(state.location.longitude))*Math.PI/180;
+        const h=Math.sin(dla/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dlo/2)**2;
+        x.distance_km=R*2*Math.atan2(Math.sqrt(h),Math.sqrt(Math.max(0,1-h)));
+      }
+      x.travel_minutes=x.travel_minutes??Math.max(2,Math.ceil(Number(x.distance_km||0)*3));
+      x.visit_minutes=x.visit_minutes??30;
+      x.total_time_minutes=x.total_time_minutes??(Number(x.travel_minutes)+Number(x.visit_minutes));
+      x.effective_category=businessEffectiveCategory(x.name,x.effective_category||x.category);
+      x.client_match_score=clientDiscoveryScore(x);
+      const mf=businessMoodFit(x);
+      x.client_reason=mf.score>=0?`${mf.reason} ${Number(x.travel_minutes||0)} dk yol ve ${Number(x.visit_minutes||0)} dk ziyaret süresi hesaba katıldı.`:"Bu ruh hali için uygun değil.";
+      return x;
+    }).filter(x=>x.client_match_score>=0 && Number(x.distance_km)<=20);
     businessDiscoveryResults.sort((a,b)=>Number(b.client_match_score)-Number(a.client_match_score)||Number(a.distance_km)-Number(b.distance_km)||String(a.name).localeCompare(String(b.name),"tr"));
     renderBusinessCards(sortBusinessResults(businessDiscoveryResults));
     if(status)status.textContent=`${businessDiscoveryResults.length} uygun işletme bulundu · 20 km · ₺${Number(budget).toLocaleString("tr-TR")} · ${time} dk`;
@@ -1633,7 +1666,7 @@ async function loadSponsoredBusinesses(){
 }
 async function openBusinessReviews(b){
   if(!state.user){openAuth("login");return;}currentReviewBusiness=b;$("reviewsTitle").textContent=b.name;$("reviewsMeta").textContent=`${Number(b.rating||5).toFixed(1)} · ${Number(b.review_count||0)} değerlendirme · ${Number(b.distance_km||0).toFixed(1)} km`;$("reviewsList").innerHTML='<div class="empty loading">Yorumlar yükleniyor...</div>';openModal("businessReviewsModal");
-  try{const {data,error}=await sb.rpc("get_business_reviews",{p_business_id:b.id});if(error)throw error;const rows=data||[];const avg=rows.length?rows.reduce((s,r)=>s+Number(r.overall_rating||0),0)/rows.length:Number(b.rating||5);$("reviewsSummary").innerHTML=`<b>${avg.toFixed(1)} / 5</b> · ${rows.length} doğrulanmış kullanıcı değerlendirmesi`;$("reviewsList").innerHTML=rows.length?rows.map(r=>`<div class="review-item"><div class="review-item-head"><div><b>${esc(r.display_name||"Kaşif")}</b><div class="stars">${starsHtml(r.overall_rating)}</div></div><small class="muted">${new Date(r.created_at).toLocaleDateString("tr-TR")}</small></div><p>${esc(r.review_text||"")}</p><div class="meta">${esc((r.criteria_labels||[]).join(" · "))}</div></div>`).join(""):'<div class="empty">Henüz yorum yok.</div>'}catch(e){$("reviewsList").innerHTML=`<div class="empty">Yorumlar alınamadı.<br><small>${esc(e.message||"")}</small></div>`}
+  try{const {data,error}=await sb.rpc("get_business_reviews",{p_business_id:b.id});if(error)throw error;const rows=data||[];const avg=rows.length?rows.reduce((s,r)=>s+Number(r.overall_rating||0),0)/rows.length:Number(b.rating||5);$("reviewsSummary").innerHTML=`<b>${avg.toFixed(1)} / 5</b> · ${rows.length} doğrulanmış kullanıcı değerlendirmesi`;$("reviewsList").innerHTML=rows.length?rows.map(r=>`<div class="review-item"><div class="review-item-head"><div><b>${esc(r.display_name||"Kaşif")}</b><div class="stars">${starsHtml(r.overall_rating)}</div></div><small class="muted">${new Date(r.created_at).toLocaleDateString("tr-TR")}</small></div><p>${esc((r.review_text ?? r.review_text === "" ? r.review_text : (r.comment||"")))}</p><div class="meta">${esc((r.criteria_labels||[]).join(" · "))}</div></div>`).join(""):'<div class="empty">Henüz yorum yok.</div>'}catch(e){$("reviewsList").innerHTML=`<div class="empty">Yorumlar alınamadı.<br><small>${esc(e.message||"")}</small></div>`}
 }
 function openBusinessReviewEditor(b){
   if(!state.user){openAuth("login");return;}
