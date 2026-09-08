@@ -83,6 +83,7 @@ body.auth-locked #locationMini{display:none!important}
 
 
 #profileCompletionModal .modalbox{width:min(720px,100%)}
+.auth-modalbox{width:min(720px,100%);max-height:92vh;overflow:auto}
 .required-note{font-size:12px;color:var(--muted);line-height:1.5}
 
 .kvkk-link{font-size:11px;color:#bda8d8;text-decoration:underline;text-underline-offset:3px;opacity:.85;cursor:pointer;background:none;border:0;padding:0}
@@ -365,28 +366,39 @@ body{background:radial-gradient(circle at 72% 0%,#342052 0,#170d22 38%,#0c0813 7
 
 <footer><div class="wrap" style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap"><span>DISCOVER AI · Kişisel deneyimleri daha akıllı keşfet.</span><button type="button" class="kvkk-link" onclick="openModal('kvkkModal')">KVKK Aydınlatma Metni</button></div></footer>
 
-<div id="authModal" class="modal"><div class="modalbox">
-<button class="close" onclick="closeModal('authModal')">×</button><div class="eyebrow">ACCOUNT</div>
+<div id="authModal" class="modal"><div class="modalbox auth-modalbox">
+<button class="close" onclick="closeModal('authModal')">×</button><div class="eyebrow">● HESAP BİLGİLERİ</div>
 <h2 id="authTitle">DISCOVER AI'a katıl</h2>
+<div id="authJoinOnly" class="join-only">
+  <p class="muted" style="margin-top:0">Hesabını tek seferde oluştur. Aşağıdaki bilgiler kayıt sırasında alınır ve daha sonra yeniden doldurman gerekmez.</p>
+  <div class="profile-lock">
+    <div>🔒</div>
+    <div><strong>Zorunlu hesap bilgileri</strong><span class="required-note">Kimlik ve profil bilgileri hesap güvenliği ve hizmetin kişiselleştirilmesi için kullanılır. T.C. kimlik numarası normal kullanıcı ekranında maskeli gösterilir.</span></div>
+  </div>
+  <div class="form" style="margin-top:14px">
+    <input id="authFirstName" placeholder="İsim" autocomplete="given-name">
+    <input id="authLastName" placeholder="Soyisim" autocomplete="family-name">
+    <input id="authUsername" placeholder="Kullanıcı adı" autocomplete="username">
+    <input id="authEmail" type="text" placeholder="E-posta veya kullanıcı adı" autocomplete="username">
+    <div>
+      <input id="authPhone" placeholder="Telefon numarası" inputmode="tel" autocomplete="tel">
+      <div id="authPhoneStatus" class="verify-status" style="margin-top:8px">Telefon numarası kayıt için alınır; SMS doğrulaması şimdilik kapalı.</div>
+    </div>
+    <input id="authBirthDate" type="date" autocomplete="bday">
+    <div class="tc-wrap">
+      <input id="authTc" placeholder="T.C. Kimlik No" inputmode="numeric" maxlength="11" autocomplete="off">
+      <span id="authTcCount" class="tc-count">0 karakter</span>
+    </div>
+    <div class="profile-lock" style="margin-top:2px"><div>ℹ️</div><div class="required-note">T.C. Kimlik No yalnızca gerekli kimlik kaydının özeti için işlenir. Ayrıntılar için <button type="button" class="kvkk-link" onclick="openModal('kvkkModal')">KVKK Aydınlatma Metni</button>'ni inceleyebilirsin.</div></div>
+    <div class="identity-note">Girdiğin profil bilgileri kayıt sırasında tek işlemde hesabına bağlanır. SMS ve kimlik doğrulaması şimdilik kapalıdır.</div>
+  </div>
+</div>
 <div class="form">
-<div id="regIdentityFields" class="join-only">
-<input id="authFirstName" placeholder="İsim">
-<input id="authLastName" placeholder="Soyisim">
-<input id="authUsername" placeholder="Kullanıcı adı">
+  <input id="authPassword" type="password" placeholder="Şifre" autocomplete="new-password">
+  <button class="btn primary" onclick="submitAuth()">Hesap oluştur</button>
+  <button id="authSwitchBtn" class="btn" onclick="switchAuth()">Zaten hesabın var mı? Giriş yap</button>
 </div>
-<input id="authEmail" type="email" placeholder="E-posta">
-<div id="regBirthFields" class="join-only" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-<select id="authBirthDay"><option value="">Gün</option></select>
-<select id="authBirthMonth"><option value="">Ay</option></select>
-<select id="authBirthYear"><option value="">Yıl</option></select>
-</div>
-<input id="authPhone" class="join-only" placeholder="Telefon numarası" inputmode="tel">
-<input id="authTc" class="join-only" placeholder="T.C. Kimlik No" inputmode="numeric" maxlength="11">
-<input id="authPassword" type="password" placeholder="Şifre">
-<button class="btn primary" onclick="submitAuth()">Hesap oluştur</button>
-<button class="btn" onclick="switchAuth()">Giriş / Hesap oluştur</button>
-</div>
-<p class="muted" id="authHint">Kayıt sırasında isim, soyisim, kullanıcı adı, e-posta, doğum tarihi (gün/ay/yıl), telefon ve T.C. bilgileri alınır.</p>
+<p class="muted" id="authHint">Kayıt formu tek adımda tamamlanır.</p>
 </div></div>
 
 <div id="profileModal" class="modal"><div class="modalbox">
@@ -1511,6 +1523,9 @@ async function openBusinessExplorer(){
 }
 function closeBusinessExplorer(){closeModal("businessExplorerModal")}
 
+$("authPhone")?.addEventListener("input",e=>{normalizePhoneInput(e.target);const st=$("authPhoneStatus");if(st)st.textContent=phoneLooksValidTR(e.target.value)?"Telefon formatı uygun.":"Telefon numarası kayıt için alınır; SMS doğrulaması şimdilik kapalı.";});
+$("authTc")?.addEventListener("input",e=>{e.target.value=e.target.value.replace(/\D/g,"").slice(0,11);updateAuthIdentityCounters();});
+
 document.addEventListener("keydown",e=>{
   if(e.key==="Escape" && $("appMenuModal")?.classList.contains("open")){closeModal("appMenuModal");return}
   if(e.key==="Enter" && !e.shiftKey && e.target?.id==="aiPrompt"){
@@ -2398,27 +2413,21 @@ function render(list){ /* legacy compatibility: main UI uses business discovery 
 
 function getActivity(id){return activities.find(x=>String(x.id)===String(id))}
 
-function populateBirthSelectors(){
-  const d=$("authBirthDay"),m=$("authBirthMonth"),y=$("authBirthYear");
-  if(!d||!m||!y||d.options.length>1)return;
-  for(let i=1;i<=31;i++)d.insertAdjacentHTML("beforeend",`<option value="${String(i).padStart(2,"0")}">${i}</option>`);
-  const months=["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
-  months.forEach((name,i)=>m.insertAdjacentHTML("beforeend",`<option value="${String(i+1).padStart(2,"0")}">${name}</option>`));
-  const now=new Date().getFullYear();
-  for(let i=now;i>=1900;i--)y.insertAdjacentHTML("beforeend",`<option value="${i}">${i}</option>`);
-}
+function populateBirthSelectors(){}
 function setJoinFieldVisibility(join){
-  document.querySelectorAll(".join-only").forEach(el=>el.style.display=join?"":"none");
+  const block=$("authJoinOnly"); if(block)block.style.display=join?"":"none";
   const hint=$("authHint");
-  if(hint)hint.textContent=join?"Kayıt sırasında isim, soyisim, kullanıcı adı, e-posta, doğum tarihi (gün/ay/yıl), telefon ve T.C. bilgileri alınır.":"E-posta ve şifre ile giriş yapabilirsin.";
+  if(hint)hint.textContent=join?"Kayıt formu tek adımda tamamlanır.":"E-posta ve şifre ile giriş yapabilirsin.";
+  const switchBtn=$("authSwitchBtn");
+  if(switchBtn)switchBtn.textContent=join?"Zaten hesabın var mı? Giriş yap":"Hesabın yok mu? Kayıt ol";
 }
 async function openAuth(type="login"){
-  populateBirthSelectors();
   const join=type!=="login";
   $("authTitle").textContent=join?"DISCOVER AI'a katıl":"DISCOVER AI'a giriş";
   document.querySelector("#authModal .btn.primary").textContent=join?"Hesap oluştur":"Giriş yap";
   $("authModal").dataset.mode=join?"join":"login";
   setJoinFieldVisibility(join);
+  updateAuthModeUI(join?'join':'login');
   openModal("authModal");
 }
 function switchAuth(){openAuth($("authModal").dataset.mode==="login"?"join":"login")}
@@ -2525,42 +2534,122 @@ async function removeUserBan(id){
 }
 async function renderAdminManagersIfVisible(){if($('adminPanelBody')&&document.querySelector('[data-admin-section="admins"].active'))await renderAdminAdmins($('adminPanelBody'))}
 
-async function submitAuth(){
-  const mode=$("authModal").dataset.mode||"join";
-  const email=$("authEmail").value.trim();
-  const password=$("authPassword").value;
-  try{
-    if(mode==="join"){
-      const first=$("authFirstName").value;
-      const last=$("authLastName").value;
-      const username=$("authUsername").value.trim();
-      if(!/^[A-Za-z0-9._-]{3,32}$/.test(username)) throw new Error("Kullanıcı adı 3–32 karakter olmalı; harf, rakam, nokta, alt çizgi veya tire kullanılabilir.");
-      const phone=$("authPhone").value;
-      const tc=$("authTc").value;
-      const day=$("authBirthDay").value,month=$("authBirthMonth").value,year=$("authBirthYear").value;
-      const birth=(day&&month&&year)?`${year}-${month}-${day}`:null;
-      const db=await checkDeviceBan(getDeviceId());
-      if(db.active)return toast(db.banned_until?`Bu cihaz ${formatBanUntil(db.banned_until)} tarihine kadar banlı.`:"Bu cihaz süresiz banlandı. Yeni hesap oluşturamazsınız.");
-      const {data,error}=await sb.auth.signUp({email,password,options:{data:{full_name:`${first} ${last}`.trim(),username:username}}});
-      if(error)throw error;
-      if(data.session && data.user){
-        const {data:saveData,error:saveError}=await sb.rpc("save_profile_unvalidated_v57",{p_first_name:first,p_last_name:last,p_username:username,p_phone:phone,p_birth_date:birth,p_tc_identity_number:tc});
-        if(saveError)throw saveError;
-        state.profile={...(saveData?.profile||{}),email:data.user.email};
-        state.profileComplete=true;
-      }
-      toast(data.session?"Kayıt tamamlandı ve hesabın aktif.":"Kayıt tamamlandı. E-posta doğrulaması gerekiyorsa doğruladıktan sonra giriş yap.");
-    }else{
-      const db=await checkDeviceBan(getDeviceId());
-      if(db.active)return toast(db.banned_until?`Bu cihaz ${formatBanUntil(db.banned_until)} tarihine kadar banlı.`:"Bu cihaz süresiz banlandı; giriş yapamazsınız.");
-      const {error}=await sb.auth.signInWithPassword({email,password});
-      if(error)throw error;toast("Giriş başarılı.");
-    }
-    closeModal("authModal");
-    await syncUser();
-  }catch(e){console.error("AUTH",e);toast("İşlem başarısız: "+(e.message||"Bilinmeyen hata"))}
+function validTcIdentityNumber(v){
+  // Kimlik doğrulaması kapalıdır; kayıt aşamasında yalnızca biçim kontrolü yapılır.
+  // Bu nedenle gerçek/veri tabanı doğrulaması iddiasında bulunulmaz.
+  const d=String(v||"").replace(/\D/g,"");
+  return d.length===11 && d[0]!=="0" && !/^(\d)\1{10}$/.test(d);
+}
+function updateAuthIdentityCounters(){
+  const tc=$("authTc"),tcCount=$("authTcCount");
+  if(tc && tcCount)tcCount.textContent=String(tc.value||"").replace(/\D/g,"").slice(0,11).length+" karakter";
 }
 
+async function resolveLoginEmail(identifier){
+  const value=String(identifier||'').trim();
+  if(!value) throw new Error('E-posta veya kullanıcı adı gerekli.');
+  if(value.includes('@')) return value.toLowerCase();
+  if(!/^[A-Za-z0-9._-]{3,32}$/.test(value)) throw new Error('Geçerli bir e-posta adresi veya kullanıcı adı gir.');
+  const {data,error}=await sb.rpc('resolve_login_identifier',{p_identifier:value});
+  if(error){
+    console.error('LOGIN IDENTIFIER RPC',error);
+    throw new Error('Kullanıcı adıyla giriş servisi şu anda hazır değil. Supabase kullanıcı adı giriş SQL ayarını uygulayın.');
+  }
+  const email=String(data||'').trim().toLowerCase();
+  if(!email) throw new Error('Bu kullanıcı adıyla eşleşen bir hesap bulunamadı.');
+  return email;
+}
+
+function updateAuthModeUI(mode){
+  const join=mode==='join';
+  const input=$('authEmail');
+  if(input){
+    input.type=join?'email':'text';
+    input.placeholder=join?'E-posta':'E-posta veya kullanıcı adı';
+    input.autocomplete=join?'email':'username';
+  }
+  const pass=$('authPassword');
+  if(pass)pass.autocomplete=join?'new-password':'current-password';
+  const primary=document.querySelector('#authModal .btn.primary');
+  if(primary)primary.textContent=join?'Hesap oluştur':'Giriş yap';
+  const hint=$('authHint');
+  if(hint)hint.textContent=join?'Kayıt formu tek adımda tamamlanır.':'E-posta adresin veya kullanıcı adınla giriş yapabilirsin.';
+}
+
+async function submitAuth(){
+  const mode=$('authModal').dataset.mode||'join';
+  const password=$('authPassword').value;
+  try{
+    if(!password || password.length<6)throw new Error('Şifre en az 6 karakter olmalı.');
+
+    const db=await checkDeviceBan(getDeviceId());
+    if(db.active)return toast(db.banned_until?`Bu cihaz ${formatBanUntil(db.banned_until)} tarihine kadar banlı.`:'Bu cihaz süresiz banlandı; giriş/kayıt yapılamaz.');
+
+    if(mode==='join'){
+      const first=$('authFirstName').value.trim();
+      const last=$('authLastName').value.trim();
+      const username=$('authUsername').value.trim();
+      const email=$('authEmail').value.trim().toLowerCase();
+      const phone=$('authPhone').value.trim();
+      const tc=$('authTc').value.replace(/\D/g,'');
+      const birth=$('authBirthDate').value || null;
+
+      if(!first || !last)throw new Error('İsim ve soyisim zorunludur.');
+      if(!/^[A-Za-z0-9._-]{3,32}$/.test(username)) throw new Error('Kullanıcı adı 3–32 karakter olmalı; harf, rakam, nokta, alt çizgi veya tire kullanılabilir.');
+      if(!/^\S+@\S+\.\S+$/.test(email))throw new Error('Geçerli bir e-posta adresi gir.');
+      if(!phoneLooksValidTR(phone))throw new Error('Geçerli bir Türkiye telefon numarası gir.');
+      if(!birth)throw new Error('Doğum tarihi zorunludur.');
+      if(!validTcIdentityNumber(tc))throw new Error('T.C. Kimlik No 11 haneli olmalı ve 0 ile başlayamaz.');
+
+      // Kullanıcı adını kayıt sırasında benzersiz kılmak için önce profil RPC'sini kontrol et.
+      const {data:usernameCheck,error:usernameCheckError}=await sb.rpc('check_username_available',{p_username:username});
+      if(usernameCheckError)throw usernameCheckError;
+      if(usernameCheck===false)throw new Error('Bu kullanıcı adı zaten kullanılıyor.');
+
+      const {data,error}=await sb.auth.signUp({
+        email,
+        password,
+        options:{data:{full_name:`${first} ${last}`.trim(),username,first_name:first,last_name:last}}
+      });
+      if(error)throw error;
+
+      // E-posta doğrulaması kapalıysa session gelir ve profil aynı anda tamamlanır.
+      // Doğrulama açıksa kullanıcı oturum açtıktan sonra syncUser üzerinden tamamlanır.
+      if(data.session && data.user){
+        const {data:saveData,error:saveError}=await sb.rpc('save_profile_unvalidated_v57',{
+          p_first_name:first,
+          p_last_name:last,
+          p_username:username,
+          p_phone:phone,
+          p_birth_date:birth,
+          p_tc_identity_number:tc
+        });
+        if(saveError)throw saveError;
+        state.profile={...(saveData?.profile||{}),email:data.user.email,username};
+        state.profileComplete=true;
+      }
+
+      toast(data.session?'Kayıt tamamlandı ve hesabın aktif.':'Kayıt tamamlandı. E-posta doğrulama gerekiyorsa doğruladıktan sonra giriş yap.');
+    }else{
+      const identifier=$('authEmail').value.trim();
+      if(!identifier)throw new Error('E-posta veya kullanıcı adı gerekli.');
+      const email=await resolveLoginEmail(identifier);
+      const {error}=await sb.auth.signInWithPassword({email,password});
+      if(error)throw error;
+      toast('Giriş başarılı.');
+    }
+
+    closeModal('authModal');
+    await syncUser();
+  }catch(e){
+    console.error('AUTH',e);
+    const raw=String(e?.message||'Bilinmeyen hata');
+    const friendly=raw.includes('Invalid login credentials')?'E-posta/kullanıcı adı veya şifre hatalı.':
+      raw.includes('User already registered')?'Bu e-posta adresi zaten kayıtlı. Giriş yapmayı dene.':
+      raw.includes('USERNAME_ALREADY_USED')?'Bu kullanıcı adı zaten kullanılıyor.':raw;
+    toast('İşlem başarısız: '+friendly);
+  }
+}
 async function syncUser(){
   try{
     const {data:{session}}=await sb.auth.getSession();
