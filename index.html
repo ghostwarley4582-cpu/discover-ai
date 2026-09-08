@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#09060d">
 <meta name="description" content="DISCOVER AI — bütçene, zamanına ve moduna göre kişisel deneyimler keşfet.">
-<title>DISCOVER AI — Kişisel Deneyim Motoru · V55</title>
+<title>DISCOVER AI — Kişisel Deneyim Motoru · V76</title>
 <style>
 :root{--bg:#08060d;--panel:#100b18;--panel2:#151020;--text:#f7f3ff;--muted:#aaa0b7;--purple:#8b5cf6;--purple2:#c084fc;--line:#2a2139;--green:#69e7b7;--danger:#ff6b8a}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 70% 5%,#261343 0,#10091a 34%,#08060d 75%);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
@@ -13,7 +13,7 @@ button,input,textarea{font:inherit}button{cursor:pointer}.wrap{width:min(1120px,
 nav{height:76px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(8,6,13,.88);backdrop-filter:blur(18px);position:sticky;top:0;z-index:20}
 .brand{font-weight:900;letter-spacing:3px;font-size:22px}.brand span{color:var(--purple2)}
 .navlinks{display:flex;gap:10px;align-items:center}.btn{border:1px solid var(--line);background:#120d1c;color:var(--text);padding:13px 18px;border-radius:16px}.btn.primary{background:linear-gradient(135deg,#7c3aed,#b04cff);border-color:#a855f7;box-shadow:0 10px 35px rgba(139,92,246,.25)}
-.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn:disabled{opacity:.55;cursor:not-allowed}.hidden{display:none!important}
 .hero{padding:70px 0 35px;text-align:center}.eyebrow{display:inline-flex;gap:10px;align-items:center;padding:11px 16px;border:1px solid #50326e;border-radius:999px;color:#dccdff;background:#0d0914}.eyebrow:before{content:"";width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 18px var(--green)}
 h1{font-size:clamp(46px,8vw,86px);line-height:.98;letter-spacing:-4px;margin:28px auto 20px;max-width:900px}h1 span{background:linear-gradient(90deg,#fff,#b36cff);-webkit-background-clip:text;color:transparent}
 .lead{font-size:20px;line-height:1.7;color:#b9afc5;max-width:780px;margin:auto}
@@ -148,178 +148,29 @@ body.auth-locked #locationMini{display:none!important}
 @media(max-width:1100px){.business-shell{grid-template-columns:240px minmax(0,1fr)}.business-details{grid-column:1/-1;max-height:240px}}
 @media(max-width:800px){.business-modal .modalbox{height:96vh;max-height:96vh;padding:12px}.business-shell{grid-template-columns:1fr;overflow:auto}.business-sidebar{max-height:260px}.business-map-wrap{min-height:480px}.business-details{max-height:320px}#businessMap{min-height:420px}.business-cats{grid-template-columns:1fr 1fr}}
 
-/* V74 — Discovery-first business recommendation interface */
-:root{
-  --bg:#0e0a16;
-  --panel:#171022;
-  --panel2:#1d1530;
-  --text:#fbf8ff;
-  --muted:#b8aec4;
-  --purple:#9b68ff;
-  --purple2:#d29cff;
-  --line:#3a2b4d;
-  --green:#69e7b7;
-  --danger:#ff6b8a;
-}
-body{
-  background:
-    radial-gradient(circle at 16% 0%,rgba(126,73,214,.22) 0,rgba(25,15,40,.78) 28%,transparent 52%),
-    radial-gradient(circle at 90% 10%,rgba(194,132,252,.12),transparent 35%),
-    #0e0a16;
-}
-nav{
-  height:86px;
-  background:rgba(14,10,22,.92);
-}
-.topbar-left{display:flex;align-items:flex-start;gap:12px}
-.brand-stack{display:flex;flex-direction:column;gap:5px}
-.brand-stack .brand{font-size:21px}
-.hamburger-btn{
-  width:38px;height:30px;padding:0;display:grid;place-items:center;
-  border:1px solid var(--line);background:#140e20;color:#fff;border-radius:11px;
-}
-.hamburger-btn span,.hamburger-btn span:before,.hamburger-btn span:after{
-  display:block;width:17px;height:2px;background:#eee;border-radius:3px;
-}
-.hamburger-btn span{position:relative}
-.hamburger-btn span:before,.hamburger-btn span:after{content:"";position:absolute;left:0}
-.hamburger-btn span:before{top:-6px}.hamburger-btn span:after{top:6px}
-.navlinks .legacy-business{display:none!important}
-
-#sideMenuOverlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.52);backdrop-filter:blur(6px);
-  z-index:95;display:none;
-}
-#sideMenuOverlay.open{display:block}
-#sideMenu{
-  position:fixed;left:0;top:0;bottom:0;width:min(360px,88vw);
-  background:linear-gradient(180deg,#191023,#0f0b16);
-  border-right:1px solid #4a355e;box-shadow:25px 0 80px rgba(0,0,0,.38);
-  transform:translateX(-102%);transition:transform .24s ease;z-index:96;
-  padding:18px;display:flex;flex-direction:column;overflow:auto;
-}
-#sideMenu.open{transform:translateX(0)}
-.side-menu-header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-.side-profile{
-  margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:18px;
-  background:#120c1b;
-}
-.side-profile strong{display:block;font-size:18px}
-.side-xp{margin-top:10px;height:7px;background:#2a1e38;border-radius:999px;overflow:hidden}
-.side-xp>span{display:block;height:100%;width:0%;background:linear-gradient(90deg,#7c3aed,#d29cff)}
-.side-menu-actions{display:grid;gap:8px;margin-top:12px}
-.side-menu-actions .btn{text-align:left}
-.side-menu-section{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
-.side-menu-section small{color:var(--muted);display:block;margin-bottom:8px}
-.menu-admin-link{display:none}
-.menu-admin-link.show{display:block}
-
-.discovery-hero{padding:58px 0 22px;text-align:center}
-.discovery-hero .brand-word{font-size:clamp(34px,6vw,62px);font-weight:950;letter-spacing:-2px}
-.discovery-hero .brand-word span{color:var(--purple2)}
-.discovery-slogan{font-size:clamp(22px,4vw,34px);font-weight:850;margin:10px 0 10px}
-.discovery-sub{max-width:720px;margin:0 auto;color:#c8bdd1;line-height:1.7}
-.business-search-box{
-  max-width:920px;margin:28px auto 0;padding:16px;border:1px solid #49325d;border-radius:26px;
-  background:linear-gradient(145deg,#181022,#100b17);
-  box-shadow:0 25px 70px rgba(76,32,120,.20);
-}
-.business-search-main{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px}
-.business-search-main input{
-  min-width:0;background:#0c0910;border:1px solid #3d2a52;color:#fff;border-radius:18px;
-  padding:18px 19px;outline:none;font-size:16px
-}
-.business-search-main input:focus{border-color:#a66dff;box-shadow:0 0 0 3px rgba(166,109,255,.08)}
-.business-search-controls{display:grid;grid-template-columns:1.05fr 1.05fr .85fr;gap:10px;margin-top:10px}
-.discovery-field{
-  background:#0f0b14;border:1px solid var(--line);border-radius:15px;padding:11px;text-align:left
-}
-.discovery-field label{display:block;color:var(--muted);font-size:11px;margin-bottom:6px}
-.discovery-field input,.discovery-field select{
-  width:100%;background:transparent;color:#fff;border:0;outline:none;padding:0;font-weight:800
-}
-.discovery-field input::-webkit-outer-spin-button,.discovery-field input::-webkit-inner-spin-button{margin:0}
-.discovery-moods{display:flex;flex-wrap:wrap;gap:8px;margin-top:11px}
-.discovery-mood{
-  border:1px solid #3c2a4f;background:#120d1b;color:#d9cce7;padding:9px 13px;border-radius:999px
-}
-.discovery-mood.active{border-color:#a66dff;background:#28183d;color:#fff;box-shadow:0 0 0 2px rgba(166,109,255,.08)}
-.discovery-note{margin-top:10px;color:#9f93ab;font-size:11px;text-align:left}
-
-.biz-section{padding:28px 0 10px}
-.biz-section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:14px}
-.biz-section-head h2{margin:5px 0;font-size:27px}
-.biz-status{color:var(--muted);font-size:12px}
-.biz-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.biz-card{
-  background:linear-gradient(160deg,#191125,#110c18);border:1px solid var(--line);
-  border-radius:18px;padding:13px;min-width:0;transition:.18s ease
-}
-.biz-card:hover{transform:translateY(-2px);border-color:#68418f}
-.biz-card.sponsored{border-color:#754baa;box-shadow:0 14px 40px rgba(108,58,159,.13)}
-.biz-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
-.biz-name{font-weight:900;line-height:1.25;word-break:break-word}
-.biz-rating{color:#f8d97a;font-size:13px;white-space:nowrap}
-.biz-meta{font-size:11px;color:#a79bae;line-height:1.5;margin-top:6px}
-.biz-distance{color:#d7ccdf}
-.biz-description{font-size:12px;color:#c9becf;line-height:1.5;margin:9px 0}
-.biz-budget-row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px}
-.biz-price{font-weight:900}
-.biz-price.good{color:#7df0bf}
-.biz-price.bad{color:#ff9fb2}
-.biz-price.unknown{color:#b6a7bf;font-size:12px}
-.biz-match{padding:8px 10px;background:#0e0a13;border:1px solid #312441;border-radius:11px;font-size:11px;color:#d5cadf;margin-top:9px}
-.biz-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
-.biz-actions .btn{padding:9px 10px;border-radius:12px;font-size:12px}
-.biz-favorite{width:38px;height:36px;padding:0!important}
-.sponsor-badge{
-  display:inline-flex;align-items:center;gap:5px;padding:4px 7px;border-radius:999px;
-  border:1px solid #6d4390;background:#21122f;color:#d9b8ff;font-size:10px;font-weight:800
-}
-.biz-empty{grid-column:1/-1;padding:24px;border:1px dashed #4a355c;border-radius:18px;text-align:center;color:var(--muted)}
-
-#businessDetailModal .modalbox,#businessReviewsModal .modalbox,#businessReviewModal .modalbox{
-  width:min(720px,100%)
-}
-.business-detail-layout{display:grid;gap:12px}
-.business-detail-title-row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-.business-detail-large-rating{font-size:16px;color:#f8d97a;font-weight:900}
-.business-detail-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.business-review-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.business-review-kpi{padding:12px;border:1px solid var(--line);border-radius:14px;background:#0d0a12}
-.business-review-item{padding:13px;border:1px solid var(--line);border-radius:15px;background:#0d0a12}
-.business-review-item+.business-review-item{margin-top:8px}
-.review-stars{color:#f8d97a;letter-spacing:2px}
-.criteria-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.criteria-box{padding:11px;border:1px solid var(--line);border-radius:14px;background:#0d0a12}
-.star-picker{display:flex;gap:5px;margin-top:7px}
-.star-picker button{border:0;background:transparent;color:#62576c;font-size:25px;padding:0}
-.star-picker button.active{color:#f8d97a}
-.comment-box{width:100%;min-height:110px;background:#09070d;color:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;resize:vertical}
-
-.sponsor-note{
-  padding:10px 12px;border:1px solid #4a355c;border-radius:13px;background:#120c1a;
-  color:#bfb2c9;font-size:11px;line-height:1.5
-}
-@media(max-width:900px){
-  .biz-grid{grid-template-columns:repeat(2,1fr)}
-  .business-search-controls{grid-template-columns:1fr 1fr}
-  .discovery-field:last-child{grid-column:1/-1}
-}
-@media(max-width:650px){
-  nav{height:78px}
-  .navlinks{gap:6px}
-  .navlinks .desktop{display:none}
-  .discovery-hero{padding-top:38px}
-  .business-search-main{grid-template-columns:1fr}
-  .business-search-controls{grid-template-columns:1fr}
-  .discovery-field:last-child{grid-column:auto}
-  .biz-grid{grid-template-columns:1fr}
-  .biz-actions{grid-template-columns:1fr 1fr}
-  .business-detail-actions{grid-template-columns:1fr}
-  .business-review-summary,.criteria-grid{grid-template-columns:1fr}
-}
+/* V75 — Discovery-first business recommendation UX */
+:root{--bg:#0d0915;--panel:#171021;--panel2:#1d1429;--text:#fbf8ff;--muted:#b9aec5;--purple:#9464ff;--purple2:#c88cff;--line:#3a2b4b;--green:#6ce9bd;--danger:#ff6b8a}
+body{background:radial-gradient(circle at 72% 0%,#342052 0,#170d22 38%,#0c0813 78%)}
+.discover-hero{padding:58px 0 22px;text-align:center}.discover-brand{font-size:clamp(42px,8vw,76px);font-weight:950;letter-spacing:-3px;margin:0}.discover-brand span{color:var(--purple2)}
+.discover-slogan{font-size:clamp(20px,3vw,30px);font-weight:800;margin:12px 0 8px}.discover-sub{max-width:760px;margin:0 auto;color:var(--muted);font-size:16px;line-height:1.7}
+.search-engine{margin:28px auto 0;max-width:980px;background:linear-gradient(145deg,#191126,#100a17);border:1px solid #50366b;border-radius:28px;padding:16px;box-shadow:0 30px 80px rgba(71,37,120,.18)}
+.search-top{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:10px}.search-top input,.search-top select,.search-field input,.search-field select{width:100%;background:#0d0913;color:#fff;border:1px solid #3c2c4f;border-radius:16px;padding:16px;outline:none}.search-top input:focus,.search-top select:focus,.search-field input:focus{border-color:#9b6aff}
+.search-label{display:block;text-align:left;font-size:11px;color:var(--muted);margin:0 0 6px 2px;text-transform:uppercase;letter-spacing:1px}
+.mood-row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.mood-chip{background:#120c1c;border:1px solid #3a2b4b;color:#e9e0ef;padding:10px 13px;border-radius:999px}.mood-chip.active{background:#24153a;border-color:#a46eff;box-shadow:0 0 0 1px rgba(164,110,255,.15)}
+.search-bottom{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:10px;align-items:end}.search-field{text-align:left}.search-field .unit-wrap{display:grid;grid-template-columns:minmax(0,1fr) 108px;gap:8px}
+.search-actions{display:flex;gap:8px}.search-actions .btn{flex:1}
+.location-line{display:flex;align-items:center;gap:8px;justify-content:flex-start;color:#c9c0d2;font-size:12px;margin-top:10px}.location-dot-small{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green)}
+.result-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}.sort-group{display:flex;gap:8px;flex-wrap:wrap}.sort-btn{background:#120d1b;border:1px solid var(--line);color:#ddd2e8;padding:9px 12px;border-radius:12px}.sort-btn.active{background:#211332;border-color:#9d62ff;color:#fff}
+.business-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.business-card{background:linear-gradient(165deg,#1a1125,#100b16);border:1px solid var(--line);border-radius:19px;padding:14px;display:flex;flex-direction:column;min-width:0}.business-card.sponsored{border-color:#8a5ce7;box-shadow:0 12px 38px rgba(138,92,231,.12)}
+.business-card-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.business-name{font-size:17px;font-weight:900;line-height:1.25;margin:0}.stars{color:#ffd64d;letter-spacing:1px;font-size:13px}.rating-line{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:4px}.rating-number{color:#ddd3e4;font-size:12px}.business-meta{font-size:12px;color:#aaa0b2;line-height:1.6;margin-top:7px}.distance-badge{font-size:11px;color:#dcd2e7;background:#0d0913;border:1px solid #352749;border-radius:999px;padding:6px 8px;white-space:nowrap}.fit-box{margin-top:9px;padding:9px 10px;border-radius:12px;background:#0d0913;border:1px solid #30233d;color:#ddd1e5;font-size:11px;line-height:1.5}.price-row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px}.price-main{font-weight:900;font-size:16px}.price-note{font-size:10px;color:#9f94a6}.business-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:11px}.business-actions .btn{width:100%;padding:10px 8px;font-size:12px}.business-actions .wide{grid-column:1/-1}
+.sponsored-section{margin-top:34px}.sponsored-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:12px}.sponsored-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.sponsored-card{background:#120d1b;border:1px solid #4b3464;border-radius:16px;padding:11px}.sponsored-card h3{margin:5px 0 4px;font-size:14px}.sponsored-card .small-meta{font-size:11px;color:var(--muted);line-height:1.5}.sponsor-badge{display:inline-block;padding:4px 7px;border-radius:999px;background:#24153a;color:#dbc9f5;font-size:10px;border:1px solid #5a3d78}
+.reviews-list{display:grid;gap:8px;margin-top:10px}.review-item{padding:11px;border:1px solid var(--line);border-radius:13px;background:#0d0913}.review-item-head{display:flex;justify-content:space-between;gap:8px}.review-item p{margin:6px 0 0;white-space:pre-wrap;color:#d7cddf;font-size:12px;line-height:1.5}.review-summary{padding:12px;border:1px solid var(--line);border-radius:14px;background:#120c1b;margin-bottom:10px}
+.rating-grid{display:grid;gap:10px}.rating-row{padding:10px;border:1px solid var(--line);border-radius:12px;background:#0d0913}.rating-row-head{display:flex;justify-content:space-between;gap:8px;align-items:center}.star-picker{display:flex;gap:3px;margin-top:7px}.star-picker button{background:none;border:0;padding:2px;font-size:24px;color:#4f4258}.star-picker button.active{color:#ffd64d}
+.menu-drawer .modalbox{width:min(420px,100%);margin-left:auto;height:100%;max-height:100vh;border-radius:24px 0 0 24px;padding:20px;background:#120c19}.menu-list{display:grid;gap:8px;margin-top:16px}.menu-item{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;background:#0d0913;border:1px solid var(--line);color:#fff;border-radius:14px;padding:13px 14px;text-align:left}.menu-item.primary{background:linear-gradient(135deg,#7d42ec,#b14eff);border-color:#a66cff}.menu-xp{padding:12px;border:1px solid #48335d;border-radius:14px;background:#0d0913}.menu-xp-bar{height:8px;border-radius:99px;background:#271c33;overflow:hidden;margin-top:8px}.menu-xp-bar>div{height:100%;width:0;background:linear-gradient(90deg,#7c3aed,#c084fc);border-radius:99px}
+.hidden-for-v75{display:none!important}
 #businessExplorerModal{display:none!important}
+@media(max-width:900px){.search-top,.search-bottom{grid-template-columns:1fr}.business-grid,.sponsored-grid{grid-template-columns:1fr}.discover-hero{padding-top:38px}.search-actions{flex-direction:column}.business-actions{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.business-grid{grid-template-columns:1fr}.discover-brand{letter-spacing:-2px}.search-engine{padding:12px}.sponsored-head{align-items:flex-start;flex-direction:column}.menu-drawer .modalbox{width:92vw;height:auto;max-height:88vh;border-radius:24px}}
 
 </style>
 
@@ -365,194 +216,137 @@ nav{
 </div>
 
 <nav>
-  <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;width:100%">
-    <div class="topbar-left">
-      <div class="brand-stack">
-        <div class="brand">✦ DISCOVER <span>AI</span></div>
-        <button class="hamburger-btn" type="button" aria-label="Menüyü aç" onclick="toggleSideMenu()"><span></span></button>
-      </div>
-    </div>
-    <div class="navlinks">
-      <button class="btn desktop" type="button" onclick="scrollToId('businessSearchSection')">Keşfet</button>
-      <button class="btn" id="loginBtn" onclick="openAuth('login')">Giriş</button>
-      <button class="btn primary" id="joinBtn" onclick="openAuth('join')">Katıl</button>
-    </div>
+<div class="wrap" style="display:flex;align-items:center;justify-content:space-between;width:100%">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button class="btn" type="button" aria-label="Menüyü aç" onclick="openAppMenu()" style="font-size:22px;padding:9px 12px">☰</button>
+    <div class="brand">✦ DISCOVER <span>AI</span></div>
   </div>
+  <div class="navlinks" aria-label="Menü">
+    <button class="btn" type="button" onclick="openAppMenu()">Menü</button>
+  </div>
+</div>
+
+<div id="appMenuModal" class="modal menu-drawer"><div class="modalbox">
+  <button class="close" type="button" onclick="closeModal('appMenuModal')">×</button>
+  <div class="eyebrow">☰ DISCOVER AI</div>
+  <h2 style="margin:14px 0 5px">Menü</h2>
+  <p id="menuUserLabel" class="muted" style="margin-top:0">Kaşif</p>
+  <div class="menu-list">
+    <button class="menu-item primary" type="button" onclick="closeModal('appMenuModal');openProfile()">👤 Profil</button>
+    <button class="menu-item" type="button" id="menuLoginItem" onclick="closeModal('appMenuModal');openAuth('login')">🔐 Giriş yap</button>
+    <button class="menu-item" type="button" id="menuJoinItem" onclick="closeModal('appMenuModal');openAuth('join')">✨ Kayıt ol</button>
+    <button class="menu-item" type="button" id="menuLogoutItem" onclick="logout();closeModal('appMenuModal')">↪ Çıkış</button>
+    <div class="menu-xp"><div class="row"><b>⭐ Seviye <span id="menuLevel">1</span></b><span id="menuXpText">0 / 750 XP</span></div><div class="menu-xp-bar"><div id="menuXpBar"></div></div></div>
+    <button class="menu-item" type="button" onclick="closeModal('appMenuModal');scrollToId('explore')">🧭 Keşfet</button>
+    <button class="menu-item" type="button" onclick="closeModal('appMenuModal');openAIAssistant()">🧠 AI Asistan</button>
+    <button class="menu-item" type="button" onclick="closeModal('appMenuModal');openRoute()">🗺️ Bugünüm / Rota</button>
+    <button class="menu-item" type="button" onclick="closeModal('appMenuModal');scrollToId('premium')">✦ Premium</button>
+  </div>
+</div></div>
 </nav>
 
-<div id="sideMenuOverlay" onclick="closeSideMenu()"></div>
-<aside id="sideMenu" aria-label="Ana menü">
-  <div class="side-menu-header">
-    <div>
-      <div class="eyebrow">DISCOVER AI</div>
-      <h2 style="margin:12px 0 0">Menü</h2>
-    </div>
-    <button class="close" type="button" onclick="closeSideMenu()">×</button>
-  </div>
-
-  <div class="side-profile">
-    <strong id="sideProfileName">Kaşif</strong>
-    <span id="sideProfileEmail" class="muted" style="font-size:12px">Giriş yapılmadı</span>
-    <div class="row" style="margin-top:10px"><span class="muted">Seviye <b id="sideLevel">1</b></span><span class="muted"><b id="sideXp">0</b> XP</span></div>
-    <div class="side-xp"><span id="sideXpBar"></span></div>
-  </div>
-
-  <div class="side-menu-actions">
-    <button type="button" class="btn primary" onclick="openProfileFromMenu()">👤 Profil</button>
-    <button type="button" class="btn" onclick="logoutFromMenu()">↪ Çıkış</button>
-  </div>
-
-  <div class="side-menu-section">
-    <small>DİĞER</small>
-    <div class="side-menu-actions">
-      <button type="button" class="btn" onclick="closeSideMenu();scrollToId('businessSearchSection')">🧭 Keşfet</button>
-      <button type="button" class="btn" onclick="closeSideMenu();openAIAssistant()">🧠 AI Asistan</button>
-      <button type="button" class="btn" onclick="closeSideMenu();openRoute()">🗺️ Bugünüm / Rota</button>
-      <button type="button" class="btn menu-admin-link" id="menuAdminLink" onclick="closeSideMenu();openAdmin()">⚙️ Yönetim</button>
-    </div>
-  </div>
-</aside>
-
-
 <main>
-<section class="discovery-hero wrap" id="businessSearchSection">
-  <div class="brand-word">DISCOVER <span>AI</span></div>
-  <div class="discovery-slogan">Bütçeni söyle. Bugününü biz tasarlayalım.</div>
-  <p class="discovery-sub">
-    Bulunduğun konuma göre 20 km içindeki işletmeleri tarıyor, ruh halini, bütçeni ve zamanını birlikte değerlendirerek sana en doğru seçenekleri öne çıkarıyoruz.
-  </p>
+<section class="discover-hero wrap">
+  <div class="discover-brand">DISCOVER <span>AI</span></div>
+  <div class="discover-slogan">Bütçeni söyle. Bugününü biz tasarlayalım.</div>
+  <p class="discover-sub">Sana en yakın gerçek işletmeleri; ruh halin, bütçen, zamanın, mesafen ve seçtiğin kategori birlikte değerlendirilerek özenle sıralıyoruz.</p>
 
-  <div class="business-search-box">
-    <div class="business-search-main">
-      <input id="mood" autocomplete="off" placeholder="Bana Öner — örn: restoran, sinema, nalbur, kahve, müze...">
-      <button type="button" class="btn primary" onclick="searchBusinesses()">✦ Bana Öner</button>
-    </div>
-
-    <div class="discovery-moods" id="businessMoodChips">
-      <button type="button" class="discovery-mood" data-mood="Romantik" onclick="setBusinessMood('Romantik',this)">❤️ Romantik</button>
-      <button type="button" class="discovery-mood active" data-mood="Sakin" onclick="setBusinessMood('Sakin',this)">🌿 Sakin</button>
-      <button type="button" class="discovery-mood" data-mood="Eğlenceli" onclick="setBusinessMood('Eğlenceli',this)">🎉 Eğlenceli</button>
-      <button type="button" class="discovery-mood" data-mood="Gezmek" onclick="setBusinessMood('Gezmek',this)">🧭 Gezmek</button>
-      <button type="button" class="discovery-mood" data-mood="Sanat" onclick="setBusinessMood('Sanat',this)">🎨 Sanat</button>
-    </div>
-
-    <div class="business-search-controls">
-      <div class="discovery-field">
-        <label>BÜTÇEN</label>
-        <input id="budget" type="number" min="0" max="500000" step="10" value="750" placeholder="₺">
-        <span id="budgetText" style="display:none">₺750</span>
+  <div class="search-engine">
+    <div class="search-top">
+      <div>
+        <label class="search-label">Bana Öner</label>
+        <input id="mood" placeholder="Ne arıyorsun? Örn. sakin bir kahve, romantik akşam yemeği, eğlence...">
       </div>
-      <div class="discovery-field">
-        <label>ZAMAN</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <input id="time" type="number" min="1" max="1440" step="1" value="4">
-          <select id="timeUnit">
-            <option value="hour" selected>Saat</option>
-            <option value="minute">Dakika</option>
-          </select>
-        </div>
-        <span id="timeText" style="display:none">4 saat</span>
-      </div>
-      <div class="discovery-field">
-        <label>MOD (İSTEĞE BAĞLI)</label>
-        <select id="modeSelect" onchange="setMode(this.value)">
-          <option value="Kişisel">Kişisel</option>
-          <option value="Çift">Çift</option>
-          <option value="Arkadaş">Arkadaş</option>
-          <option value="Aile">Aile</option>
+      <div>
+        <label class="search-label">Kategori filtresi</label>
+        <select id="businessDiscoveryCategory">
+          <option value="">Tüm uygun kategoriler</option>
+          <option value="food">🍽️ Yeme & İçme</option>
+          <option value="shopping">🛒 Market & Alışveriş</option>
+          <option value="hardware">🔧 Nalbur & Hırdavat</option>
+          <option value="nightlife">🌙 Gece Hayatı</option>
+          <option value="culture">🎭 Kültür & Sanat</option>
+          <option value="sport">🏋️ Spor</option>
+          <option value="outdoor">🌿 Doğa & Açık Alan</option>
+          <option value="hotel">🏨 Konaklama</option>
+          <option value="beauty">💇 Güzellik</option>
+          <option value="health">🏥 Sağlık</option>
+          <option value="education">🎓 Eğitim</option>
+          <option value="finance">🏦 Banka & Finans</option>
+          <option value="fuel">⛽ Akaryakıt</option>
+          <option value="auto">🚗 Otomotiv</option>
+          <option value="services">🛠️ Hizmetler</option>
+          <option value="religious">🕌 İbadethane</option>
         </select>
-        <span id="modeText" style="display:none">Kişisel</span>
       </div>
     </div>
 
-    <div class="discovery-note">
-      📍 Arama alanı mevcut konumundan <b>20 km</b> çevreyi kapsar. Fiyatı kayıtlı olmayan işletmelerde fiyat bilgisi “belirtilmemiş” olarak gösterilir; sistem fiyat uydurmaz.
+    <div class="mood-row" id="discoveryMoodRow">
+      <button type="button" class="mood-chip active" data-mood="" onclick="setDiscoveryMood('',this)">✨ Fark etmez</button>
+      <button type="button" class="mood-chip" data-mood="romantik" onclick="setDiscoveryMood('romantik',this)">❤️ Romantik</button>
+      <button type="button" class="mood-chip" data-mood="sakin" onclick="setDiscoveryMood('sakin',this)">🌿 Sakin</button>
+      <button type="button" class="mood-chip" data-mood="eglenceli" onclick="setDiscoveryMood('eglenceli',this)">🎉 Eğlenceli</button>
+      <button type="button" class="mood-chip" data-mood="gezmek" onclick="setDiscoveryMood('gezmek',this)">🧭 Gezmek</button>
+      <button type="button" class="mood-chip" data-mood="sanat" onclick="setDiscoveryMood('sanat',this)">🎨 Sanat</button>
     </div>
+
+    <div class="search-bottom">
+      <div class="search-field">
+        <label class="search-label">Bütçe</label>
+        <input id="businessBudget" type="number" min="0" step="10" placeholder="Örn. 750">
+      </div>
+      <div class="search-field">
+        <label class="search-label">Zaman</label>
+        <div class="unit-wrap"><input id="businessTimeValue" type="number" min="1" step="1" value="2"><select id="businessTimeUnit"><option value="60">Saat</option><option value="1">Dakika</option></select></div>
+      </div>
+      <div class="search-actions">
+        <button class="btn primary" type="button" onclick="runBusinessDiscovery()">✦ Bana Öner</button>
+        <button class="btn" type="button" onclick="clearBusinessDiscovery()">Temizle</button>
+      </div>
+    </div>
+    <div class="location-line"><span class="location-dot-small"></span><span>Arama alanı konumunun çevresindeki maksimum <b>20 km</b> ile sınırlandırılır.</span></div>
   </div>
 </section>
 
-<section class="biz-section wrap" id="businessResultsSection">
-  <div class="biz-section-head">
-    <div>
-      <div class="eyebrow">DISCOVER MATCH</div>
-      <h2>Sana en uygun işletmeler</h2>
-      <div id="businessResultSummary" class="biz-status">Arama yaptığında sana uygun sonuçlar burada görünecek.</div>
+<section id="explore" class="wrap">
+  <div class="section-head">
+    <div><div class="eyebrow">DISCOVER BUSINESS MATCH</div><h2>Senin için seçilen işletmeler</h2><p id="resultSummary" class="muted">Kriterlerini doldurup “Bana Öner” dediğinde 20 km içindeki uygun işletmeler özenle sıralanır.</p></div>
+  </div>
+  <div class="result-toolbar">
+    <div id="businessSearchState" class="muted">Henüz arama yapılmadı.</div>
+    <div class="sort-group">
+      <button type="button" class="sort-btn active" data-sort="match" onclick="setBusinessSort('match',this)">Uygunluk</button>
+      <button type="button" class="sort-btn" data-sort="distance" onclick="setBusinessSort('distance',this)">Mesafe</button>
+      <button type="button" class="sort-btn" data-sort="price" onclick="setBusinessSort('price',this)">Fiyat</button>
     </div>
-    <button type="button" class="btn mini" onclick="searchBusinesses()">↻ Yenile</button>
   </div>
-  <div id="businessResults" class="biz-grid">
-    <div class="biz-empty">Önce üstteki arama alanından bir kategori, işletme türü veya ihtiyaç yaz.</div>
-  </div>
+  <div id="results" class="business-grid"><div class="empty">Arama sonucunu burada göreceksin.</div></div>
 </section>
 
-<section class="biz-section wrap">
-  <div class="biz-section-head">
-    <div>
-      <div class="eyebrow">SPONSORLU KEŞİF</div>
-      <h2>Önerilen işletmeler</h2>
-      <div class="biz-status">Yalnızca aktif reklamı bulunan işletmeler; sana olan mesafeye göre en fazla 6 sonuç.</div>
-    </div>
-  </div>
-  <div id="sponsoredResults" class="biz-grid">
-    <div class="biz-empty">Konumun doğrulandığında sponsorlu işletmeler burada görüntülenecek.</div>
-  </div>
-  <div class="sponsor-note" style="margin-top:10px">
-    Reklamlı öneriler ayrı bir bölümde gösterilir. Bu alana dahil olabilmek için işletmenin aktif aylık <b>₺3.000</b> sponsorluk kaydı bulunması gerekir. Ödeme ve aktivasyon yönetim tarafından yapılır.
-  </div>
+<section class="wrap sponsored-section">
+  <div class="sponsored-head"><div><div class="eyebrow">SPONSORED DISCOVERY</div><h2 style="margin:7px 0 4px">Önerilen işletmeler</h2><p class="muted" style="margin:0">Sponsor olan işletmeler ayrı tutulur ve bulunduğun konuma göre en fazla 6 işletme gösterilir.</p></div><span class="sponsor-badge">Aylık sponsorlu görünürlük: ₺3.000</span></div>
+  <div id="sponsoredResults" class="sponsored-grid"><div class="empty">Önerilen işletmeler yükleniyor...</div></div>
 </section>
 
 <section id="levels" class="wrap">
-  <div class="section-head">
-    <div>
-      <div class="eyebrow">PROGRESS ENGINE</div>
-      <h2>Keşfettikçe seviye atla.</h2>
-      <p class="muted">10 seviyeli sistem. Her seviye yeni bir ödül ve keşif katmanı açar.</p>
-    </div>
-  </div>
-  <div class="glass">
-    <div class="row"><b>BUGÜNÜN İLERLEMESİ</b><b id="xpLabel">0 / 750 XP</b></div>
-    <div style="height:9px;background:#251b32;border-radius:99px;margin-top:10px"><div id="xpBar" style="height:100%;width:0%;background:linear-gradient(90deg,#7c3aed,#c084fc);border-radius:99px"></div></div>
-    <div id="levelsGrid" class="levels" style="margin-top:18px"></div>
-  </div>
+  <div class="section-head"><div><div class="eyebrow">PROGRESS ENGINE</div><h2>Keşfettikçe seviye atla.</h2><p class="muted">10 seviyeli sistem. Her seviye yeni bir ödül ve keşif katmanı açar.</p></div></div>
+  <div class="glass"><div class="row"><b>BUGÜNÜN İLERLEMESİ</b><b id="xpLabel">0 / 750 XP</b></div><div style="height:9px;background:#251b32;border-radius:99px;margin-top:10px"><div id="xpBar" style="height:100%;width:0%;background:linear-gradient(90deg,#7c3aed,#c084fc);border-radius:99px"></div></div><div id="levelsGrid" class="levels" style="margin-top:18px"></div></div>
 </section>
 
-<section class="wrap">
-  <div class="feature-grid">
-    <div class="glass"><b>🧠 Kişisel AI</b><p class="muted">Zamanla tercihlerini öğrenen öneri motoru.</p></div>
-    <div class="glass"><b>📍 20 KM KEŞİF</b><p class="muted">Bulunduğun konuma göre yakın işletmeleri bul.</p></div>
-    <div class="glass"><b>💰 Hard Budget</b><p class="muted">Kayıtlı fiyatları bütçenle karşılaştır ve aşımı öne alma.</p></div>
-    <div class="glass"><b>⭐ Gerçek Değerlendirme</b><p class="muted">Her işletmeyi üç ayrı kriterle değerlendir.</p></div>
-  </div>
-</section>
+<section class="wrap"><div class="feature-grid">
+  <div class="glass"><b>🧠 Kişisel AI</b><p class="muted">Zamanla tercihlerini öğrenen öneri motoru.</p></div>
+  <div class="glass"><b>💰 Hard Budget</b><p class="muted">Belirlediğin bütçeyi aşmayan ücretli seçenekleri öne çıkarır.</p></div>
+  <div class="glass"><b>🗺️ Akıllı Mesafe</b><p class="muted">Gidip gelme süresini de dikkate alır; kısa vaktini yolda harcatmaz.</p></div>
+  <div class="glass"><b>🛡️ Yakınlık Kontrollü Yorum</b><p class="muted">Yorum yazma yetkisi yalnızca işletmeye 200 metre yakınken açılır.</p></div>
+</div></section>
 
-<section class="wrap">
-  <div class="premium">
-    <div class="eyebrow">✦ DISCOVER AI ELITE</div>
-    <h2>Premium sadece daha fazla sonuç değil.</h2>
-    <p class="lead" style="text-align:left">Daha gelişmiş kişiselleştirme, bütçe optimizasyonu, rota oluşturma, “Bundan daha iyisini bul”, hava durumuna göre B planı ve kişisel AI tercih profili.</p>
-    <div class="plans">
-      <div class="plan"><span class="muted">Haftalık</span><h3 id="publicPriceWeekly">₺99</h3><button class="btn primary" onclick="subscribe('Haftalık')">Premium'a geç</button></div>
-      <div class="plan"><span class="muted">Aylık</span><h3 id="publicPriceMonthly">₺249</h3><button class="btn primary" onclick="subscribe('Aylık')">Premium'a geç</button></div>
-      <div class="plan"><span class="muted">Yıllık</span><h3 id="publicPriceYearly">₺1.999</h3><button class="btn primary" onclick="subscribe('Yıllık')">Premium'a geç</button></div>
-    </div>
-  </div>
-</section>
+<section id="premium" class="wrap"><div class="premium">
+  <div class="eyebrow">✦ DISCOVER AI ELITE</div><h2>Premium sadece daha fazla sonuç değil.</h2>
+  <p class="lead" style="text-align:left">Daha gelişmiş kişiselleştirme, bütçe optimizasyonu, rota oluşturma, “Bundan daha iyisini bul”, hava durumuna göre B planı ve kişisel AI tercih profili.</p>
+  <div class="plans"><div class="plan"><span class="muted">Haftalık</span><h3 id="publicPriceWeekly">₺99</h3><button class="btn primary" onclick="subscribe('Haftalık')">Premium'a geç</button></div><div class="plan"><span class="muted">Aylık</span><h3 id="publicPriceMonthly">₺249</h3><button class="btn primary" onclick="subscribe('Aylık')">Premium'a geç</button></div><div class="plan"><span class="muted">Yıllık</span><h3 id="publicPriceYearly">₺1.999</h3><button class="btn primary" onclick="subscribe('Yıllık')">Premium'a geç</button></div></div>
+</div></section>
 
-<section class="wrap">
-  <div class="glass">
-    <div class="section-head" style="margin-bottom:8px">
-      <div><div class="eyebrow">BUGÜNÜM</div><h2 style="margin-bottom:0">Rotan</h2></div>
-      <button class="btn" onclick="openRoute()">Rotayı Gör</button>
-    </div>
-    <div id="routeBox" class="muted">Henüz deneyim eklemedin.</div>
-  </div>
-</section>
-
-<!-- Legacy experience list kept for backward compatibility, not shown on the homepage. -->
-<section id="explore" class="wrap" style="display:none!important">
-  <div id="resultSummary" class="muted"></div>
-  <div id="results" class="grid"></div>
-</section>
+<section class="wrap"><div class="glass"><div class="section-head" style="margin-bottom:8px"><div><div class="eyebrow">BUGÜNÜM</div><h2 style="margin-bottom:0">Rotan</h2></div><button class="btn" onclick="openRoute()">Rotayı Gör</button></div><div id="routeBox" class="muted">Henüz deneyim eklemedin.</div></div></section>
 </main>
 
 <footer><div class="wrap" style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap"><span>DISCOVER AI · Kişisel deneyimleri daha akıllı keşfet.</span><button type="button" class="kvkk-link" onclick="openModal('kvkkModal')">KVKK Aydınlatma Metni</button></div></footer>
@@ -762,6 +556,27 @@ nav{
   </div>
 </div>
 
+
+<div id="businessProfileModal" class="modal"><div class="modalbox" style="width:min(720px,100%)">
+  <button class="close" type="button" onclick="closeModal('businessProfileModal')">×</button><div class="eyebrow">📍 İŞLETME PROFİLİ</div>
+  <h2 style="margin:14px 0 8px">İşletme hakkında</h2>
+  <div id="businessProfileBody"></div>
+</div></div>
+<div id="businessReviewsModal" class="modal"><div class="modalbox" style="width:min(760px,100%)">
+  <button class="close" type="button" onclick="closeModal('businessReviewsModal')">×</button><div class="eyebrow">💬 YORUMLAR</div>
+  <h2 id="reviewsTitle" style="margin:14px 0 5px">İşletme yorumları</h2><p id="reviewsMeta" class="muted" style="margin-top:0"></p>
+  <div id="reviewsSummary" class="review-summary">Yorumlar yükleniyor...</div><div id="reviewsList" class="reviews-list"></div>
+</div></div>
+<div id="businessReviewEditorModal" class="modal"><div class="modalbox" style="width:min(700px,100%)">
+  <button class="close" type="button" onclick="closeModal('businessReviewEditorModal')">×</button><div class="eyebrow">⭐ İŞLETMEYİ DEĞERLENDİR</div>
+  <h2 id="reviewEditorTitle" style="margin:14px 0 5px">Değerlendir</h2><p id="reviewEditorHint" class="muted" style="margin-top:0"></p>
+  <div id="reviewCriteriaGrid" class="rating-grid"></div>
+  <textarea id="reviewText" rows="5" maxlength="800" placeholder="Deneyimini kısaca anlat..."></textarea>
+  <div id="reviewDistanceStatus" class="verify-box" style="margin-top:10px"></div>
+  <div class="row" style="justify-content:flex-end;margin-top:10px"><button class="btn" onclick="closeModal('businessReviewEditorModal')">Vazgeç</button><button class="btn primary" onclick="submitBusinessReview()">Değerlendirmeyi gönder</button></div>
+  <div id="reviewEditorError" class="required-note" style="min-height:18px;margin-top:8px"></div>
+</div></div>
+
 <div id="aiAssistantModal" class="modal">
   <div class="modalbox" style="width:min(760px,100%);max-height:92vh">
     <button class="close" type="button" onclick="closeModal('aiAssistantModal')">×</button>
@@ -960,50 +775,6 @@ nav{
   </div>
 </div>
 
-
-<div id="businessDetailModal" class="modal">
-  <div class="modalbox">
-    <button class="close" type="button" onclick="closeModal('businessDetailModal')">×</button>
-    <div class="eyebrow">İŞLETME DETAYI</div>
-    <div id="businessDetailModalBody" class="business-detail-layout" style="margin-top:14px">
-      <div class="empty loading">İşletme yükleniyor...</div>
-    </div>
-  </div>
-</div>
-
-<div id="businessReviewsModal" class="modal">
-  <div class="modalbox">
-    <button class="close" type="button" onclick="closeModal('businessReviewsModal')">×</button>
-    <div class="eyebrow">YORUMLAR</div>
-    <h2 id="businessReviewsTitle" style="margin:14px 0 6px">İşletme yorumları</h2>
-    <div id="businessReviewsSummary" class="business-review-summary" style="margin:12px 0"></div>
-    <div class="row" style="margin-bottom:12px">
-      <span class="muted" id="businessReviewsCount">0 değerlendirme</span>
-      <button class="btn primary" type="button" onclick="openBusinessReviewForCurrent()">⭐ İşletmeyi değerlendir</button>
-    </div>
-    <div id="businessReviewsBody"></div>
-  </div>
-</div>
-
-<div id="businessReviewModal" class="modal">
-  <div class="modalbox">
-    <button class="close" type="button" onclick="closeModal('businessReviewModal')">×</button>
-    <div class="eyebrow">DEĞERLENDİR</div>
-    <h2 id="businessReviewTitle" style="margin:14px 0 6px">İşletmeyi değerlendir</h2>
-    <p class="muted" style="margin-top:0">Her işletme kendi kategorisine göre 3 kriterle değerlendirilir.</p>
-    <div id="businessCriteriaGrid" class="criteria-grid" style="margin-top:14px"></div>
-    <div style="margin-top:12px">
-      <label class="muted" style="font-size:12px">Yorumun</label>
-      <textarea id="businessReviewComment" class="comment-box" maxlength="1200" placeholder="Deneyimini yaz..."></textarea>
-    </div>
-    <div class="row" style="margin-top:12px;justify-content:flex-end">
-      <button class="btn" type="button" onclick="closeModal('businessReviewModal')">Vazgeç</button>
-      <button class="btn primary" type="button" onclick="submitBusinessReview()">Değerlendirmeyi gönder</button>
-    </div>
-    <div id="businessReviewError" class="required-note" style="margin-top:8px;min-height:18px"></div>
-  </div>
-</div>
-
 <div id="toast" class="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1022,6 +793,12 @@ const $=id=>document.getElementById(id);
 const LOCATION_REQUIRED=true;
 let requiredLocationBusy=false;
 let locationMiniTimer=null;
+
+function updateMenuUI(){
+  const p=state.profile||{};if($("menuUserLabel"))$("menuUserLabel").textContent=p.username||state.user?.email||"Kaşif";const lvl=state.profile?.level||1,cur=Number(state.xp||0)%750,pct=Math.min(100,Math.round(cur/750*100));if($("menuLevel"))$("menuLevel").textContent=lvl;if($("menuXpText"))$("menuXpText").textContent=`${cur} / 750 XP`;if($("menuXpBar"))$("menuXpBar").style.width=pct+"%";
+}
+function openAppMenu(){updateMenuUI();openModal("appMenuModal")}
+
 
 // Android Chrome/WebView uyumluluğu: inline onclick'e ek olarak doğrudan
 // event listener bağla. Böylece buton mutlaka kullanıcı hareketiyle
@@ -1283,7 +1060,7 @@ async function loadActivities(){
   const map=new Map();
   (data||[]).map(normalizeActivity).forEach(a=>{if(!map.has(normalize(a.title)))map.set(normalize(a.title),a)});
   activities=[...map.values()];
-  recommend(true);
+  // Ana ekran iş önerisi artık kullanıcı aramasıyla başlar.
 }
 
 function moodMatch(a,q){
@@ -1715,75 +1492,203 @@ document.addEventListener("keydown",e=>{
     e.preventDefault();sendAIAssistant();
   }
 });
-function recommend(silent=false){
-  if(!requireLocation("Keşfet")){return;}
-  if(!activities.length){$("results").innerHTML='<div class="empty">Şu anda gösterilecek aktif deneyim bulunamadı.</div>';return}
-  betterOffset=0;
-  let list=activities.map(a=>({...a,score:scoreActivity(a)})).filter(a=>a.score>=0);
-  list.sort((a,b)=>b.score-a.score || b.rating-a.rating);
-  lastResults=list;
-  render(list.slice(0,6));
-  $("resultSummary").textContent=`${list.length} uygun deneyim bulundu · Bütçe ${priceText(currentBudget())} · ${currentTime()/60} saat · ${state.mode}`;
-  if(!silent)toast("DISCOVER Score güncellendi.");
-}
+let businessDiscoveryMood="";
+let businessDiscoverySort="match";
+let businessDiscoveryResults=[];
+let sponsoredBusinessResults=[];
+let currentReviewBusiness=null;
+let currentReviewCriteria={};
 
-function render(list){
-  if(!list.length){
-    $("results").innerHTML='<div class="empty"><b>Bu kombinasyona uygun deneyim bulamadım.</b><p class="muted">Bütçeyi veya zamanı biraz artırmayı deneyebilirsin.</p></div>';
-    return;
-  }
-  $("results").innerHTML=list.map(a=>{
-    const fav=state.favorites.includes(a.id);
-    const moodNames=(a.moods||[]).slice(0,3).join(" · ");
-    return `<article class="card">
-      <div class="cover">${emojiFor(a)}<span class="score">%${a.score} Uyum</span></div>
-      <span class="tag">${esc(a.tag)}</span>
-      <h3>${esc(a.title)}</h3>
-      <div class="meta">★ ${Number(a.rating||0).toFixed(1)} · ${a.dist?esc(a.dist+" km"):"Konum yok"} · ${Number(a.time||0)} dk · ${esc(a.city)}</div>
-      <p class="why">${esc(a.why)}</p>
-      <div class="match">🧠 <b>Neden bu?</b> ${esc(moodNames?moodNames+" ile eşleşiyor. ":"")}Bütçene ve zamanına uyuyor.</div>
-      <div class="row" style="margin-top:12px">
-        <span class="price">${priceText(a.price)}</span>
-        <button class="btn mini" type="button" aria-label="${fav?"Favoriden çıkar":"Favoriye ekle"}" onclick="toggleFavorite(${JSON.stringify(a.id)})">${fav?"♥":"♡"}</button>
-      </div>
-      <div class="card-actions">
-        <button class="btn" type="button" onclick='openActivityDetail(${JSON.stringify(a.id)})'>Detaylar</button>
-        <button class="btn primary" type="button" onclick='goToActivity(${JSON.stringify(a.id)})'>Rotaya git</button>
-        <button class="btn" type="button" onclick='reportActivity(${JSON.stringify(a.title)})'>Bildir</button>
-        <button class="btn" type="button" onclick='toggleFavorite(${JSON.stringify(a.id)})'>${fav?"Favoriden çıkar":"Favoriye ekle"}</button>
-      </div>
-    </article>`;
+const DISCOVERY_CATEGORY_LABELS={
+  food:"Yeme & İçme",shopping:"Market & Alışveriş",hardware:"Nalbur & Hırdavat",nightlife:"Gece Hayatı",culture:"Kültür & Sanat",sport:"Spor",outdoor:"Doğa & Açık Alan",hotel:"Konaklama",beauty:"Güzellik",health:"Sağlık",education:"Eğitim",finance:"Banka & Finans",fuel:"Akaryakıt",auto:"Otomotiv",services:"Hizmetler",religious:"İbadethane",other:"Diğer"
+};
+const DISCOVERY_MOOD_RULES={
+  romantik:{blocked:["religious","fuel","hardware","finance","auto","pharmacy","education"],preferred:["food","hotel","beauty","culture"],keywords:["restoran","restaurant","cafe","kafe","kahve","manzara","spa","sinema","tiyatro","otel","sahil"]},
+  sakin:{blocked:["religious","nightlife","fuel","hardware","finance","auto"],preferred:["outdoor","food","hotel","culture","education"],keywords:["park","bahce","bahçe","sahil","orman","kutuphane","kütüphane","kahve","cafe","kafe","spa"]},
+  eglenceli:{blocked:["religious","pharmacy","finance","education","fuel","hardware"],preferred:["nightlife","sport","culture","food","shopping"],keywords:["club","gece","bar","pub","bowling","oyun","sinema","luna","konser","etkinlik"]},
+  gezmek:{blocked:["religious","finance","pharmacy","hardware"],preferred:["outdoor","culture","shopping","food","hotel"],keywords:["park","sahil","müze","muze","çarşı","carsi","pazar","meydan","manzara","seyir"]},
+  sanat:{blocked:["religious","fuel","finance","hardware","auto","pharmacy"],preferred:["culture","education","food"],keywords:["sanat","galeri","müze","muze","tiyatro","sergi","konser","atölye","atolye"]}
+};
+function setDiscoveryMood(mood,el){businessDiscoveryMood=mood;document.querySelectorAll("#discoveryMoodRow .mood-chip").forEach(x=>x.classList.remove("active"));if(el)el.classList.add("active")}
+function discoveryTimeMinutes(){const v=Number($("businessTimeValue")?.value||0),u=Number($("businessTimeUnit")?.value||60);return Math.max(1,Math.round(v*u))}
+function discoveryBudget(){const raw=$("businessBudget")?.value;return raw===""||raw==null?null:Number(raw)}
+function discoveryCategory(){return String($("businessDiscoveryCategory")?.value||"").trim()}
+function discoveryQuery(){return String($("mood")?.value||"").trim()}
+function businessEffectiveCategory(name,category){
+  const s=normalize(String(name||""));
+  if(/(?:^|\s)(cami|mescit|masjid|kilise|sinagog|ibadethane|turbe|türbe|church|mosque)(?:\s|$)/.test(s)||s.includes("cami")||s.includes("mescit"))return "religious";
+  if(/(gece kulubu|gece kulübü|night club|nightclub|bar|pub|disco|disko|casino)/.test(s))return "nightlife";
+  if(/(park|bahce|bahçe|koru|sahil|mesire|piknik|orman|seyir tepesi|meydan)/.test(s))return "outdoor";
+  return category||"other";
+}
+function businessMoodFit(row){
+  const mood=businessDiscoveryMood;
+  if(!mood)return {score:40,reason:"Ruh hali belirtilmedi; kategori, bütçe, mesafe ve süre birlikte değerlendirildi."};
+  const rules=DISCOVERY_MOOD_RULES[mood]||{blocked:[],preferred:[],keywords:[]};
+  const cat=businessEffectiveCategory(row.name,row.category);
+  const hay=normalize([row.name,row.description,row.address,row.city,row.district].join(" "));
+  if(rules.blocked.includes(cat))return {score:-100,reason:"Bu ruh hali için uygun olmayan bir kategori."};
+  let score=rules.preferred.includes(cat)?70:25;
+  const hits=rules.keywords.filter(k=>hay.includes(normalize(k))).length;
+  score+=Math.min(25,hits*8);
+  if(cat==="religious")score=-100;
+  return {score,reason:score>=80?`${mood} ruh haliyle güçlü eşleşiyor.`:score>=55?`${mood} ruh haliyle uyumlu.`:`${mood} için sınırlı ama olası bir eşleşme.`};
+}
+function businessCriteriaLabels(business){
+  const c=businessEffectiveCategory(business?.name||"",business?.effective_category||business?.category||"");
+  if(c==="food")return ["Titizlik","Lezzet","Karşılama"];
+  if(c==="fuel")return ["Titizlik","Güven","Karşılama"];
+  if(c==="nightlife")return ["Atmosfer","Eğlence","Karşılama"];
+  if(c==="hotel")return ["Temizlik","Konfor","Karşılama"];
+  if(c==="sport")return ["Temizlik","İmkanlar","İlgi"];
+  if(c==="culture")return ["Düzen","İçerik","Karşılama"];
+  if(c==="health")return ["Temizlik","İlgi","Güven"];
+  if(c==="beauty")return ["Temizlik","Hizmet","Karşılama"];
+  if(c==="shopping")return ["Düzen","Ürün çeşitliliği","Hizmet"];
+  if(c==="religious")return ["Temizlik","Düzen","Karşılama"];
+  if(c==="outdoor")return ["Temizlik","Huzur","Düzen"];
+  if(c==="education")return ["Düzen","İçerik","İlgi"];
+  if(c==="auto")return ["Titizlik","İşçilik","Karşılama"];
+  return ["Titizlik","Hizmet","Karşılama"];
+}
+function starsHtml(rating){const r=Math.max(0,Math.min(5,Number(rating||0)));const full=Math.round(r);return "★★★★★".split("").map((s,i)=>`<span style="opacity:${i<full?1:.22}">${s}</span>`).join("")}
+function formatBusinessPrice(row){
+  const a=Number(row.price_from),b=Number(row.price_to);if(Number.isFinite(a)&&a>0&&Number.isFinite(b)&&b>a)return `₺${Math.round(a).toLocaleString("tr-TR")}–₺${Math.round(b).toLocaleString("tr-TR")}`;
+  if(Number.isFinite(a)&&a>0)return `₺${Math.round(a).toLocaleString("tr-TR")}`;
+  if(Number.isFinite(b)&&b>0)return `₺${Math.round(b).toLocaleString("tr-TR")}`;
+  return "Fiyat bilgisi yok";
+}
+function businessPriceValue(row){const a=Number(row.price_from),b=Number(row.price_to);if(Number.isFinite(a)&&a>=0)return a;if(Number.isFinite(b)&&b>=0)return b;return null}
+function clientDiscoveryScore(row){
+  const mf=businessMoodFit(row);if(mf.score<0)return -1;
+  const budget=discoveryBudget(),time=discoveryTimeMinutes(),price=businessPriceValue(row);
+  const dist=Number(row.distance_km),travel=Number(row.travel_minutes||Math.ceil(dist*3)),visit=Number(row.visit_minutes||0),total=Number(row.total_time_minutes||travel+visit);
+  if(!Number.isFinite(budget)||!Number.isFinite(time)||price==null||price>budget||total>time||travel>Math.floor(time*.40))return -1;
+  const budgetScore=Math.max(0,100-Math.abs(budget-price)/Math.max(1,budget)*100);
+  const distanceScore=Math.max(0,100-Math.min(100,dist*5));
+  const timeSlack=Math.max(0,time-total);
+  const timeScore=Math.max(0,100-(timeSlack/Math.max(1,time))*55);
+  const q=discoveryQuery(),hay=normalize([row.name,row.address,row.description,row.city,row.district].join(" "));
+  const words=normalize(q).split(/\s+/).filter(w=>w.length>2);const hits=words.filter(w=>hay.includes(w)).length;
+  const queryScore=words.length?Math.min(100,hits/Math.min(words.length,4)*100):35;
+  const cat=discoveryCategory();const categoryScore=cat&&businessEffectiveCategory(row.name,row.category)===cat?100:45;
+  return mf.score*.40+budgetScore*.22+distanceScore*.13+timeScore*.15+queryScore*.06+categoryScore*.04;
+}
+function renderBusinessCards(list){
+  const box=$("results");if(!box)return;
+  if(!list.length){box.innerHTML='<div class="empty"><b>Bu kriterlerle uygun işletme bulamadık.</b><p class="muted">Bütçeyi veya süreyi artırmayı, başka bir kategori/ruh hali seçmeyi deneyebilirsin. Fiyat verisi olmayan işletmeler bütçe karşılaştırmasına dahil edilmez.</p></div>';return}
+  box.innerHTML=list.map(b=>{
+    const cat=businessEffectiveCategory(b.name,b.category),score=Math.round(Number(b.client_match_score??b.recommendation_score??0));
+    const price=formatBusinessPrice(b),total=Number(b.total_time_minutes||0),travel=Number(b.travel_minutes||0),visit=Number(b.visit_minutes||0);
+    const menu=b.menu_url?`<button class="btn" type="button" onclick='window.open(${JSON.stringify(b.menu_url)},"_blank","noopener,noreferrer")'>📖 Menü</button>`:`<button class="btn" type="button" disabled>📖 Menü yok</button>`;
+    return `<article class="business-card"><div class="business-card-head"><div style="min-width:0"><h3 class="business-name">${esc(b.name)}</h3><div class="rating-line"><span class="stars">${starsHtml(b.rating)}</span><span class="rating-number">${Number(b.rating||5).toFixed(1)} · ${Number(b.review_count||0)} yorum</span></div></div><span class="distance-badge">${Number(b.distance_km||0).toFixed(1)} km</span></div><div class="business-meta">${esc(DISCOVERY_CATEGORY_LABELS[cat]||cat)} · ${esc(b.city||"Türkiye")}${b.district?" · "+esc(b.district):""}</div><div class="price-row"><div><div class="price-main">${esc(price)}</div><div class="price-note">Uygunluk: %${score}</div></div><div style="text-align:right"><div>${travel} dk yol</div><div class="price-note">${visit} dk ziyaret · ${total} dk toplam</div></div></div><div class="fit-box">🧠 <b>Neden önerildi?</b> ${esc(b.client_reason||b.match_reason||"Kriterlerine göre seçildi.")}</div><div class="business-actions"><button class="btn primary" type="button" onclick='showBusinessProfileFromDiscovery(${JSON.stringify(b)})'>Detaylar</button>${menu}<button class="btn" type="button" onclick='openBusinessReviewsFromDiscovery(${JSON.stringify(b)})'>Yorumlar</button><button class="btn" type="button" onclick='openBusinessReviewEditor(${JSON.stringify(b)})'>⭐ Değerlendir</button><button class="btn" type="button" onclick='toggleBusinessFavorite(${JSON.stringify(b.id)})'>♡ Favori</button><button class="btn wide" type="button" onclick='routeToBusiness(${JSON.stringify(b.latitude)},${JSON.stringify(b.longitude)})'>🗺️ Rotaya git</button></div></article>`;
   }).join("");
 }
-
-function setMood(v,el){
-  $("mood").value=v;
-  document.querySelectorAll(".chip").forEach(x=>x.classList.remove("active"));
-  if(el)el.classList.add("active");
-  recommend();
+function sortBusinessResults(list){
+  const a=list.slice();
+  if(businessDiscoverySort==="distance")a.sort((x,y)=>Number(x.distance_km)-Number(y.distance_km)||Number(y.client_match_score||0)-Number(x.client_match_score||0));
+  else if(businessDiscoverySort==="price")a.sort((x,y)=>(businessPriceValue(x)??Infinity)-(businessPriceValue(y)??Infinity)||Number(y.client_match_score||0)-Number(x.client_match_score||0));
+  else a.sort((x,y)=>Number(y.client_match_score??y.recommendation_score??0)-Number(x.client_match_score??x.recommendation_score??0)||Number(x.distance_km)-Number(y.distance_km)||String(x.name).localeCompare(String(y.name),"tr"));
+  return a;
 }
-function setMode(v){state.mode=v;$("modeText").textContent=v;recommend()}
-$("budget")?.addEventListener("input",e=>{$("budgetText")&&( $("budgetText").textContent="₺"+Number(e.target.value).toLocaleString("tr-TR"));});
-$("time")?.addEventListener("input",e=>{$("timeText")&&( $("timeText").textContent=e.target.value+" "+($("timeUnit")?.value==="minute"?"dakika":"saat"));});
-
-function surprise(){
-  if(!activities.length)return toast("Henüz aktivite yüklenmedi.");
-  const candidates=activities.map(a=>({...a,score:scoreActivity(a)})).filter(a=>a.score>=0);
-  if(!candidates.length)return toast("Mevcut bütçe ve zamanda sürpriz bulunamadı.");
-  const pool=candidates.slice().sort((a,b)=>b.score-a.score).slice(0,Math.min(6,candidates.length));
-  const a=pool[Math.floor(Math.random()*pool.length)];
-  $("mood").value="Sürpriz";
-  render([{...a,score:scoreActivity(a)}]);
-  $("resultSummary").textContent="🎲 Bütçene ve zamanına uyan sürpriz deneyim.";
-  scrollToId("explore");toast("Sürpriz deneyimin hazır.");
+function setBusinessSort(sort,el){businessDiscoverySort=sort;document.querySelectorAll(".sort-btn").forEach(x=>x.classList.remove("active"));if(el)el.classList.add("active");renderBusinessCards(sortBusinessResults(businessDiscoveryResults));}
+async function runBusinessDiscovery(){
+  if(state.user&&!requireProfileComplete("Bana Öner"))return;
+  if(!requireLocation("Bana Öner"))return;
+  if(!state.user){openAuth("login");return}
+  const budget=discoveryBudget(),time=discoveryTimeMinutes(),category=discoveryCategory(),query=discoveryQuery();
+  if(budget==null||!Number.isFinite(budget)||budget<0)return toast("Bütçeni rakam olarak gir.");
+  if(!Number.isFinite(time)||time<1)return toast("Geçerli bir süre gir.");
+  const status=$("businessSearchState");if(status)status.textContent="20 km içindeki adaylar inceleniyor; rastgele seçim yapılmıyor…";
+  $("results").innerHTML='<div class="empty loading">Kategori, ruh hali, fiyat, mesafe ve toplam yol/ziyaret süresi birlikte değerlendiriliyor…</div>';
+  try{
+    const {data,error}=await sb.rpc("discover_nearby_businesses",{p_latitude:Number(state.location.latitude),p_longitude:Number(state.location.longitude),p_category:category,p_query:query,p_mood:businessDiscoveryMood,p_budget:budget,p_time_minutes:time,p_sort:"match",p_limit:50});
+    if(error)throw error;
+    businessDiscoveryResults=(data||[]).map(r=>{const x={...r};x.effective_category=businessEffectiveCategory(x.name,x.effective_category||x.category);x.client_match_score=clientDiscoveryScore(x);const mf=businessMoodFit(x);x.client_reason=mf.score>=0?`${mf.reason} ${Number(x.travel_minutes||0)} dk yol ve ${Number(x.visit_minutes||0)} dk ziyaret süresi hesaba katıldı.`:"Bu ruh hali için uygun değil.";return x;}).filter(x=>x.client_match_score>=0);
+    businessDiscoveryResults.sort((a,b)=>Number(b.client_match_score)-Number(a.client_match_score)||Number(a.distance_km)-Number(b.distance_km)||String(a.name).localeCompare(String(b.name),"tr"));
+    renderBusinessCards(sortBusinessResults(businessDiscoveryResults));
+    if(status)status.textContent=`${businessDiscoveryResults.length} uygun işletme bulundu · 20 km · ₺${Number(budget).toLocaleString("tr-TR")} · ${time} dk`;
+    $("resultSummary").textContent=`${businessDiscoveryResults.length} aday; kategori, ruh hali, bütçe, mesafe ve toplam süre birlikte değerlendirilerek sıralandı.`;
+    await loadSponsoredBusinesses();scrollToId("explore");
+  }catch(e){console.error("DISCOVERY BUSINESSES",e);if(status)status.textContent="İşletme araması başarısız oldu.";$("results").innerHTML=`<div class="empty">İşletme araması başarısız oldu.<br><small>${esc(e.message||"Supabase RPC hatası")}</small></div>`}
+}
+function clearBusinessDiscovery(){businessDiscoveryMood="";$("mood").value="";$("businessDiscoveryCategory").value="";$("businessBudget").value="";$("businessTimeValue").value="2";$("businessTimeUnit").value="60";document.querySelectorAll("#discoveryMoodRow .mood-chip").forEach(x=>x.classList.toggle("active",x.dataset.mood===""));$("results").innerHTML='<div class="empty">Arama sonucunu burada göreceksin.</div>';$("businessSearchState").textContent="Henüz arama yapılmadı.";}
+function showBusinessProfileFromDiscovery(b){
+  currentReviewBusiness=b;
+  const phone=b.phone?`<div class="business-detail-field"><small>Telefon</small><strong>${esc(b.phone)}</strong></div>`:"";
+  const web=b.website?`<div class="business-detail-field"><small>Web sitesi</small><strong><a href="${esc(businessEscapeUrl(b.website))}" target="_blank" rel="noopener" style="color:#d9c6ff">${esc(b.website)}</a></strong></div>`:"";
+  const menu=b.menu_url?`<button class="btn" type="button" onclick='window.open(${JSON.stringify(b.menu_url)},"_blank","noopener,noreferrer")'>📖 Menüyü gör</button>`:`<button class="btn" type="button" disabled>📖 Menü bulunmuyor</button>`;
+  const origin=state.location?`&origin=${encodeURIComponent(state.location.latitude+","+state.location.longitude)}`:"";
+  const maps=`https://www.google.com/maps/dir/?api=1${origin}&destination=${encodeURIComponent(b.latitude+","+b.longitude)}`;
+  const d=$("businessProfileBody");if(!d)return;
+  d.innerHTML=`<div class="business-detail-card"><div class="business-detail-cover">${businessCategoryEmoji(b.category)}</div><div><span class="tag">${esc(DISCOVERY_CATEGORY_LABELS[businessEffectiveCategory(b.name,b.category)]||b.category)}</span><h3 style="margin:8px 0 2px">${esc(b.name)}</h3><div class="meta">${esc(b.city||"Türkiye")}${b.district?" · "+esc(b.district):""} · ${Number(b.distance_km||0).toFixed(1)} km</div><div class="rating-line"><span class="stars">${starsHtml(b.rating)}</span><span>${Number(b.rating||5).toFixed(1)} · ${Number(b.review_count||0)} değerlendirme</span></div></div><div class="business-detail-field"><small>Adres</small><strong>${esc(b.address||"Adres bilgisi bulunmuyor")}</strong></div><div class="business-detail-field"><small>Fiyat</small><strong>${esc(formatBusinessPrice(b))}</strong></div>${phone}${web}<div class="card-actions"><button class="btn primary" onclick='window.open(${JSON.stringify(maps)},"_blank","noopener,noreferrer")'>🗺️ Rotaya git</button>${menu}<button class="btn" onclick='openBusinessReviewsFromDiscovery(${JSON.stringify(b)})'>💬 Yorumlar</button><button class="btn" onclick='openBusinessReviewEditor(${JSON.stringify(b)})'>⭐ Değerlendir</button></div></div>`;
+  openModal("businessProfileModal");
+}
+function openBusinessReviewsFromDiscovery(b){currentReviewBusiness=b;openBusinessReviews(b)}
+function routeToBusiness(lat,lng){if(!requireLocation("Rota"))return;const origin=state.location?encodeURIComponent(state.location.latitude+","+state.location.longitude):"";const url=`https://www.google.com/maps/dir/?api=1${origin?"&origin="+origin:""}&destination=${encodeURIComponent(Number(lat)+","+Number(lng))}`;window.open(url,"_blank","noopener,noreferrer")}
+async function loadSponsoredBusinesses(){
+  const box=$("sponsoredResults");if(!box||!state.location)return;
+  box.innerHTML='<div class="empty loading">Önerilen işletmeler hesaplanıyor...</div>';
+  try{const {data,error}=await sb.rpc("get_sponsored_businesses",{p_latitude:Number(state.location.latitude),p_longitude:Number(state.location.longitude),p_limit:6});if(error)throw error;sponsoredBusinessResults=data||[];if(!sponsoredBusinessResults.length){box.innerHTML='<div class="empty">Bu konum çevresinde aktif sponsorlu işletme bulunmuyor.</div>';return}box.innerHTML=sponsoredBusinessResults.map(b=>`<article class="sponsored-card"><span class="sponsor-badge">SPONSORLU</span><h3>${esc(b.name)}</h3><div class="small-meta">${esc(DISCOVERY_CATEGORY_LABELS[b.effective_category]||b.effective_category||b.category||"İşletme")} · ${Number(b.distance_km||0).toFixed(1)} km</div><div class="small-meta" style="margin-top:4px"><span class="stars">${starsHtml(b.rating)}</span> ${Number(b.rating||5).toFixed(1)}</div><button class="btn mini" style="width:100%;margin-top:8px" onclick='showBusinessProfileFromDiscovery(${JSON.stringify(b)})'>Detaylar</button></article>`).join("")}catch(e){console.error(e);box.innerHTML=`<div class="empty">Önerilen işletmeler yüklenemedi.<br><small>${esc(e.message||"")}</small></div>`}
+}
+async function openBusinessReviews(b){
+  if(!state.user){openAuth("login");return;}currentReviewBusiness=b;$("reviewsTitle").textContent=b.name;$("reviewsMeta").textContent=`${Number(b.rating||5).toFixed(1)} · ${Number(b.review_count||0)} değerlendirme · ${Number(b.distance_km||0).toFixed(1)} km`;$("reviewsList").innerHTML='<div class="empty loading">Yorumlar yükleniyor...</div>';openModal("businessReviewsModal");
+  try{const {data,error}=await sb.rpc("get_business_reviews",{p_business_id:b.id});if(error)throw error;const rows=data||[];const avg=rows.length?rows.reduce((s,r)=>s+Number(r.overall_rating||0),0)/rows.length:Number(b.rating||5);$("reviewsSummary").innerHTML=`<b>${avg.toFixed(1)} / 5</b> · ${rows.length} doğrulanmış kullanıcı değerlendirmesi`;$("reviewsList").innerHTML=rows.length?rows.map(r=>`<div class="review-item"><div class="review-item-head"><div><b>${esc(r.display_name||"Kaşif")}</b><div class="stars">${starsHtml(r.overall_rating)}</div></div><small class="muted">${new Date(r.created_at).toLocaleDateString("tr-TR")}</small></div><p>${esc(r.review_text||"")}</p><div class="meta">${esc((r.criteria_labels||[]).join(" · "))}</div></div>`).join(""):'<div class="empty">Henüz yorum yok.</div>'}catch(e){$("reviewsList").innerHTML=`<div class="empty">Yorumlar alınamadı.<br><small>${esc(e.message||"")}</small></div>`}
+}
+function openBusinessReviewEditor(b){
+  if(!state.user){openAuth("login");return;}
+  if(!requireLocation("Değerlendirme"))return;
+  currentReviewBusiness=b;currentReviewCriteria={};
+  const labels=businessCriteriaLabels(b);
+  $("reviewEditorTitle").textContent=b.name;
+  $("reviewEditorHint").textContent="Yorumları herkes okuyabilir. Değerlendirme yalnızca işletmeye 200 metre içinde ve güncel konumla sunucuda doğrulanarak kabul edilir.";
+  $("reviewText").value="";
+  $("reviewCriteriaGrid").innerHTML=labels.map((label,i)=>`<div class="rating-row"><div class="rating-row-head"><b>${esc(label)}</b><span id="criterionValue${i}">0/5</span></div><div class="star-picker" data-criterion="${i}">${[1,2,3,4,5].map(v=>`<button type="button" onclick="setReviewCriterion(${i},${v})">★</button>`).join("")}</div></div>`).join("");
+  const dist=Number(b.distance_km??999)*1000,approxEligible=dist<=200;
+  $("reviewDistanceStatus").innerHTML=approxEligible?`<div class="verify-row"><span><b>✅ Yakın görünüyorsun</b><br><small class="muted">Yaklaşık ${Math.round(dist)} metre. Gönderimde sunucu 200 m kontrolünü yeniden yapar.</small></span><span class="verify-status ok">Hazır</span></div>`:`<div class="verify-row"><span><b>🔒 Yorum kilitli</b><br><small class="muted">İşletmeye 200 metre içinde olduğunda değerlendirme açılır.</small></span><span class="verify-status bad">${(Number(b.distance_km)||0).toFixed(1)} km</span></div>`;
+  $("businessReviewEditorModal").dataset.eligible=approxEligible?"1":"0";
+  openModal("businessReviewEditorModal");
+}
+function setReviewCriterion(index,value){currentReviewCriteria[index]=value;const row=document.querySelector(`.star-picker[data-criterion="${index}"]`);row?.querySelectorAll("button").forEach((b,i)=>b.classList.toggle("active",i<value));const t=$("criterionValue"+index);if(t)t.textContent=value+"/5"}
+async function submitBusinessReview(){
+  if(!currentReviewBusiness)return;if(!state.user)return openAuth("login");if(!requireLocation("Değerlendirme"))return;
+  const err=$("reviewEditorError"),vals=[0,1,2].map(i=>Number(currentReviewCriteria[i]||0));
+  if(vals.some(v=>v<1||v>5)){err.textContent="Üç değerlendirme alanını da 1–5 yıldız arasında doldur.";return}
+  err.textContent="Konum doğrulanıyor…";
+  try{
+    await syncLocationToProfile();
+    const labels=businessCriteriaLabels(currentReviewBusiness);
+    const criteria={criterion_1:vals[0],criterion_2:vals[1],criterion_3:vals[2],labels};
+    const {data,error}=await sb.rpc("submit_business_review",{p_business_id:currentReviewBusiness.id,p_criteria:criteria,p_comment:String($("reviewText").value||"").trim().slice(0,1000)});
+    if(error)throw error;
+    toast(`Değerlendirmen kaydedildi · ${Number(data?.rating||0).toFixed(1)} / 5`);
+    closeModal("businessReviewEditorModal");await runBusinessDiscovery();
+  }catch(e){
+    const msg=String(e?.message||"Sunucu hatası");
+    if(msg.includes("NOT_WITHIN_200M"))err.textContent="Değerlendirme yalnızca işletmeye 200 metre içinde olduğunda kabul edilir.";
+    else if(msg.includes("LOCATION_NOT_FRESH"))err.textContent="Konumun güncel değil. Konum iznini açık tutup birkaç saniye sonra tekrar dene.";
+    else if(msg.includes("LOCATION_REQUIRED"))err.textContent="Güncel konum alınamadı.";
+    else if(msg.includes("AUTH_REQUIRED"))err.textContent="Değerlendirmek için giriş yapmalısın.";
+    else err.textContent=msg;
+  }
 }
 
-function better(){
-  if(!lastResults.length)return recommend();
-  betterOffset=(betterOffset+3)%Math.max(1,lastResults.length);
-  const list=lastResults.slice(betterOffset).concat(lastResults.slice(0,betterOffset)).slice(0,6);
-  render(list);
-  toast("Alternatif sonuçlar getirildi.");
+async function toggleBusinessFavorite(id){if(!state.user)return openAuth("login");try{const {data,error}=await sb.rpc("toggle_business_favorite",{p_business_id:id});if(error)throw error;toast(data?.favorited?"İşletme favorilere eklendi.":"İşletme favorilerden çıkarıldı.")}catch(e){toast("Favori işlemi başarısız: "+(e.message||""))}}
+function recommend(silent=false){if(!silent)runBusinessDiscovery();}
+function setMood(v,el){$("mood").value=v;setDiscoveryMood(normalize(v),el);runBusinessDiscovery()}
+function setMode(v){state.mode=v}
+function surprise(){runBusinessDiscovery()}
+function better(){if(businessDiscoveryResults.length){setBusinessSort("match",document.querySelector('.sort-btn[data-sort="match"]'))}else runBusinessDiscovery()}
+$("businessBudget")?.addEventListener("keydown",e=>{if(e.key==="Enter")runBusinessDiscovery()});
+$("businessTimeValue")?.addEventListener("keydown",e=>{if(e.key==="Enter")runBusinessDiscovery()});
+
+function render(list){
+  if(!list?.length){
+    $("results").innerHTML='<div class="empty"><b>Uygun deneyim bulunamadı.</b></div>';return;
+  }
+  $("results").innerHTML=list.slice(0,6).map(a=>{
+    const fav=state.favorites.includes(a.id);return `<article class="business-card"><div class="business-card-head"><div><h3 class="business-name">${esc(a.title||"Deneyim")}</h3><div class="rating-line"><span class="stars">${starsHtml(a.rating||0)}</span><span class="rating-number">${Number(a.rating||0).toFixed(1)}</span></div></div><span class="distance-badge">${a.dist?esc(a.dist+" km"):"—"}</span></div><div class="business-meta">${esc(a.tag||"KEŞİF")} · ${esc(a.city||"")}</div><div class="price-row"><div class="price-main">${priceText(a.price)}</div><div class="price-note">${Number(a.time||0)} dk</div></div><div class="fit-box">🧠 ${esc(a.why||"Kriterlerine göre seçildi.")}</div><div class="business-actions"><button class="btn primary" onclick='openActivityDetail(${JSON.stringify(a.id)})'>Detaylar</button><button class="btn" onclick='toggleFavorite(${JSON.stringify(a.id)})'>${fav?"♥ Favoriden çıkar":"♡ Favorile"}</button><button class="btn wide" onclick='goToActivity(${JSON.stringify(a.id)})'>🗺️ Rotaya git</button></div></article>`;
+  }).join("");
 }
 
 function getActivity(id){return activities.find(x=>String(x.id)===String(id))}
@@ -2006,10 +1911,13 @@ function updateAuthUI(){
   const logged=!!state.user;
   document.body.classList.toggle("auth-locked",!logged);
   $("authAccessGate")?.classList.toggle("hidden",logged);
-  $("loginBtn").textContent=logged?"Profil":"Giriş";
-  $("loginBtn").onclick=logged?()=>openProfile():()=>openAuth("login");
-  $("joinBtn").textContent=logged?"Çıkış":"Katıl";
-  $("joinBtn").onclick=logged?()=>logout():()=>openAuth("join");
+  $("menuLoginItem")?.classList.toggle("hidden",logged);
+  $("menuJoinItem")?.classList.toggle("hidden",logged);
+  $("menuLogoutItem")?.classList.toggle("hidden",!logged);
+  if($("menuUserLabel")){
+    const p=state.profile||{};
+    $("menuUserLabel").textContent=logged?(p.username||state.user.email||"Kaşif"):"Misafir";
+  }
 }
 function maskHalf(value,keep="ends"){
   const s=String(value??"");if(!s)return "-";
@@ -2081,7 +1989,7 @@ function openProfile(){
   renderProfileFavorites();
   openModal("profileModal");
 }
-async function logout(){stopLocationTracking();await sb.auth.signOut();state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel",aiSettings:null,siteSettings:{},location:state.location,locationReady:state.locationReady,locationWatchId:null,locationHeartbeatId:null};updateAuthUI();updateLevels();recommend(true);closeModal("profileModal");syncLiveLocationAccess();toast("Çıkış yapıldı.")}
+async function logout(){stopLocationTracking();await sb.auth.signOut();state={user:null,profile:null,favorites:[],routes:[],xp:0,premium:false,mode:"Kişisel",aiSettings:null,siteSettings:{},location:state.location,locationReady:state.locationReady,locationWatchId:null,locationHeartbeatId:null};updateAuthUI();updateLevels();updateMenuUI();closeModal("profileModal");syncLiveLocationAccess();toast("Çıkış yapıldı.")}
 
 async function toggleFavorite(id){
   if(state.user && !requireProfileComplete("Favoriler"))return;
@@ -3347,7 +3255,7 @@ async function saveSiteSettings(){
   updatePublicPrices();
   toast("Sistem ayarları kaydedildi.");
 }
-["authModal","profileModal","ownerProfileModal","routeModal","reportModal","banModal","adminModal","businessExplorerModal"].forEach(id=>$(id)?.addEventListener("click",e=>{if(id==="adminModal"&&document.querySelector("#banModal.open"))return;if(e.target.classList.contains("modal")){if(id==="businessExplorerModal")closeBusinessExplorer();else closeModal(id)}}));
+["authModal","profileModal","ownerProfileModal","routeModal","reportModal","banModal","adminModal","businessExplorerModal","appMenuModal","businessProfileModal","businessReviewsModal","businessReviewEditorModal"].forEach(id=>$(id)?.addEventListener("click",e=>{if(id==="adminModal"&&document.querySelector("#banModal.open"))return;if(e.target.classList.contains("modal")){if(id==="businessExplorerModal")closeBusinessExplorer();else closeModal(id)}}));
 
 (async()=>{
   document.body.classList.add("auth-loading");
@@ -3355,587 +3263,10 @@ async function saveSiteSettings(){
   sb.auth.onAuthStateChange(()=>setTimeout(syncUser,0));
   await syncUser();
   document.body.classList.remove("auth-loading");
+  if(state.user && state.locationReady) loadSponsoredBusinesses();
   updateAuthUI();
-  if(state.user && state.locationReady && state.aiSettings) recommend(true);
+  if(state.user && state.locationReady && state.aiSettings) loadSponsoredBusinesses();
 })();
-
-/* V74 — discovery-first nearby business engine */
-let businessMood = "Sakin";
-let businessSearchBusy = false;
-let businessCurrent = null;
-let businessCurrentReviews = [];
-const BUSINESS_RADIUS_KM = 20;
-
-const BUSINESS_MOOD_RULES = {
-  "Romantik":{
-    cats:["food","hotel","culture","services"],
-    words:["romantik","cift","çift","manzara","bogaz","boğaz","rooftop","cafe","kafe","restaurant","restoran","spa","sunset"]
-  },
-  "Sakin":{
-    cats:["food","culture","services","sport"],
-    words:["park","bahce","bahçe","kitap","kutuphane","kütüphane","muz","müze","galeri","kahve","kafe","cafe","çay","yoga","spa","sahil","deniz","göl"]
-  },
-  "Eğlenceli":{
-    cats:["food","culture","sport","services"],
-    words:["bar","pub","gece","kulup","kulüp","sinema","bowling","karaoke","oyun","eglence","eğlence","konser","müzik","lunapark"]
-  },
-  "Gezmek":{
-    cats:["culture","shopping","hotel","services","sport"],
-    words:["muz","müze","tarihi","çarşı","carsi","pazar","market","park","sahil","manzara","atraksiyon","turizm","turistik","galeri"]
-  },
-  "Sanat":{
-    cats:["culture","services"],
-    words:["sanat","müze","muz","galeri","gallery","tiyatro","sinema","heykel","resim","sergi","atolye","atölye","craft"]
-  }
-};
-
-function setBusinessMood(mood, el){
-  businessMood = mood || "Sakin";
-  document.querySelectorAll(".discovery-mood").forEach(x=>x.classList.remove("active"));
-  if(el)el.classList.add("active");
-  $("mood").value = businessQueryValue($("mood")?.value || "");
-  searchBusinesses(true);
-}
-
-function businessQueryValue(v){ return String(v||"").trim(); }
-
-function businessTimeMinutes(){
-  const v=Math.max(1,Number($("time")?.value||4));
-  return ($("timeUnit")?.value==="minute") ? v : v*60;
-}
-function businessBudgetValue(){ return Math.max(0,Number($("budget")?.value||0)); }
-
-function detectBusinessCategory(query){
-  const q=normalize(query);
-  const map=[
-    [["nalbur","hırdavat","hirdavat","yapi market","yapı market","boya","tesisat"],"hardware"],
-    [["restoran","restaurant","lokanta","kebap","pide","döner","doner","cafe","kafe","kahve","pastane","fırın","firin","bar","pub"],"food"],
-    [["market","bakkal","süpermarket","supermarket","mağaza","magaza","giyim","ayakkabı","kitapçı","kitapci"],"shopping"],
-    [["eczane","pharmacy"],"pharmacy"],
-    [["hastane","klinik","doktor","diş","dis","sağlık","saglik"],"health"],
-    [["okul","üniversite","universite","kurs","sürücü","surucu"],"education"],
-    [["banka","atm","döviz","doviz","sigorta"],"finance"],
-    [["benzin","akaryakıt","akaryakit","petrol"],"fuel"],
-    [["oto","otomotiv","lastik","tamir","yıkama","yikama","servis"],"auto"],
-    [["kuaför","kuafor","güzellik","guzellik","kozmetik"],"beauty"],
-    [["otel","hotel","pansiyon","hostel","resort"],"hotel"],
-    [["spor","fitness","gym","stadyum","stad"],"sport"],
-    [["müze","muze","galeri","tiyatro","sinema","sanat"],"culture"]
-  ];
-  for(const [words,cat] of map){ if(words.some(w=>q.includes(normalize(w)))) return cat; }
-  return "";
-}
-
-function normalizeNearbyBusiness(r){
-  return {
-    id:r.id,
-    name:r.name||"İsimsiz işletme",
-    description:r.description||"",
-    category:r.category||"other",
-    city:r.city||"",
-    district:r.district||"",
-    address:r.address||"",
-    latitude:Number(r.latitude),
-    longitude:Number(r.longitude),
-    phone:r.phone||"",
-    website:r.website||"",
-    menu_url:r.menu_url||"",
-    average_price:r.average_price===null||r.average_price===undefined?null:Number(r.average_price),
-    price_updated_at:r.price_updated_at||null,
-    rating:(r.rating===null||r.rating===undefined||Number(r.rating)<=0)?5:Number(r.rating),
-    review_count:Number(r.review_count||0),
-    distance_km:Number(r.distance_km||0),
-    is_sponsored:!!r.is_sponsored
-  };
-}
-
-function businessCriteria(category){
-  const map={
-    food:["Titizlik","Lezzet","Karşılama"],
-    fuel:["Titizlik","Güven","Karşılama"],
-    shopping:["Ürün çeşitliliği","Fiyat","Karşılama"],
-    hardware:["Ürün bilgisi","Fiyat","Karşılama"],
-    pharmacy:["İlgi","Güven","Karşılama"],
-    health:["Titizlik","İlgi","Güven"],
-    education:["Eğitim kalitesi","İlgi","Düzen"],
-    finance:["Güven","Hız","İlgi"],
-    auto:["İşçilik","Güven","Karşılama"],
-    beauty:["Titizlik","Kalite","Karşılama"],
-    hotel:["Temizlik","Konfor","Karşılama"],
-    sport:["Temizlik","Ekipman","İlgi"],
-    culture:["İçerik","Düzen","Atmosfer"],
-    services:["Kalite","Hız","İlgi"],
-    other:["Kalite","Güven","Karşılama"]
-  };
-  return map[category]||map.other;
-}
-
-function businessStarText(rating){
-  const r=Math.max(0,Math.min(5,Number(rating||0)));
-  const full=Math.round(r);
-  return "★".repeat(full)+"☆".repeat(5-full);
-}
-
-function businessMoodScore(b){
-  const rule=BUSINESS_MOOD_RULES[businessMood]||BUSINESS_MOOD_RULES["Sakin"];
-  const hay=normalize([b.name,b.category,b.description,b.address,b.city,b.district].join(" "));
-  const wordHits=rule.words.reduce((n,w)=>n+(hay.includes(normalize(w))?1:0),0);
-  let score=0;
-  if(rule.cats.includes(b.category))score+=20;
-  score+=Math.min(30,wordHits*6);
-  return score;
-}
-
-function businessTimeEstimate(b){
-  const c=b.category;
-  if(["food","hotel"].includes(c))return 90;
-  if(c==="culture")return 120;
-  if(["sport","services"].includes(c))return 90;
-  if(["shopping","hardware","pharmacy","finance","fuel","auto"].includes(c))return 35;
-  return 60;
-}
-
-function businessBudgetScore(b,budget){
-  if(b.average_price===null||!Number.isFinite(b.average_price)) return 0;
-  if(b.average_price>budget) return -1000;
-  if(budget<=0)return b.average_price===0?40:-1000;
-  return Math.max(0,40-(Math.abs(budget-b.average_price)/Math.max(1,budget))*40);
-}
-
-function businessTimeScore(b,minutes){
-  const est=businessTimeEstimate(b);
-  if(est>minutes)return -400;
-  return Math.max(0,15-Math.abs(minutes-est)/Math.max(1,minutes)*15);
-}
-
-function businessSortScore(b){
-  const budget=businessBudgetValue();
-  const minutes=businessTimeMinutes();
-  let score=businessMoodScore(b);
-  const bscore=businessBudgetScore(b,budget);
-  if(b.average_price!==null){
-    if(bscore<0)return -99999;
-    score+=bscore;
-  }else{
-    score-=8;
-  }
-  const tscore=businessTimeScore(b,minutes);
-  if(tscore<0)return -99999;
-  score+=tscore;
-  score += Math.max(0,16-Math.min(16,b.distance_km*0.8));
-  score += Math.max(0,Math.min(15,(b.rating||5)*3));
-  score += Math.min(5,Math.log10(Math.max(1,b.review_count+1)));
-  return score;
-}
-
-function businessBudgetLabel(b){
-  const budget=businessBudgetValue();
-  if(b.average_price===null||!Number.isFinite(b.average_price)){
-    return `<span class="biz-price unknown">Fiyat bilgisi yok</span>`;
-  }
-  const price="₺"+Number(b.average_price).toLocaleString("tr-TR");
-  return b.average_price<=budget
-    ? `<span class="biz-price good">${price} · bütçene uyuyor</span>`
-    : `<span class="biz-price bad">${price} · bütçeyi aşıyor</span>`;
-}
-
-function businessCardHtml(b){
-  const fav = !!(b.__favorite);
-  const sponsor = b.is_sponsored ? `<span class="sponsor-badge">SPONSORLU</span>` : "";
-  const title=`${esc(b.name)} ${sponsor}`;
-  const price=businessBudgetLabel(b);
-  const cityline=[b.city,b.district].filter(Boolean).join(" · ")||"Türkiye";
-  const reason = businessMoodScore(b)>20
-    ? `${businessMood} ruh halinle daha güçlü eşleşiyor.`
-    : `20 km çevrendeki seçenekler arasında değerlendirildi.`;
-  const menuDisabled=!b.menu_url&&!b.website;
-  return `<article class="biz-card ${b.is_sponsored?"sponsored":""}">
-    <div class="biz-top">
-      <div style="min-width:0"><div class="biz-name">${title}</div><div class="biz-rating">${businessStarText(b.rating)} <span style="color:#c9bcd4">${Number(b.rating).toFixed(1)}</span></div></div>
-      <button type="button" class="btn mini biz-favorite" title="${fav?"Favoriden çıkar":"Favorile"}" onclick='toggleBusinessFavorite(${JSON.stringify(b.id)})'>${fav?"♥":"♡"}</button>
-    </div>
-    <div class="biz-meta">${esc(businessCategoryLabel(b.category))} · ${esc(cityline)} · <span class="biz-distance">${b.distance_km.toFixed(1)} km</span></div>
-    <div class="biz-description">${esc(b.description||"Yakınındaki işletme.")}</div>
-    <div class="biz-budget-row"><span>${price}</span><span class="muted">${businessTimeEstimate(b)} dk tahmini</span></div>
-    <div class="biz-match">🧠 <b>Neden burada?</b> ${esc(reason)}</div>
-    <div class="biz-actions">
-      <button type="button" class="btn primary" onclick='openBusinessDetails(${JSON.stringify(b.id)})'>Detaylar</button>
-      <button type="button" class="btn" onclick='openBusinessMenu(${JSON.stringify(b.id)})'>${menuDisabled?"Menü / fiyat yok":"Menüyü gör"}</button>
-      <button type="button" class="btn" onclick='openBusinessReviews(${JSON.stringify(b.id)})'>Yorumlar</button>
-      <button type="button" class="btn" onclick='openBusinessReview(${JSON.stringify(b.id)})'>⭐ Değerlendir</button>
-    </div>
-    <button type="button" class="btn primary" style="width:100%;margin-top:7px" onclick='goToBusiness(${JSON.stringify(b.id)})'>🗺️ Rotaya git</button>
-  </article>`;
-}
-
-function cacheNearbyBusinesses(list){
-  window.__nearbyBusinessRows=window.__nearbyBusinessRows||new Map();
-  list.forEach(b=>window.__nearbyBusinessRows.set(String(b.id),b));
-}
-
-function getBusinessById(id){
-  return window.__nearbyBusinessRows?.get(String(id))||null;
-}
-
-async function loadBusinessFavoriteIds(){
-  if(!state.user)return new Set();
-  try{
-    const {data,error}=await sb.rpc("get_my_business_favorites");
-    if(error)throw error;
-    return new Set((data||[]).map(x=>String(x.id)));
-  }catch(e){
-    console.warn("BUSINESS FAVORITES",e); return new Set();
-  }
-}
-
-async function searchBusinesses(silent=false){
-  if(businessSearchBusy)return;
-  if(state.user && !requireProfileComplete("İşletme önerileri"))return;
-  if(!requireLocation("İşletme önerileri"))return;
-  if(!state.user){
-    toast("İşletme önerilerini kullanmak için giriş yap.");
-    openAuth("login");
-    return;
-  }
-  if(!state.location){
-    toast("Konumun bulunamadı.");
-    return;
-  }
-
-  const q=businessQueryValue($("mood")?.value);
-  const category=detectBusinessCategory(q);
-  const summary=$("businessResultSummary");
-  const box=$("businessResults");
-  businessSearchBusy=true;
-  if(summary)summary.textContent="20 km çevrende işletmeler aranıyor…";
-  if(box)box.innerHTML='<div class="biz-empty loading">Yakınındaki işletmeler taranıyor…</div>';
-
-  try{
-    const {data,error}=await sb.rpc("search_nearby_businesses",{
-      p_lat:Number(state.location.latitude),
-      p_lng:Number(state.location.longitude),
-      p_radius_km:BUSINESS_RADIUS_KM,
-      p_category:category,
-      p_search:q,
-      p_limit:250
-    });
-    if(error)throw error;
-    let rows=(data||[]).map(normalizeNearbyBusiness);
-    const favIds=await loadBusinessFavoriteIds();
-    rows.forEach(b=>b.__favorite=favIds.has(String(b.id)));
-    cacheNearbyBusinesses(rows);
-
-    let scored=rows.map(b=>({...b,__score:businessSortScore(b)})).filter(b=>b.__score>-50000);
-    scored.sort((a,b)=>b.__score-a.__score||a.distance_km-b.distance_km);
-    const shown=scored.slice(0,12);
-    if(summary){
-      const filters=[];
-      if(q)filters.push(`“${q}”`);
-      if(businessMood)filters.push(businessMood);
-      filters.push(`₺${businessBudgetValue().toLocaleString("tr-TR")}`);
-      filters.push(`${businessTimeMinutes()} dk`);
-      summary.textContent=`${shown.length} uygun işletme · ${filters.join(" · ")} · 20 km`;
-    }
-    if(!shown.length){
-      if(box)box.innerHTML='<div class="biz-empty"><b>Bu koşullarda uygun işletme bulunamadı.</b><p class="muted">Bütçeyi/zamanı değiştirebilir veya arama kelimesini genişletebilirsin.</p></div>';
-    }else{
-      if(box)box.innerHTML=shown.map(b=>businessCardHtml(b)).join("");
-      cacheNearbyBusinesses(shown);
-    }
-    await loadSponsoredBusinesses();
-    if(!silent)scrollToId("businessResultsSection");
-  }catch(e){
-    console.error("NEARBY BUSINESSES",e);
-    if(box)box.innerHTML=`<div class="biz-empty"><b>İşletmeler yüklenemedi.</b><p class="muted">${esc(e.message||"Supabase RPC hatası")}</p></div>`;
-    if(summary)summary.textContent="İşletme araması tamamlanamadı.";
-  }finally{
-    businessSearchBusy=false;
-  }
-}
-
-async function loadSponsoredBusinesses(){
-  const box=$("sponsoredResults"); if(!box)return;
-  if(!state.user||!state.locationReady||!state.location){
-    box.innerHTML='<div class="biz-empty">Konumun doğrulandığında sponsorlu işletmeler burada görüntülenecek.</div>'; return;
-  }
-  try{
-    const {data,error}=await sb.rpc("search_promoted_businesses",{
-      p_lat:Number(state.location.latitude),p_lng:Number(state.location.longitude),
-      p_radius_km:BUSINESS_RADIUS_KM,p_limit:6
-    });
-    if(error)throw error;
-    let rows=(data||[]).map(normalizeNearbyBusiness).map(x=>({...x,is_sponsored:true}));
-    const favIds=await loadBusinessFavoriteIds();
-    rows.forEach(b=>b.__favorite=favIds.has(String(b.id)));
-    cacheNearbyBusinesses(rows);
-    box.innerHTML=rows.length
-      ? rows.slice(0,6).map(b=>businessCardHtml(b)).join("")
-      : '<div class="biz-empty">Şu anda bulunduğun konumda aktif sponsorlu işletme bulunmuyor.</div>';
-  }catch(e){
-    console.warn("SPONSORED BUSINESSES",e);
-    box.innerHTML='<div class="biz-empty">Sponsorlu öneriler şu anda yüklenemedi.</div>';
-  }
-}
-
-function openBusinessMenu(id){
-  const b=getBusinessById(id);
-  if(!b)return toast("İşletme bulunamadı.");
-  const url=b.menu_url||b.website;
-  if(!url)return toast("Bu işletme için menü bağlantısı bulunmuyor.");
-  window.open(businessEscapeUrl(url),"_blank","noopener,noreferrer");
-}
-
-function openBusinessDetails(id){
-  if(state.user&&!requireProfileComplete("İşletme detayı"))return;
-  if(!requireLocation("İşletme detayı"))return;
-  const b=getBusinessById(id); if(!b)return toast("İşletme bulunamadı.");
-  businessCurrent=b;
-  const priceInfo=b.average_price===null?"Fiyat bilgisi eklenmemiş":"₺"+Number(b.average_price).toLocaleString("tr-TR");
-  const menuLabel=b.menu_url||b.website ? "Menü / web sitesini aç" : "Menü bağlantısı yok";
-  const web=b.website?`<a href="${esc(businessEscapeUrl(b.website))}" target="_blank" rel="noopener" style="color:#d9c6ff">${esc(b.website)}</a>`:"-";
-  $("businessDetailModalBody").innerHTML=`
-    <div class="business-detail-title-row">
-      <div>
-        <span class="tag">${esc(businessCategoryLabel(b.category))}</span>
-        <h2 style="margin:8px 0 3px">${esc(b.name)}</h2>
-        <div class="muted">${esc([b.city,b.district].filter(Boolean).join(" · "))}</div>
-      </div>
-      <div style="text-align:right"><div class="business-detail-large-rating">${businessStarText(b.rating)}</div><strong>${Number(b.rating).toFixed(1)}/5</strong><div class="muted">${b.review_count} değerlendirme</div></div>
-    </div>
-    <div class="business-detail-field"><small>Yakınlık</small><strong>${b.distance_km.toFixed(1)} km</strong></div>
-    <div class="business-detail-field"><small>Adres</small><strong>${esc(b.address||"Adres bilgisi bulunmuyor")}</strong></div>
-    <div class="business-detail-field"><small>Bütçenle karşılaştırma</small><strong>${priceInfo}${b.average_price!==null?(b.average_price<=businessBudgetValue()?" · uygun":" · bütçeyi aşıyor"):""}</strong></div>
-    <div class="business-detail-field"><small>Telefon</small><strong>${esc(b.phone||"-")}</strong></div>
-    <div class="business-detail-field"><small>Web sitesi</small><strong>${web}</strong></div>
-    <div class="business-match">🧠 <b>Neden öneriliyor?</b> ${esc((businessMoodScore(b)>20?businessMood:"20 km yakınlık")+" ve bütçe/zaman kriterlerine göre sıralandı.")}</div>
-    <div class="business-detail-actions">
-      <button class="btn primary" type="button" onclick='goToBusiness(${JSON.stringify(b.id)})'>🗺️ Rotaya git</button>
-      <button class="btn" type="button" onclick='openBusinessMenu(${JSON.stringify(b.id)})'>${menuLabel}</button>
-      <button class="btn" type="button" onclick='closeModal("businessDetailModal");openBusinessReviews(${JSON.stringify(b.id)})'>💬 Yorumlar</button>
-      <button class="btn" type="button" onclick='closeModal("businessDetailModal");openBusinessReview(${JSON.stringify(b.id)})'>⭐ Değerlendir</button>
-      <button class="btn" type="button" onclick='toggleBusinessFavorite(${JSON.stringify(b.id)})'>${b.__favorite?"♥ Favoriden çıkar":"♡ Favorile"}</button>
-      <button class="btn" type="button" onclick='copyBusinessCoords(${JSON.stringify(b.latitude+","+b.longitude)})'>📋 Konumu kopyala</button>
-    </div>`;
-  openModal("businessDetailModal");
-}
-
-async function openBusinessReviews(id){
-  if(state.user&&!requireProfileComplete("İşletme yorumları"))return;
-  if(!requireLocation("İşletme yorumları"))return;
-  const b=getBusinessById(id); if(!b)return toast("İşletme bulunamadı.");
-  businessCurrent=b;
-  $("businessReviewsTitle").textContent=b.name;
-  $("businessReviewsSummary").innerHTML=`
-    <div class="business-review-kpi"><small class="muted">Puan</small><strong>${businessStarText(b.rating)} ${Number(b.rating).toFixed(1)}</strong></div>
-    <div class="business-review-kpi"><small class="muted">Değerlendirme</small><strong>${b.review_count}</strong></div>
-    <div class="business-review-kpi"><small class="muted">Konum</small><strong>${b.distance_km.toFixed(1)} km</strong></div>`;
-  $("businessReviewsBody").innerHTML='<div class="empty loading">Yorumlar yükleniyor…</div>';
-  openModal("businessReviewsModal");
-  try{
-    const {data,error}=await sb.rpc("get_business_reviews",{p_business_id:b.id});
-    if(error)throw error;
-    businessCurrentReviews=data||[];
-    $("businessReviewsCount").textContent=`${businessCurrentReviews.length} değerlendirme`;
-    if(!businessCurrentReviews.length){
-      $("businessReviewsBody").innerHTML='<div class="empty">Henüz yorum yok. İlk değerlendirmeyi sen bırakabilirsin.</div>';return;
-    }
-    $("businessReviewsBody").innerHTML=businessCurrentReviews.map(r=>{
-      const criteria=Object.entries(r.criteria||{}).map(([k,v])=>`${esc(k)} ${Number(v).toFixed(1)}`).join(" · ");
-      return `<div class="business-review-item">
-        <div class="row"><b>${esc(r.username||"Kaşif")}</b><span class="review-stars">${businessStarText(r.overall_rating)}</span></div>
-        <div class="muted" style="font-size:11px;margin-top:4px">${new Date(r.created_at).toLocaleString("tr-TR")}</div>
-        ${criteria?`<div class="meta" style="margin-top:7px">${criteria}</div>`:""}
-        <div style="margin-top:7px;color:#ddd3e7;line-height:1.6">${esc(r.comment||"Yorum bırakılmamış.")}</div>
-      </div>`;
-    }).join("");
-  }catch(e){
-    $("businessReviewsBody").innerHTML=`<div class="biz-empty">Yorumlar yüklenemedi: ${esc(e.message||"Sunucu hatası")}</div>`;
-  }
-}
-
-function openBusinessReviewForCurrent(){
-  if(!businessCurrent)return toast("İşletme seçilmedi.");
-  closeModal("businessReviewsModal");
-  openBusinessReview(businessCurrent.id);
-}
-
-function renderStarPicker(containerId,key){
-  const box=$(containerId);if(!box)return;
-  box.innerHTML=`<div class="star-picker" data-star-key="${esc(key)}">`+
-    [1,2,3,4,5].map(n=>`<button type="button" data-star="${n}" aria-label="${n} yıldız">★</button>`).join("")+
-    `</div>`;
-  const picker=box.querySelector(".star-picker");
-  picker.onclick=e=>{
-    const btn=e.target.closest("button");if(!btn)return;
-    const val=Number(btn.dataset.star);
-    picker.dataset.value=String(val);
-    [...picker.querySelectorAll("button")].forEach(x=>x.classList.toggle("active",Number(x.dataset.star)<=val));
-  };
-}
-
-function openBusinessReview(id){
-  if(!state.user){toast("Değerlendirmek için önce giriş yap.");return openAuth("login")}
-  if(state.user&&!requireProfileComplete("İşletme değerlendirmesi"))return;
-  if(!requireLocation("İşletme değerlendirmesi"))return;
-  const b=getBusinessById(id);if(!b)return toast("İşletme bulunamadı.");
-  businessCurrent=b;
-  $("businessReviewTitle").textContent=`${b.name} · ${Number(b.rating).toFixed(1)}★`;
-  $("businessReviewComment").value="";
-  $("businessReviewError").textContent="";
-  const labels=businessCriteria(b.category);
-  $("businessCriteriaGrid").innerHTML=labels.map((label,i)=>`<div class="criteria-box"><b>${esc(label)}</b><div id="criterion${i+1}"></div></div>`).join("");
-  labels.forEach((_,i)=>renderStarPicker("criterion"+(i+1),"c"+(i+1)));
-  openModal("businessReviewModal");
-}
-
-async function submitBusinessReview(){
-  if(!businessCurrent||!state.user)return;
-  const vals=[1,2,3].map(i=>Number($("criterion"+i)?.querySelector(".star-picker")?.dataset.value||0));
-  const err=$("businessReviewError");
-  if(vals.some(v=>v<1||v>5)){if(err)err.textContent="Lütfen üç kriterin tamamını 1–5 yıldız arasında değerlendir.";return}
-  const comment=String($("businessReviewComment")?.value||"").trim();
-  const labels=businessCriteria(businessCurrent.category);
-  const criteria={};labels.forEach((label,i)=>criteria[label]=vals[i]);
-  try{
-    const {data,error}=await sb.rpc("submit_business_review",{
-      p_business_id:businessCurrent.id,
-      p_criteria:criteria,
-      p_comment:comment
-    });
-    if(error)throw error;
-    const newRating=Number(data?.rating||5);
-    businessCurrent.rating=newRating;
-    businessCurrent.review_count=Number(data?.review_count||businessCurrent.review_count+1);
-    window.__nearbyBusinessRows?.set(String(businessCurrent.id),businessCurrent);
-    closeModal("businessReviewModal");
-    toast("Değerlendirmen kaydedildi.");
-    await searchBusinesses(true);
-    await loadSponsoredBusinesses();
-  }catch(e){
-    if(err)err.textContent=e.message||"Değerlendirme kaydedilemedi.";
-  }
-}
-
-async function toggleBusinessFavorite(id){
-  if(!state.user){toast("Favorilemek için önce giriş yap.");return openAuth("login")}
-  if(state.user&&!requireProfileComplete("İşletme favorileri"))return;
-  if(!requireLocation("İşletme favorileri"))return;
-  const b=getBusinessById(id);if(!b)return toast("İşletme bulunamadı.");
-  try{
-    const {data,error}=await sb.rpc("toggle_business_favorite",{p_business_id:b.id});
-    if(error)throw error;
-    b.__favorite=!!data?.favorited;
-    toast(b.__favorite?"İşletme favorilere eklendi.":"İşletme favorilerden çıkarıldı.");
-    await searchBusinesses(true);
-    await loadSponsoredBusinesses();
-    if($("profileModal")?.classList.contains("open"))await renderMyBusinessFavorites();
-  }catch(e){toast("Favori işlemi başarısız: "+(e.message||"Sunucu hatası"))}
-}
-
-async function renderMyBusinessFavorites(){
-  const box=$("profileBusinessFavoritesList");
-  const count=$("profileBusinessFavoriteCount");
-  if(!box)return;
-  if(!state.user){box.innerHTML='<div class="muted">Giriş yapınca burada görünür.</div>';if(count)count.textContent="0";return}
-  box.innerHTML='<div class="muted">Favoriler yükleniyor…</div>';
-  try{
-    const {data,error}=await sb.rpc("get_my_business_favorites");
-    if(error)throw error;
-    const rows=(data||[]).map(normalizeNearbyBusiness);
-    cacheNearbyBusinesses(rows);
-    if(count)count.textContent=String(rows.length);
-    if(!rows.length){box.innerHTML='<div class="muted">Henüz favorilediğin işletme yok.</div>';return}
-    box.innerHTML=rows.map(b=>`<div class="route-item">
-      <div><b>${esc(b.name)}</b><small class="muted" style="display:block">${esc(businessCategoryLabel(b.category))} · ${esc([b.city,b.district].filter(Boolean).join(" · "))}</small></div>
-      <button class="btn mini primary" type="button" onclick='goToBusiness(${JSON.stringify(b.id)})'>Rotaya git</button>
-    </div>`).join("");
-  }catch(e){box.innerHTML=`<div class="muted">Favoriler yüklenemedi: ${esc(e.message||"Sunucu hatası")}</div>`}
-}
-
-function goToBusiness(id){
-  if(state.user&&!requireProfileComplete("Yol tarifi"))return;
-  if(!requireLocation("Yol tarifi"))return;
-  if(!state.user){toast("Yol tarifi için önce giriş yap.");return openAuth("login")}
-  const b=getBusinessById(id);if(!b)return toast("İşletme bulunamadı.");
-  const origin=`${Number(state.location.latitude)},${Number(state.location.longitude)}`;
-  const dest=`${Number(b.latitude)},${Number(b.longitude)}`;
-  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
-  const url=isIOS
-    ? `https://maps.apple.com/?saddr=${encodeURIComponent(origin)}&daddr=${encodeURIComponent(dest)}`
-    : `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(dest)}`;
-  window.open(url,"_blank","noopener,noreferrer");
-}
-
-function toggleSideMenu(){
-  $("sideMenu")?.classList.toggle("open");
-  $("sideMenuOverlay")?.classList.toggle("open");
-  updateSideMenu();
-}
-function closeSideMenu(){
-  $("sideMenu")?.classList.remove("open");
-  $("sideMenuOverlay")?.classList.remove("open");
-}
-function updateSideMenu(){
-  const p=state.profile||{};
-  $("sideProfileName")&&( $("sideProfileName").textContent=p.username||([p.first_name,p.last_name].filter(Boolean).join(" ")||"Kaşif") );
-  $("sideProfileEmail")&&( $("sideProfileEmail").textContent=state.user?.email||"Giriş yapılmadı");
-  const level=Number(state.profile?.level||Math.floor(state.xp/750)+1);
-  const cur=state.xp%750,pct=Math.min(100,Math.round(cur/750*100));
-  $("sideLevel")&&($("sideLevel").textContent=String(level));
-  $("sideXp")&&($("sideXp").textContent=String(state.xp));
-  $("sideXpBar")&&($("sideXpBar").style.width=pct+"%");
-  $("menuAdminLink")?.classList.toggle("show",!!state.user&&isAdmin());
-}
-function openProfileFromMenu(){
-  closeSideMenu();
-  if(!state.user)return openAuth("login");
-  openProfile();
-}
-function logoutFromMenu(){
-  closeSideMenu();
-  logout();
-}
-
-document.addEventListener("keydown",e=>{
-  if(e.key==="Enter"&&document.activeElement?.id==="mood"){
-    e.preventDefault();searchBusinesses();
-  }
-  if(e.key==="Escape")closeSideMenu();
-});
-$("timeUnit")?.addEventListener("change",()=>{
-  if($("timeText"))$("timeText").textContent=`${$("time").value} ${$("timeUnit").value==="minute"?"dakika":"saat"}`;
-});
-$("modeSelect")?.addEventListener("change",()=>setMode($("modeSelect").value));
-
-/* Keep the existing profile modal, but append business favorites to it. */
-const __discoverOriginalOpenProfile = window.openProfile;
-window.openProfile = function(){
-  const result=__discoverOriginalOpenProfile.apply(this,arguments);
-  if(state.user)renderMyBusinessFavorites();
-  updateSideMenu();
-  return result;
-};
-
-/* Keep the existing location/auth boot flow, then hydrate nearby recommendations. */
-const __discoverOriginalUpdateAuthUI = window.updateAuthUI;
-window.updateAuthUI = function(){
-  const r=__discoverOriginalUpdateAuthUI?.apply(this,arguments);
-  updateSideMenu();
-  if(state.user&&state.locationReady){
-    loadSponsoredBusinesses().catch(()=>{});
-  }
-  return r;
-};
-
-/* Initial nearby sponsored area after current app boot. */
-setTimeout(()=>{
-  if(state.user&&state.locationReady)loadSponsoredBusinesses().catch(()=>{});
-},1800);
-
-
-/* Make the legacy scoring helpers understand the new time unit. */
-window.currentTime = function(){ return businessTimeMinutes(); };
-
 </script>
 </body>
 </html>
