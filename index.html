@@ -393,6 +393,9 @@ body{background:radial-gradient(circle at 72% 0%,#342052 0,#170d22 38%,#0c0813 7
     <div class="identity-note">Girdiğin profil bilgileri kayıt sırasında tek işlemde hesabına bağlanır. SMS ve kimlik doğrulaması şimdilik kapalıdır.</div>
   </div>
 </div>
+<div class="form" id="authLoginOnly" style="display:none">
+  <input id="authLoginIdentifier" type="text" placeholder="E-posta veya kullanıcı adı" autocomplete="username" inputmode="email">
+</div>
 <div class="form">
   <input id="authPassword" type="password" placeholder="Şifre" autocomplete="new-password">
   <button class="btn primary" onclick="submitAuth()">Hesap oluştur</button>
@@ -2562,17 +2565,27 @@ async function resolveLoginEmail(identifier){
 
 function updateAuthModeUI(mode){
   const join=mode==='join';
-  const input=$('authEmail');
-  if(input){
-    input.type=join?'email':'text';
-    input.placeholder=join?'E-posta':'E-posta veya kullanıcı adı';
-    input.autocomplete=join?'email':'username';
+  const signupEmail=$("authEmail");
+  const loginIdentifier=$("authLoginIdentifier");
+  const loginOnly=$("authLoginOnly");
+
+  if(signupEmail){
+    signupEmail.type='email';
+    signupEmail.placeholder='E-posta';
+    signupEmail.autocomplete='email';
   }
-  const pass=$('authPassword');
+  if(loginOnly)loginOnly.style.display=join?'none':'';
+  if(loginIdentifier){
+    loginIdentifier.type='text';
+    loginIdentifier.placeholder='E-posta veya kullanıcı adı';
+    loginIdentifier.autocomplete='username';
+  }
+
+  const pass=$("authPassword");
   if(pass)pass.autocomplete=join?'new-password':'current-password';
   const primary=document.querySelector('#authModal .btn.primary');
   if(primary)primary.textContent=join?'Hesap oluştur':'Giriş yap';
-  const hint=$('authHint');
+  const hint=$("authHint");
   if(hint)hint.textContent=join?'Kayıt formu tek adımda tamamlanır.':'E-posta adresin veya kullanıcı adınla giriş yapabilirsin.';
 }
 
@@ -2632,7 +2645,7 @@ async function submitAuth(){
 
       toast(data.session?'Kayıt tamamlandı ve hesabın aktif.':'Kayıt tamamlandı. E-posta doğrulama gerekiyorsa doğruladıktan sonra giriş yap.');
     }else{
-      const identifier=$('authEmail').value.trim();
+      const identifier=$('authLoginIdentifier').value.trim();
       if(!identifier)throw new Error('E-posta veya kullanıcı adı gerekli.');
       const email=await resolveLoginEmail(identifier);
       const {error}=await sb.auth.signInWithPassword({email,password});
