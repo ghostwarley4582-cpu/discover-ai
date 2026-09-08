@@ -134,7 +134,7 @@ body.auth-locked #locationMini{display:none!important}
 .business-cat small{color:var(--muted);font-size:10px}
 .business-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
 .business-map-wrap{min-width:0;min-height:0;display:flex;flex-direction:column}
-#businessMap{flex:1;min-height:420px;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#08060d}
+#businessMap{flex:1;min-height:420px;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#08060d;position:relative}
 .business-map-status{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 2px;color:var(--muted);font-size:12px}
 .business-stat{padding:9px 11px;border:1px solid var(--line);background:#0d0a12;border-radius:12px}
 .business-detail-card{display:grid;gap:10px}
@@ -143,7 +143,7 @@ body.auth-locked #locationMini{display:none!important}
 .business-detail-field small{display:block;color:var(--muted);font-size:11px;margin-bottom:4px}
 .business-detail-field strong{display:block;word-break:break-word}
 .business-pin{font-size:12px}
-.business-loading{display:grid;place-items:center;height:100%;min-height:260px}
+.business-loading{position:absolute;inset:0;display:grid;place-items:center;min-height:260px;z-index:3;background:#08060d;pointer-events:none}
 .business-list-hint{padding:10px 11px;border:1px dashed #4a355c;border-radius:12px;color:var(--muted);font-size:12px;line-height:1.5;margin-top:10px}
 @media(max-width:1100px){.business-shell{grid-template-columns:240px minmax(0,1fr)}.business-details{grid-column:1/-1;max-height:240px}}
 @media(max-width:800px){.business-modal .modalbox{height:96vh;max-height:96vh;padding:12px}.business-shell{grid-template-columns:1fr;overflow:auto}.business-sidebar{max-height:260px}.business-map-wrap{min-height:480px}.business-details{max-height:320px}#businessMap{min-height:420px}.business-cats{grid-template-columns:1fr 1fr}}
@@ -1379,6 +1379,8 @@ async function openBusinessExplorer(){
   setTimeout(async()=>{
     if(!businessMap){
       const center=state.location?[state.location.latitude,state.location.longitude]:[39,35];
+      const mapEl=$("businessMap");
+      if(mapEl)mapEl.innerHTML="";
       businessMap=L.map("businessMap",{preferCanvas:true,zoomControl:true}).setView(center,state.location?13:6);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap contributors"}).addTo(businessMap);
       businessMap.on("moveend",()=>loadBusinessesForMap());
