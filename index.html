@@ -3268,6 +3268,7 @@ function renderMenu(
 
   const website=
     safeUrl(
+      data.website||
       p.website||
       b.website||
       ""
@@ -3314,7 +3315,9 @@ function renderMenu(
       address,
 
       data.menu_source||data.source||
-      "Foursquare Places API",
+      "Menü kaynağı bulunamadı",
+
+      data.cached?"Önbellekten gösteriliyor":"",
 
       data.checked_at
       ?"Son kontrol: "+
@@ -3329,6 +3332,7 @@ function renderMenu(
     .filter(Boolean)
     .join(" · ");
 
+  const searchUrl="https://www.google.com/search?q="+encodeURIComponent([b.name,b.address,b.city,"menü"].filter(Boolean).join(" "));
   const actions=[
     menu
     ?`
@@ -3365,7 +3369,8 @@ function renderMenu(
         📞 Ara
       </a>
     `
-    :""
+    :"",
+    !menu?`<a class="btn" href="${esc(searchUrl)}" target="_blank" rel="noopener">🔎 Web'de menü ara</a>`:""
   ]
   .filter(Boolean)
   .join("");
@@ -3373,7 +3378,8 @@ function renderMenu(
   const itemHtml=
     items.length
     ?`
-      <h3>Menü ürünleri</h3>
+      <h3>Kaynak sayfadan okunan menü ürünleri</h3>
+      ${data.menu_items_source?`<div class="muted" style="margin-bottom:12px">Kaynak: <a href="${esc(safeUrl(data.menu_items_source))}" target="_blank" rel="noopener">İşletmenin menü sayfası</a> · Son okuma: ${esc(new Date(data.checked_at).toLocaleString("tr-TR"))}</div>`:""}
 
       <div class="stack">
 
@@ -3463,6 +3469,8 @@ function renderMenu(
     `
     :"";
 
+  const candidateHtml=Array.isArray(data.candidate_urls)&&data.candidate_urls.length
+    ?`<h3>Diğer olası menü bağlantıları</h3><div class="notice">Bu bağlantıların işletmeye ait olduğu doğrulanmadı; ürün ve fiyatları eşleştirmedik.</div><div class="search-actions">${data.candidate_urls.map((u,i)=>`<a class="btn" href="${esc(safeUrl(u))}" target="_blank" rel="noopener">Aday kaynak ${i+1}</a>`).join("")}</div>`:"";
   const note=
     !menu &&
     !items.length &&
@@ -3482,6 +3490,8 @@ function renderMenu(
     ${itemHtml}
 
     ${photoHtml}
+
+    ${candidateHtml}
 
     ${Array.isArray(data.warnings)&&data.warnings.length?`<div class="notice">${esc(data.warnings.join(" · "))}</div>`:""}
 
