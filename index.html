@@ -35,14 +35,28 @@ section{padding:45px 0}.section-head{display:flex;justify-content:space-between;
 footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-size:13px}
 @media(max-width:800px){.navlinks .desktop{display:none}.hero{padding-top:45px}h1{letter-spacing:-2px}.controls,.grid,.plans,.admin{grid-template-columns:1fr}.feature-grid{grid-template-columns:1fr 1fr}.levels{grid-template-columns:repeat(2,1fr)}.prompt{flex-direction:column}.prompt .btn{width:100%}.section-head{align-items:start;flex-direction:column}}
 
-.menu-box{margin-top:12px;padding:12px;background:#0b0810;border:1px solid #332642;border-radius:14px}
-.menu-head{display:flex;justify-content:space-between;gap:10px;align-items:center}
-.menu-items{display:grid;gap:7px;margin-top:9px}
-.menu-item{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#ddd3e7;padding:7px 0;border-bottom:1px solid #21182c}
-.menu-item:last-child{border-bottom:0}
-.menu-price{font-weight:800;color:#d8b4ff;white-space:nowrap}
-.live-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;background:#10251e;border:1px solid #285a47;color:#9ff0ce;font-size:11px}
-.live-badge:before{content:"";width:7px;height:7px;border-radius:50%;background:#69e7b7;box-shadow:0 0 10px #69e7b7}
+/* DISCOVER AI — Live Menu Service */
+.menu-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;
+  background:#17102a;border:1px solid #5a3b79;color:#d9c6ff;font-size:11px}
+.menu-badge.live{background:#0d241d;border-color:#245f4c;color:#8cf0c5}
+.menu-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.menu-panel{margin-top:12px;padding:12px;border:1px solid #3a294b;border-radius:15px;background:#0b0810}
+.menu-panel h4{margin:0 0 8px}
+.menu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.menu-item{padding:10px;border:1px solid var(--line);border-radius:12px;background:#100c17}
+.menu-item b{display:block;font-size:13px}
+.menu-item small{display:block;color:var(--muted);margin-top:4px;line-height:1.4}
+.menu-item .menu-price{color:#d9c6ff;font-weight:800;margin-top:5px}
+.menu-photo{width:100%;height:120px;object-fit:cover;border-radius:10px;margin-top:8px;border:1px solid var(--line)}
+.menu-source{font-size:11px;color:var(--muted);line-height:1.5;margin-top:8px}
+.menu-modal .modalbox{width:min(920px,100%)}
+.menu-detail-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.menu-detail-meta{color:var(--muted);font-size:12px;line-height:1.6}
+.menu-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.menu-detail-field{padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#0d0a12}
+.menu-detail-field small{display:block;color:var(--muted);margin-bottom:4px}
+.menu-empty{padding:18px;border:1px dashed #4a355c;border-radius:14px;color:var(--muted)}
+@media(max-width:700px){.menu-grid,.menu-detail-grid{grid-template-columns:1fr}}
 
 </style>
 </head>
@@ -144,7 +158,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 </section>
 </main>
 
-<footer><div class="wrap">DISCOVER AI · Canlı mekan ve menü verileri güvenli Supabase Edge Function üzerinden alınır; secret/service_role anahtarları frontend'e konmaz.</div></footer>
+<footer><div class="wrap">DISCOVER AI · Canlı mekan verileri güvenli Supabase Edge Function üzerinden alınır; secret/service_role anahtarları frontend'e konmaz.</div></footer>
 
 <div id="authModal" class="modal"><div class="modalbox">
 <button class="close" onclick="closeModal('authModal')">×</button><div class="eyebrow">ACCOUNT</div>
@@ -178,6 +192,17 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-s
 <button class="btn primary" style="margin-top:10px" onclick="submitReport()">Şikayeti kaydet</button>
 </div></div>
 
+
+<div id="menuModal" class="modal menu-modal">
+  <div class="modalbox">
+    <button class="close" onclick="closeModal('menuModal')">×</button>
+    <div class="eyebrow">LIVE MENU</div>
+    <div id="menuModalBody" style="margin-top:12px">
+      <div class="empty loading">Güncel menü bilgileri yükleniyor...</div>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -193,6 +218,8 @@ let lastResults=[];
 let betterOffset=0;
 let liveRequestSeq=0;
 let liveTimer=null;
+let menuCache=new Map();
+let menuRequestSeq=0;
 
 const $=id=>document.getElementById(id);
 function toast(t){const x=$("toast");x.textContent=t;x.style.display="block";clearTimeout(window.__toast);window.__toast=setTimeout(()=>x.style.display="none",3000)}
@@ -219,67 +246,35 @@ function normalizeActivity(a){
   };
 }
 
-function normalizeMenuItem(x){
-  if(!x)return null;
-  const name=String(x.name||x.title||x.item||x.label||"").trim();
-  if(!name)return null;
-  const raw=x.price??x.amount??x.value??x.cost??null;
-  let price=null;
-  if(typeof raw==="number")price=raw;
-  else if(typeof raw==="string"){
-    const m=raw.replace(",",".").match(/(\d+(?:\.\d+)?)/);
-    if(m)price=Number(m[1]);
-  }
-  return {
-    name,
-    description:String(x.description||x.desc||"").trim(),
-    category:String(x.category||x.section||x.group||"").trim(),
-    price:Number.isFinite(price)?price:null,
-    currency:String(x.currency||x.menu_currency||"TRY").trim()||"TRY"
-  };
-}
-
 function normalizeLivePlace(p){
   const loc=p.location||{};
   const cats=Array.isArray(p.categories)?p.categories.map(c=>c.name).filter(Boolean):[];
-  const rawMenu=Array.isArray(p.menu_items)?p.menu_items:
-                Array.isArray(p.menu)?p.menu:
-                Array.isArray(p.menu?.items)?p.menu.items:[];
-  const menuItems=rawMenu.map(normalizeMenuItem).filter(Boolean);
   const title=p.name||"Mekan";
   const rating=Number(p.rating||0);
   const distanceKm=Number(p.distance||0)/1000;
   return {
-    id:"live:"+String(p.place_id||p.fsq_place_id||title),
-    place_id:p.place_id||p.fsq_place_id||null,
+    id:"live:"+String(p.place_id||title),
+    place_id:p.place_id||null,
     title,
     price:0,
-    priceLevel:Number(p.price||p.price_level||0),
+    priceLevel:Number(p.price||0),
     rating,
     tag:"CANLI MEKAN",
     description:p.description||cats.slice(0,3).join(" · "),
-    why:p.why||"Canlı mekan verisi; konum, puan, fiyat seviyesi ve mevcut menü bilgisi birlikte değerlendirildi.",
+    why:"Foursquare canlı mekan verisi; konum, puan ve fiyat seviyesi birlikte değerlendirildi.",
     time:60,
     dist:distanceKm,
     moods:cats,
-    city:loc.locality||p.city||currentCity(),
+    city:loc.locality||currentCity(),
     emoji:"📍",
     is_active:true,
     isLive:true,
     categories:cats,
     address:loc.formatted_address||[loc.address,loc.locality].filter(Boolean).join(", "),
-    website:p.website||p.website_url||"",
+    website:p.website||"",
     tel:p.tel||"",
     fsq_url:p.fsq_url||"",
-    hours:p.hours||null,
-    openNow:typeof p.open_now==="boolean"?p.open_now:null,
-    menuUrl:p.menu_url||p.menu||"",
-    menuItems,
-    menuCurrency:p.menu_currency||"TRY",
-    menuCheckedAt:p.menu_checked_at||p.checked_at||null,
-    menuSource:p.menu_source||p.source_type||"",
-    menuConfidence:Number(p.menu_confidence??p.confidence??0),
-    menuStatus:p.menu_status||(menuItems.length?"parsed":(p.menu_url||p.menu?"url_only":"not_available"))
+    hours:p.hours||null
   };
 }
 
@@ -345,6 +340,145 @@ function scoreActivity(a){
   return Math.round(Math.min(100,score));
 }
 
+
+function menuEndpoint(){
+  return "discover-menu";
+}
+
+function normalizeMenuData(data){
+  const place=data?.place||data?.details||{};
+  const rawPhotos=Array.isArray(data?.photos)?data.photos:[];
+  const photos=rawPhotos.map(x=>x.url||x.photo_url||"").filter(Boolean);
+  const rawItems=Array.isArray(data?.menu_items)?data.menu_items:[];
+  const menuItems=rawItems.map(x=>({
+    name:x.name||x.title||"",
+    description:x.description||"",
+    price:x.price??x.amount??null,
+    currency:x.currency||data?.menu_currency||""
+  })).filter(x=>x.name);
+  return {
+    place_id:data?.place_id||place.fsq_place_id||place.place_id||null,
+    name:place.name||data?.name||"",
+    address:place.location?.formatted_address||[place.location?.address,place.location?.locality].filter(Boolean).join(", "),
+    website:place.website||data?.website_url||"",
+    menuUrl:place.menu||place.menu_url||data?.menu_url||"",
+    rating:Number(place.rating||data?.rating||0),
+    priceLevel:Number(place.price||data?.price_level||0),
+    hours:place.hours||data?.hours||null,
+    phone:place.tel||data?.tel||"",
+    photos,
+    menuItems,
+    source:data?.source||"Foursquare Places API",
+    checked_at:data?.checked_at||new Date().toISOString(),
+    hasMenuUrl:!!(place.menu||place.menu_url||data?.menu_url),
+    hasMenuPhotos:photos.length>0,
+    hasMenuItems:menuItems.length>0
+  };
+}
+
+async function fetchMenuForPlace(placeId, silent=true){
+  if(!placeId)return null;
+  if(menuCache.has(placeId))return menuCache.get(placeId);
+
+  const seq=++menuRequestSeq;
+  try{
+    const {data,error}=await sb.functions.invoke(menuEndpoint(),{
+      body:{place_id:placeId,include_photos:true,include_details:true}
+    });
+    if(seq!==menuRequestSeq && !silent)return null;
+    if(error)throw error;
+    if(!data?.ok)throw new Error(data?.error||"Menü servisi sonuç vermedi.");
+    const menu=normalizeMenuData(data);
+    menuCache.set(placeId,menu);
+    return menu;
+  }catch(e){
+    console.warn("discover-menu:",e);
+    return null;
+  }
+}
+
+function menuSummaryHtml(a){
+  if(!a.isLive)return "";
+  const m=a.menu||null;
+  if(!m)return `<div class="menu-panel"><span class="menu-badge">🍽️ Menü verisi yükleniyor…</span></div>`;
+
+  const chips=[];
+  if(m.hasMenuItems)chips.push(`<span class="menu-badge live">✓ Menü ürünleri</span>`);
+  if(m.hasMenuUrl)chips.push(`<span class="menu-badge">↗ Menü bağlantısı</span>`);
+  if(m.hasMenuPhotos)chips.push(`<span class="menu-badge">📷 Menü görselleri</span>`);
+  if(!chips.length)chips.push(`<span class="menu-badge">ℹ Menü URL'si bulunamadı</span>`);
+
+  return `<div class="menu-panel">
+    <div class="row" style="align-items:center">
+      <h4>🍽️ Güncel menü</h4>
+      <span class="menu-badge">${esc(m.checked_at?new Date(m.checked_at).toLocaleString("tr-TR"):"Canlı")}</span>
+    </div>
+    <div class="menu-actions">${chips.join("")}
+      <button class="btn mini primary" onclick='openMenu(${JSON.stringify(a.place_id||"")})'>Menüyü aç</button>
+    </div>
+    ${m.menuItems?.length?`<div class="menu-grid" style="margin-top:10px">${m.menuItems.slice(0,4).map(x=>`
+      <div class="menu-item"><b>${esc(x.name)}</b>${x.description?`<small>${esc(x.description)}</small>`:""}${x.price!=null?`<div class="menu-price">${esc(String(x.price))}${x.currency?" "+esc(x.currency):""}</div>`:""}</div>`).join("")}</div>`:""}
+    ${m.photos?.length?`<img class="menu-photo" src="${esc(m.photos[0])}" alt="Menü görseli" loading="lazy" onerror="this.style.display='none'">`:""}
+    <div class="menu-source">Kaynak: ${esc(m.source||"Foursquare")} · Menü ürün/fiyat verisi yalnızca kaynak tarafından sağlanmışsa gösterilir.</div>
+  </div>`;
+}
+
+async function enrichLiveMenus(live){
+  const enriched=await Promise.all(live.map(async a=>{
+    const menu=await fetchMenuForPlace(a.place_id,true);
+    return {...a,menu};
+  }));
+  return enriched;
+}
+
+async function openMenu(placeId){
+  if(!placeId)return;
+  openModal("menuModal");
+  $("menuModalBody").innerHTML='<div class="empty loading">Güncel menü bilgileri ve menü görselleri alınıyor...</div>';
+
+  const menu=await fetchMenuForPlace(placeId,false);
+  const place=livePlaces.find(x=>String(x.place_id)===String(placeId))||lastResults.find(x=>String(x.place_id)===String(placeId));
+
+  if(!menu){
+    $("menuModalBody").innerHTML='<div class="menu-empty">Menü servisi şu anda veri döndürmedi. Mekanın web sitesi veya mevcut menü bağlantısı üzerinden kontrol edebilirsin.</div>';
+    return;
+  }
+
+  const items=menu.menuItems||[];
+  $("menuModalBody").innerHTML=`
+    <div class="menu-detail-head">
+      <div>
+        <h2 style="margin:0">${esc(menu.name||place?.title||"Mekan")}</h2>
+        <div class="menu-detail-meta">${esc(menu.address||place?.address||"")} ${menu.rating?`· ★ ${menu.rating.toFixed(1)}`:""}</div>
+      </div>
+      <span class="menu-badge live">● CANLI</span>
+    </div>
+
+    <div class="menu-detail-grid">
+      <div class="menu-detail-field"><small>Menü kaynağı</small><strong>Foursquare Places API</strong></div>
+      <div class="menu-detail-field"><small>Son kontrol</small><strong>${esc(new Date(menu.checked_at).toLocaleString("tr-TR"))}</strong></div>
+      <div class="menu-detail-field"><small>Menü bağlantısı</small><strong>${menu.menuUrl?`<button class="btn mini primary" onclick='openExternal(${JSON.stringify(menu.menuUrl)})'>Menüyü webde aç</button>`:"Menü URL'si bulunamadı"}</strong></div>
+      <div class="menu-detail-field"><small>Web sitesi</small><strong>${menu.website?`<button class="btn mini" onclick='openExternal(${JSON.stringify(menu.website)})'>Web sitesine git</button>`:"-"}</strong></div>
+    </div>
+
+    ${items.length?`
+      <h3 style="margin:18px 0 10px">Menü ürünleri</h3>
+      <div class="menu-grid">${items.map(x=>`
+        <div class="menu-item"><b>${esc(x.name)}</b>${x.description?`<small>${esc(x.description)}</small>`:""}${x.price!=null?`<div class="menu-price">${esc(String(x.price))}${x.currency?" "+esc(x.currency):""}</div>`:""}</div>
+      `).join("")}</div>
+    `:`<div class="menu-empty" style="margin-top:14px">Bu mekan için Foursquare üzerinden yapılandırılmış ürün/fiyat listesi dönmedi. Menü URL'si veya menü görselleri varsa aşağıda gösteriliyor.</div>`}
+
+    ${menu.photos?.length?`
+      <h3 style="margin:18px 0 10px">Menü görselleri</h3>
+      <div class="menu-grid">${menu.photos.slice(0,6).map(u=>`<img class="menu-photo" src="${esc(u)}" alt="Menü" loading="lazy" onerror="this.style.display='none'">`).join("")}</div>
+    `:""}
+
+    <div class="menu-source" style="margin-top:16px">
+      Foursquare'in güncel Places API'si mekanın menü URL'si ve menü sınıfındaki fotoğrafları sağlayabilir; yapılandırılmış ürün/fiyat bilgisi her mekan için garanti edilmez.
+    </div>
+  `;
+}
+
 async function fetchLivePlaces(){
   const seq=++liveRequestSeq;
   const q=$("mood").value.trim()||(
@@ -360,29 +494,22 @@ async function fetchLivePlaces(){
       budget:currentBudget(),
       max_results:10,
       max_price:budgetToPriceLevel(currentBudget()),
-      sort:"RELEVANCE",
-      include_details:true,
-      include_menu:true,
-      include_photos:true,
-      menu_limit:100,
-      menu_refresh_minutes:30,
-      fields:[
-        "fsq_place_id","name","categories","location","distance","rating",
-        "price","hours","website","tel","description","social_media",
-        "menu","menu_url","open_now"
-      ].join(",")
+      sort:"RELEVANCE"
     }
   });
 
   if(seq!==liveRequestSeq)return [];
+
   if(error){
     console.warn("discover-live:",error);
     return [];
   }
-  if(!data?.ok||!Array.isArray(data.places)){
+
+  if(!data?.ok || !Array.isArray(data.places)){
     console.warn("discover-live response:",data);
     return [];
   }
+
   return data.places.map(normalizeLivePlace);
 }
 
@@ -401,18 +528,19 @@ async function recommend(silent=false){
   const local=activities.map(a=>({...a,score:scoreActivity(a)})).filter(a=>a.score>=0);
   const live=await fetchLivePlaces();
   const liveScored=live.map(a=>({...a,score:scoreActivity(a)})).filter(a=>a.score>=0);
+  // Menü servisi canlı sonuçları zenginleştirir; menü servisi hata verirse mekan önerisi yine çalışır.
+  const liveWithMenus=await enrichLiveMenus(liveScored);
   const localScored=local;
-  const list=mergeResults(liveScored,localScored).sort((a,b)=>b.score-a.score || b.rating-a.rating);
+  const list=mergeResults(liveWithMenus,localScored).sort((a,b)=>b.score-a.score || b.rating-a.rating);
 
   lastResults=list;
-  livePlaces=liveScored;
+  livePlaces=liveWithMenus;
   betterOffset=0;
 
   render(list.slice(0,8));
 
   const liveText=liveScored.length?`${liveScored.length} canlı mekan`:"canlı mekan bulunamadı";
-  const menuCount=liveScored.filter(x=>Array.isArray(x.menuItems)&&x.menuItems.length).length;
-  $("resultSummary").textContent=`${list.length} uygun sonuç · ${liveText} · ${menuCount} menü işlenmiş · ${currentCity()} · Bütçe ${priceText(currentBudget())} · ${currentTime()/60} saat · ${state.mode}`;
+  $("resultSummary").textContent=`${list.length} uygun sonuç · ${liveText} · ${currentCity()} · Bütçe ${priceText(currentBudget())} · ${currentTime()/60} saat · ${state.mode}`;
 
   if(!silent)toast(liveScored.length?"Canlı Foursquare sonuçları güncellendi.":"Canlı sonuç bulunamadı; kayıtlı deneyimler gösteriliyor.");
 }
@@ -420,43 +548,6 @@ async function recommend(silent=false){
 function scheduleRecommend(silent=true){
   clearTimeout(liveTimer);
   liveTimer=setTimeout(()=>recommend(silent),650);
-}
-
-function renderMenu(a){
-  if(!a.isLive)return "";
-  const items=Array.isArray(a.menuItems)?a.menuItems:[];
-  const menuLink=a.menuUrl||"";
-  const freshness=a.menuCheckedAt
-    ? `Kontrol: ${new Date(a.menuCheckedAt).toLocaleString("tr-TR")}`
-    : "Canlı kontrol zamanı belirtilmedi";
-
-  if(!items.length){
-    return `<div class="menu-box">
-      <div class="menu-head">
-        <b>🍽️ Menü</b>
-        <span class="muted" style="font-size:11px">${esc(a.menuStatus==="url_only"?"Menü bağlantısı mevcut":"Menü kalemleri bulunamadı")}</span>
-      </div>
-      <p class="muted" style="font-size:12px;margin:8px 0">${esc(freshness)}</p>
-      ${menuLink?`<button class="btn mini" onclick="openExternal(${JSON.stringify(menuLink)})">Menüyü aç</button>`:""}
-    </div>`;
-  }
-
-  const shown=items.slice(0,12);
-  return `<div class="menu-box">
-    <div class="menu-head">
-      <b>🍽️ Menü · ${items.length} ürün</b>
-      <span class="live-badge">CANLI</span>
-    </div>
-    <p class="muted" style="font-size:11px;margin:7px 0">${esc(freshness)}</p>
-    <div class="menu-items">
-      ${shown.map(x=>`<div class="menu-item">
-        <span>${esc(x.name)}${x.description?`<small class="muted" style="display:block;margin-top:2px">${esc(x.description)}</small>`:""}</span>
-        <span class="menu-price">${x.price!=null?esc((x.currency||a.menuCurrency||"TRY")+" "+Number(x.price).toLocaleString("tr-TR")):"—"}</span>
-      </div>`).join("")}
-    </div>
-    ${items.length>12?`<div class="muted" style="font-size:11px;margin-top:7px">+${items.length-12} ürün daha</div>`:""}
-    ${menuLink?`<button class="btn mini" style="margin-top:9px" onclick="openExternal(${JSON.stringify(menuLink)})">Kaynak menüyü aç</button>`:""}
-  </div>`;
 }
 
 function render(list){
@@ -491,13 +582,13 @@ function render(list){
       <div class="meta">★ ${a.rating?Number(a.rating).toFixed(1):"—"} · ${a.dist?esc(a.dist.toFixed(1)+" km"):"Konum yok"} · ${esc(a.city)}</div>
       ${a.address?`<div class="meta">📍 ${esc(a.address)}</div>`:""}
       <p class="why">${esc(a.why)}</p>
-      ${renderMenu(a)}
       <div class="match">🧠 <b>Neden bu?</b> ${esc(moodNames?moodNames+" ile eşleşiyor. ":"")}Bütçe ve tercih sinyallerine göre puanlandı.${isLive?" Canlı Foursquare verisi kullanıldı.":""}</div>
       <div class="row" style="margin-top:12px">${priceHtml}${favoriteButton}</div>
       <div class="card-actions">
         ${websiteButton}
-        <button class="btn" onclick="reportActivity(${JSON.stringify(a.title)})">Bildir</button>
+        ${isLive?`<button class="btn" onclick='openMenu(${JSON.stringify(a.place_id||"")})'>🍽️ Menü</button>`:`<button class="btn" onclick="reportActivity(${JSON.stringify(a.title)})">Bildir</button>`}
       </div>
+      ${menuSummaryHtml(a)}
     </article>`;
   }).join("");
 }
@@ -530,7 +621,6 @@ function setMode(v){state.mode=v;$("modeText").textContent=v;recommend()}
 $("budget").addEventListener("input",e=>{$("budgetText").textContent="₺"+Number(e.target.value).toLocaleString("tr-TR");scheduleRecommend(true)});
 $("time").addEventListener("input",e=>{$("timeText").textContent=e.target.value+" saat";scheduleRecommend(true)});
 $("city").addEventListener("change",()=>recommend());
-$("mood").addEventListener("keydown",e=>{if(e.key==="Enter")recommend();});
 
 async function surprise(){
   $("mood").value="Sürpriz";
@@ -675,7 +765,7 @@ async function submitReport(){
   catch(e){toast("Rapor işlemi başarısız: "+e.message)}
 }
 
-["authModal","profileModal","routeModal","adminModal"].forEach(id=>$(id).addEventListener("click",e=>{if(e.target.classList.contains("modal"))closeModal(id)}));
+["authModal","profileModal","routeModal","adminModal","menuModal"].forEach(id=>$(id).addEventListener("click",e=>{if(e.target.classList.contains("modal"))closeModal(id)}));
 
 (async()=>{
   updateAuthUI();updateLevels();
