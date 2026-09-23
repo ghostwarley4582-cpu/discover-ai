@@ -1,180 +1,3398 @@
-async function openBusinessMenu(b){
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0710">
+<meta name="description" content="DISCOVER AI — bütçene, zamanına, konumuna ve moduna göre kişisel deneyim ve işletme önerileri.">
+<title>DISCOVER AI — Kişisel Deneyim Motoru</title>
+<style>
+:root{
+  --bg:#09060f;--bg2:#12091e;--panel:#130c1c;--panel2:#191024;--text:#fbf8ff;
+  --muted:#b8acc6;--purple:#8b5cf6;--purple2:#c084fc;--purple3:#a855f7;
+  --line:#3a2b4b;--green:#69e7b7;--danger:#ff6b8a;--amber:#f4c86c;
+  --shadow:0 24px 70px rgba(0,0,0,.34)
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;background:
+radial-gradient(circle at 76% 0%,#32204d 0,#1a0f28 27%,#0e0816 58%,#08050d 100%);min-height:100vh}
+button,input,select,textarea{font:inherit}button{cursor:pointer}a{color:inherit}.hidden{display:none!important}.wrap{width:min(1120px,92%);margin:auto}
+body.modal-lock{overflow:hidden}
 
-  if(!b){
-    toast("İşletme bilgisi bulunamadı.");
-    return;
-  }
+.btn{
+  border:1px solid var(--line);
+  background:#120d1c;
+  color:#fff;
+  padding:12px 16px;
+  border-radius:14px;
+  transition:.18s ease;
+  text-decoration:none;
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
+  gap:7px
+}
+.btn:hover{transform:translateY(-1px);border-color:#6c4a8c}
+.btn.primary{
+  background:linear-gradient(135deg,#7c3aed,#ad45f4);
+  border-color:#aa63ff;
+  box-shadow:0 10px 30px rgba(139,92,246,.24)
+}
+.btn.ghost{background:transparent}
+.btn.danger{border-color:#6f2942;background:#2a0d16;color:#ffb0c0}
+.btn:disabled{opacity:.52;cursor:not-allowed;transform:none}
+.mini{padding:8px 11px;font-size:12px}
+.muted{color:var(--muted)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.stack{display:grid;gap:10px}
 
-  /*
-    Supabase'te zaten doğrulanmış bir menu_url varsa
-    Foursquare kotası harcamadan doğrudan aç.
-  */
-  const existingMenu=
-    businessEscapeUrl(
-      b.menu_url || ""
-    );
+nav{
+  height:76px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  background:rgba(8,5,13,.9);
+  backdrop-filter:blur(18px);
+  position:sticky;
+  top:0;
+  z-index:40
+}
+nav .wrap{
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between
+}
+.brand{font-weight:950;letter-spacing:3px;font-size:22px}
+.brand span{color:var(--purple2)}
+.nav-left,.nav-right{display:flex;align-items:center;gap:10px}
+.menu-btn{font-size:22px;min-width:46px;padding:9px 12px}
+.nav-user{
+  font-size:12px;
+  color:var(--muted);
+  max-width:220px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap
+}
 
-  if(existingMenu){
-    window.open(
-      existingMenu,
-      "_blank",
-      "noopener,noreferrer"
-    );
+.hero{padding:58px 0 28px;text-align:center}
+.hero-logo{
+  font-size:clamp(44px,8vw,78px);
+  font-weight:950;
+  letter-spacing:-4px;
+  line-height:1
+}
+.hero-logo span{
+  background:linear-gradient(90deg,#fff,#c77dff);
+  -webkit-background-clip:text;
+  color:transparent
+}
+.slogan{
+  font-size:clamp(21px,3.2vw,31px);
+  font-weight:850;
+  margin:14px 0 9px
+}
+.lead{
+  max-width:780px;
+  margin:0 auto;
+  color:var(--muted);
+  font-size:16px;
+  line-height:1.72
+}
 
-    return;
-  }
+.eyebrow{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border:1px solid #5b3a76;
+  border-radius:999px;
+  background:#0e0916;
+  color:#ddcdff;
+  font-size:12px
+}
+.eyebrow:before{
+  content:"";
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 14px var(--green)
+}
 
-  /*
-    Kullanıcı tıklaması sırasında pencereyi önceden açıyoruz.
-    Böylece Foursquare cevabı async geldikten sonra tarayıcının
-    popup engelleyicisine takılma ihtimali azalır.
-  */
-  let menuWindow=null;
+.search-engine{
+  margin:30px auto 0;
+  max-width:980px;
+  padding:16px;
+  border:1px solid #563970;
+  border-radius:28px;
+  background:linear-gradient(145deg,#1a1127,#100a17);
+  box-shadow:var(--shadow)
+}
+.search-top{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 220px;
+  gap:10px
+}
+.search-field{text-align:left}
+.search-label{
+  display:block;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  color:var(--muted);
+  margin:0 0 6px 2px
+}
 
-  try{
-    menuWindow=
-      window.open(
-        "about:blank",
-        "_blank"
-      );
-  }catch(_){}
+.search-engine input,
+.search-engine select,
+.modal input,
+.modal select,
+.modal textarea{
+  width:100%;
+  background:#0b0810;
+  color:#fff;
+  border:1px solid #3a2b4b;
+  border-radius:15px;
+  padding:14px;
+  outline:none
+}
 
-  if(menuWindow){
-    try{
-      menuWindow.document.write(`
-        <!doctype html>
-        <html lang="tr">
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport"
-                content="width=device-width,initial-scale=1">
-          <title>DISCOVER AI · Menü</title>
+.search-engine input:focus,
+.search-engine select:focus,
+.modal input:focus,
+.modal select:focus,
+.modal textarea:focus{
+  border-color:#9965ff;
+  box-shadow:0 0 0 2px rgba(153,101,255,.1)
+}
 
-          <style>
-            :root{
-              --bg:#08060d;
-              --panel:#100b18;
-              --text:#f7f3ff;
-              --muted:#aaa0b7;
-              --purple:#8b5cf6;
-              --purple2:#c084fc;
-              --line:#3a2b4b;
-            }
+.mood-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin:12px 0
+}
+.chip{
+  border:1px solid #3d2e4e;
+  background:#120c1c;
+  color:#eee5f5;
+  padding:9px 13px;
+  border-radius:999px
+}
+.chip.active{
+  background:#24153a;
+  border-color:#a46eff;
+  color:#fff;
+  box-shadow:0 0 0 1px rgba(164,110,255,.12)
+}
 
-            *{
-              box-sizing:border-box;
-            }
+.search-bottom{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr 1fr;
+  gap:10px
+}
+.unit-wrap{
+  display:grid;
+  grid-template-columns:1fr 98px;
+  gap:7px
+}
+.search-actions{
+  display:flex;
+  gap:8px;
+  margin-top:12px
+}
+.search-actions .btn{flex:1}
+.location-line{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  justify-content:flex-start;
+  color:#c8bdd2;
+  font-size:12px;
+  margin-top:11px
+}
+.dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 12px var(--green)
+}
 
-            body{
-              margin:0;
-              padding:32px 18px;
-              background:
-                radial-gradient(
-                  circle at 70% 5%,
-                  #261343 0,
-                  #10091a 34%,
-                  #08060d 75%
-                );
-              color:var(--text);
-              font-family:
-                Inter,
-                system-ui,
-                -apple-system,
-                Segoe UI,
-                sans-serif;
-            }
+section{padding:42px 0}
+.section-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:15px;
+  margin-bottom:16px
+}
+.section-head h2{margin:7px 0 3px;font-size:30px}
 
-            .box{
-              width:min(720px,94%);
-              margin:auto;
-              background:#100b18;
-              border:1px solid #543572;
-              border-radius:24px;
-              padding:24px;
-            }
+.result-toolbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:14px
+}
+.sort-group{display:flex;gap:8px}
+.sort-btn{
+  background:#120d1b;
+  border:1px solid var(--line);
+  color:#ddd2e8;
+  padding:9px 12px;
+  border-radius:12px
+}
+.sort-btn.active{
+  background:#211332;
+  border-color:#9d62ff;
+  color:#fff
+}
 
-            .brand{
-              color:#d9c6ff;
-              font-weight:900;
-            }
+.business-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px
+}
+.business-card{
+  background:linear-gradient(165deg,#1a1125,#0f0a15);
+  border:1px solid var(--line);
+  border-radius:19px;
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  transition:.18s ease
+}
+.business-card:hover{
+  transform:translateY(-3px);
+  border-color:#6c478e
+}
+.business-card.live{border-color:#4f3a70}
+.business-card-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:9px
+}
+.business-name{
+  font-size:17px;
+  font-weight:900;
+  line-height:1.25;
+  margin:0
+}
+.distance-badge,.badge{
+  font-size:10px;
+  padding:5px 8px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:#0d0913;
+  white-space:nowrap
+}
+.badge.live{
+  border-color:#28654f;
+  background:#0d241d;
+  color:#8cf0c5
+}
+.badge.warn{
+  border-color:#765a29;
+  background:#241a0c;
+  color:#ffdc98
+}
+.badge.purple{
+  border-color:#624483;
+  background:#211332;
+  color:#ddc9ff
+}
+.stars{color:#ffd64d;letter-spacing:1px}
+.rating-line{
+  display:flex;
+  gap:7px;
+  align-items:center;
+  flex-wrap:wrap;
+  margin-top:4px;
+  font-size:12px
+}
+.business-meta{
+  font-size:12px;
+  color:#a99db4;
+  line-height:1.55;
+  margin-top:7px
+}
+.fit-box,.reason-box{
+  margin-top:9px;
+  padding:9px 10px;
+  border-radius:12px;
+  background:#0d0913;
+  border:1px solid #30233d;
+  color:#ddd1e5;
+  font-size:11px;
+  line-height:1.5
+}
+.price-row{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  align-items:center;
+  margin-top:10px
+}
+.price-main{font-weight:900;font-size:16px}
+.price-note{font-size:10px;color:#9e92a8}
+.business-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin-top:11px
+}
+.business-actions .btn{
+  width:100%;
+  padding:10px 7px;
+  font-size:12px
+}
+.business-actions .wide{grid-column:1/-1}
 
-            .loading{
-              color:var(--muted);
-              margin-top:15px;
-            }
-          </style>
-        </head>
+.empty{
+  grid-column:1/-1;
+  padding:26px;
+  border:1px dashed #503864;
+  border-radius:18px;
+  text-align:center;
+  background:#0d0913;
+  color:var(--muted)
+}
 
-        <body>
-          <div class="box">
-            <div class="brand">
-              ✦ DISCOVER AI
-            </div>
+.feature-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px
+}
+.glass{
+  background:#100b18;
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:18px
+}
 
-            <h2>
-              ${esc(b.name || "İşletme")}
-            </h2>
+.levels{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:9px
+}
+.level{
+  background:#0e0915;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:12px;
+  text-align:center
+}
+.level.active{
+  border-color:#9560ff;
+  box-shadow:0 0 24px rgba(149,96,255,.16)
+}
+.level small{
+  display:block;
+  color:#d6bdf9;
+  margin-top:5px
+}
 
-            <div class="loading">
-              Güncel menü kontrol ediliyor...
-            </div>
-          </div>
-        </body>
-        </html>
-      `);
+.xp-track{
+  height:9px;
+  background:#251b32;
+  border-radius:99px;
+  overflow:hidden
+}
+.xp-fill{
+  height:100%;
+  width:0;
+  background:linear-gradient(90deg,#7c3aed,#c084fc);
+  border-radius:99px
+}
 
-      menuWindow.document.close();
+.premium{
+  position:relative;
+  overflow:hidden;
+  background:linear-gradient(135deg,#1e1131,#0e0815);
+  border:1px solid #60407f;
+  border-radius:28px;
+  padding:28px
+}
+.plans{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  margin-top:20px
+}
+.plan{
+  background:#0b0810;
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:19px
+}
+.plan h3{font-size:27px;margin:7px 0 14px}
+.plan.featured{
+  border-color:#9761ff;
+  box-shadow:0 12px 38px rgba(139,92,246,.13)
+}
 
-    }catch(_){}
-  }
+.modal{
+  position:fixed;
+  inset:0;
+  z-index:100;
+  background:rgba(0,0,0,.75);
+  backdrop-filter:blur(10px);
+  display:none;
+  place-items:center;
+  padding:18px
+}
+.modal.open{display:grid}
+.modalbox{
+  width:min(600px,100%);
+  max-height:91vh;
+  overflow:auto;
+  background:#100b18;
+  border:1px solid #573873;
+  border-radius:25px;
+  padding:24px;
+  box-shadow:var(--shadow)
+}
+.modalbox.wide{width:min(920px,100%)}
+.close{
+  float:right;
+  border:0;
+  background:none;
+  color:#aaa;
+  font-size:26px
+}
+.form{display:grid;gap:10px}
 
-  toast(
-    "Güncel menü kontrol ediliyor..."
+.menu-drawer{
+  place-items:stretch start;
+  padding:0
+}
+.menu-drawer .modalbox{
+  width:min(470px,92vw);
+  height:100vh;
+  max-height:100vh;
+  border-radius:0 24px 24px 0;
+  margin:0;
+  padding:22px
+}
+.menu-list{
+  display:grid;
+  gap:8px;
+  margin-top:15px
+}
+.menu-item{
+  width:100%;
+  text-align:left;
+  border:1px solid var(--line);
+  background:#0d0913;
+  color:#fff;
+  padding:13px 14px;
+  border-radius:14px
+}
+.menu-item.primary{
+  background:linear-gradient(135deg,#7c3aed,#ae46f5);
+  border-color:#a66cff
+}
+.menu-xp{
+  padding:12px;
+  border:1px solid #49355f;
+  border-radius:14px;
+  background:#0d0913
+}
+
+.menu-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px
+}
+.menu-card{
+  border:1px solid var(--line);
+  background:#0d0913;
+  border-radius:14px;
+  padding:12px
+}
+.menu-card small{
+  display:block;
+  color:var(--muted);
+  margin-bottom:4px
+}
+.menu-photos{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:9px
+}
+.menu-photos img{
+  width:100%;
+  height:170px;
+  object-fit:cover;
+  border-radius:12px;
+  border:1px solid var(--line);
+  display:block
+}
+
+.notice{
+  padding:12px 14px;
+  border-left:3px solid var(--purple);
+  background:#120c1b;
+  border-radius:11px;
+  color:#d1c6da;
+  font-size:12px;
+  line-height:1.55
+}
+.notice.danger{
+  border-left-color:var(--danger);
+  background:#190b12;
+  color:#e8cdd4
+}
+
+.review-list{display:grid;gap:8px}
+.review-item{
+  padding:11px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#0d0913
+}
+.star-picker{display:flex;gap:4px}
+.star-picker button{
+  border:0;
+  background:none;
+  color:#504459;
+  font-size:27px;
+  padding:0
+}
+.star-picker button.active{color:#ffd64d}
+.review-criterion{
+  padding:10px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#0d0913
+}
+
+.admin-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px
+}
+.stat{
+  padding:14px;
+  border:1px solid var(--line);
+  background:#0d0913;
+  border-radius:15px
+}
+.stat b{
+  display:block;
+  font-size:25px;
+  margin-top:5px
+}
+
+.toast{
+  position:fixed;
+  right:18px;
+  bottom:18px;
+  z-index:200;
+  display:none;
+  max-width:min(92vw,520px);
+  background:#17101f;
+  border:1px solid #52366c;
+  border-radius:15px;
+  padding:14px 17px;
+  box-shadow:var(--shadow)
+}
+
+#locationGate{
+  position:fixed;
+  inset:0;
+  z-index:300;
+  background:rgba(5,3,9,.97);
+  backdrop-filter:blur(18px);
+  display:none;
+  place-items:center;
+  padding:20px
+}
+#locationGate.open{display:grid}
+.gate-card{
+  width:min(620px,94vw);
+  background:#100b18;
+  border:1px solid #573873;
+  border-radius:28px;
+  padding:28px;
+  box-shadow:var(--shadow)
+}
+
+#authGate{
+  position:fixed;
+  inset:0;
+  z-index:260;
+  background:rgba(5,3,9,.96);
+  backdrop-filter:blur(18px);
+  display:none;
+  place-items:center;
+  padding:20px
+}
+#authGate.open{display:grid}
+.auth-gate-card{
+  width:min(620px,94vw);
+  background:#100b18;
+  border:1px solid #573873;
+  border-radius:28px;
+  padding:28px;
+  text-align:center;
+  box-shadow:var(--shadow)
+}
+.auth-gate-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:18px
+}
+
+footer{
+  border-top:1px solid var(--line);
+  padding:30px 0;
+  color:var(--muted);
+  font-size:13px
+}
+
+@media(max-width:950px){
+  .business-grid{grid-template-columns:1fr 1fr}
+  .feature-grid{grid-template-columns:1fr 1fr}
+  .search-bottom{grid-template-columns:1fr 1fr}
+  .plans{grid-template-columns:1fr}
+  .admin-grid{grid-template-columns:1fr 1fr}
+}
+
+@media(max-width:680px){
+  .hero{padding-top:38px}
+  .hero-logo{letter-spacing:-2px}
+  .search-top,.search-bottom,.business-grid{grid-template-columns:1fr}
+  .search-actions{flex-direction:column}
+  .levels{grid-template-columns:1fr 1fr}
+  .feature-grid{grid-template-columns:1fr}
+  .section-head{align-items:flex-start;flex-direction:column}
+  .nav-user{display:none}
+  .menu-photos{grid-template-columns:1fr 1fr}
+  .menu-grid{grid-template-columns:1fr}
+  .auth-gate-actions{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="locationGate">
+  <div class="gate-card">
+    <div class="eyebrow">GÜVENLİ KONUM</div>
+    <h2>Yakınındaki gerçek yerleri bulalım.</h2>
+    <p class="muted">
+      Konum izni verirsen mesafe, rota ve yakınlık tabanlı öneriler daha doğru olur.
+      İzin vermek istemezsen şehir ile arama yapmaya devam edebilirsin.
+    </p>
+    <div class="row" style="flex-wrap:wrap">
+      <button class="btn primary" onclick="requestLocation(true)">📍 Konum izni ver</button>
+      <button class="btn" onclick="closeLocationGate()">Şehir ile devam et</button>
+    </div>
+    <div id="locationGateStatus" class="muted" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<div id="authGate">
+  <div class="auth-gate-card">
+    <div class="eyebrow">🔐 HESAP GEREKLİ</div>
+    <h2>DISCOVER AI'a devam et</h2>
+    <p class="muted">
+      Keşif, canlı işletme, menü, favori, rota ve AI özelliklerini
+      kullanmak için giriş yap veya hesap oluştur.
+    </p>
+    <div class="auth-gate-actions">
+      <button class="btn" onclick="openAuth('login')">Giriş yap</button>
+      <button class="btn primary" onclick="openAuth('join')">Kayıt ol</button>
+    </div>
+  </div>
+</div>
+
+<nav>
+  <div class="wrap">
+    <div class="nav-left">
+      <button class="btn menu-btn" aria-label="Menü" onclick="openAppMenu()">☰</button>
+      <div class="brand">✦ DISCOVER <span>AI</span></div>
+    </div>
+
+    <div class="nav-right">
+      <span id="navUser" class="nav-user">Misafir</span>
+      <button id="navProfileBtn" class="btn mini" onclick="openAuth('login')">Giriş</button>
+      <button id="navJoinBtn" class="btn primary mini" onclick="openAuth('join')">Katıl</button>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+<section class="hero wrap">
+  <div class="hero-logo">DISCOVER <span>AI</span></div>
+
+  <div class="slogan">
+    Bütçeni söyle. Bugününü biz tasarlayalım.
+  </div>
+
+  <p class="lead">
+    Konumunu, bütçeni, zamanını, ruh halini ve gerçek işletme
+    verilerini birlikte değerlendirerek sana uygulanabilir seçenekler sunar.
+  </p>
+
+  <div class="search-engine">
+
+    <div class="search-top">
+      <div class="search-field">
+        <label class="search-label">Bana Öner</label>
+
+        <input
+          id="query"
+          placeholder="Örn. sevgilimle sakin ve özel bir kahve, sanat, yemek..."
+          autocomplete="off"
+        >
+      </div>
+
+      <div class="search-field">
+        <label class="search-label">Kategori</label>
+
+        <select id="category">
+          <option value="">Tüm uygun kategoriler</option>
+          <option value="food">🍽️ Yeme & İçme</option>
+          <option value="coffee">☕ Kahve</option>
+          <option value="culture">🎨 Kültür & Sanat</option>
+          <option value="nightlife">🎉 Gece Hayatı</option>
+          <option value="outdoor">🌿 Doğa & Açık Alan</option>
+          <option value="shopping">🛍️ Alışveriş</option>
+          <option value="sport">🏋️ Spor</option>
+          <option value="beauty">💇 Güzellik</option>
+          <option value="hotel">🏨 Konaklama</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="moodRow" class="mood-row">
+      <button class="chip active" onclick="setMood('',this)">✨ Fark etmez</button>
+      <button class="chip" onclick="setMood('romantik',this)">❤️ Romantik</button>
+      <button class="chip" onclick="setMood('sakin',this)">🌿 Sakin</button>
+      <button class="chip" onclick="setMood('eglenceli',this)">🎉 Eğlenceli</button>
+      <button class="chip" onclick="setMood('kesif',this)">🧭 Keşif</button>
+      <button class="chip" onclick="setMood('sanat',this)">🎨 Sanat</button>
+    </div>
+
+    <div class="search-bottom">
+
+      <div class="search-field">
+        <label class="search-label">Bütçe</label>
+        <input id="budget" type="number" min="0" step="50" value="750">
+      </div>
+
+      <div class="search-field">
+        <label class="search-label">Zaman</label>
+
+        <div class="unit-wrap">
+          <input id="timeValue" type="number" min="1" step="1" value="4">
+
+          <select id="timeUnit">
+            <option value="60">Saat</option>
+            <option value="1">Dakika</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="search-field">
+        <label class="search-label">Şehir</label>
+        <input id="city" value="İstanbul" placeholder="İstanbul">
+      </div>
+
+      <div class="search-field">
+        <label class="search-label">Mod</label>
+
+        <select id="mode">
+          <option>Kişisel</option>
+          <option>Çift</option>
+          <option>Arkadaş</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="search-actions">
+      <button id="recommendBtn" class="btn primary" onclick="runDiscovery()">
+        ✦ Bana Öner
+      </button>
+
+      <button class="btn" onclick="surpriseMe()">
+        🎲 Surprise Me
+      </button>
+
+      <button class="btn" onclick="betterResults()">
+        ↻ Bundan daha iyisini bul
+      </button>
+    </div>
+
+    <div class="location-line">
+      <span class="dot"></span>
+      <span id="locationLine">
+        Konum izni verirsen sonuçlar 10 km çevrende hassaslaştırılır.
+      </span>
+    </div>
+
+  </div>
+</section>
+
+<section id="explore" class="wrap">
+
+  <div class="section-head">
+    <div>
+      <div class="eyebrow">DISCOVER BUSINESS MATCH</div>
+      <h2>Sana uygun işletmeler</h2>
+
+      <p id="resultSummary" class="muted">
+        Kriterlerini girip “Bana Öner” dediğinde canlı ve kayıtlı işletmeler
+        birlikte değerlendirilir.
+      </p>
+    </div>
+  </div>
+
+  <div class="result-toolbar">
+
+    <div id="searchState" class="muted">
+      Henüz arama yapılmadı.
+    </div>
+
+    <div class="sort-group">
+      <button class="sort-btn active" onclick="setSort('match',this)">Uygunluk</button>
+      <button class="sort-btn" onclick="setSort('distance',this)">Mesafe</button>
+      <button class="sort-btn" onclick="setSort('price',this)">Fiyat</button>
+    </div>
+  </div>
+
+  <div id="results" class="business-grid">
+    <div class="empty">
+      Arama sonucunu burada göreceksin.
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="feature-grid">
+
+    <div class="glass">
+      <b>🧠 DISCOVER Score</b>
+      <p class="muted">
+        Ruh hali, bütçe, süre, mesafe ve kalite sinyallerini birlikte değerlendirir.
+      </p>
+    </div>
+
+    <div class="glass">
+      <b>💰 Hard Budget</b>
+      <p class="muted">
+        Gerçek fiyatı bilinen yerlerde bütçenin üzerinde olanları eler;
+        bilinmeyen fiyatı kesin fiyatmış gibi göstermez.
+      </p>
+    </div>
+
+    <div class="glass">
+      <b>🍽️ Canlı Menü</b>
+      <p class="muted">
+        Menü URL'si veya menü görseli kaynakta varsa gösterilir.
+        Olmayan ürün/fiyat uydurulmaz.
+      </p>
+    </div>
+
+    <div class="glass">
+      <b>🛡️ Güven</b>
+      <p class="muted">
+        Yorum, rapor ve moderasyon akışları mevcut Supabase altyapısını kullanır.
+      </p>
+    </div>
+
+  </div>
+</section>
+
+<section id="levels" class="wrap">
+
+  <div class="section-head">
+    <div>
+      <div class="eyebrow">PROGRESS ENGINE</div>
+      <h2>Keşfettikçe seviye atla.</h2>
+      <p class="muted">10 seviyeli yapı ve her seviyede yeni bir ödül.</p>
+    </div>
+  </div>
+
+  <div class="glass">
+
+    <div class="row">
+      <b id="levelLabel">Seviye 1 · Kaşif</b>
+      <b id="xpLabel">0 / 750 XP</b>
+    </div>
+
+    <div class="xp-track" style="margin-top:10px">
+      <div id="xpFill" class="xp-fill"></div>
+    </div>
+
+    <div id="levelsGrid" class="levels" style="margin-top:16px"></div>
+  </div>
+</section>
+
+<section id="premium" class="wrap">
+
+  <div class="premium">
+
+    <div class="eyebrow">✦ DISCOVER AI ELITE</div>
+
+    <h2>
+      Premium daha fazla sonuç değil, daha iyi karar desteği.
+    </h2>
+
+    <p class="lead" style="text-align:left;margin:0">
+      Gelişmiş kişiselleştirme, alternatif arama, rota optimizasyonu
+      ve özel keşif modları için Premium katmanı.
+    </p>
+
+    <div class="plans">
+
+      <div class="plan">
+        <span class="muted">Haftalık</span>
+        <h3>₺99</h3>
+        <button class="btn primary" onclick="subscribe('Haftalık')">
+          Premium'a geç
+        </button>
+      </div>
+
+      <div class="plan featured">
+        <span class="muted">Aylık</span>
+        <h3>₺249</h3>
+        <button class="btn primary" onclick="subscribe('Aylık')">
+          Premium'a geç
+        </button>
+      </div>
+
+      <div class="plan">
+        <span class="muted">Yıllık</span>
+        <h3>₺1.999</h3>
+        <button class="btn primary" onclick="subscribe('Yıllık')">
+          Premium'a geç
+        </button>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="glass">
+
+    <div class="section-head" style="margin-bottom:8px">
+
+      <div>
+        <div class="eyebrow">BUGÜNÜM</div>
+        <h2 style="margin-bottom:0">Rotan</h2>
+      </div>
+
+      <button class="btn" onclick="openRoute()">
+        Rotayı Gör
+      </button>
+
+    </div>
+
+    <div id="routePreview" class="muted">
+      Henüz rota oluşturmadın.
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    DISCOVER AI · Gizli servis anahtarları yalnızca Supabase Edge Functions içinde tutulur.
+  </div>
+</footer>
+
+<div id="appMenuModal" class="modal menu-drawer">
+  <div class="modalbox">
+
+    <button class="close" onclick="closeModal('appMenuModal')">×</button>
+
+    <div class="eyebrow">DISCOVER AI</div>
+    <h2>Menü</h2>
+
+    <p id="menuUser" class="muted">Misafir</p>
+
+    <div class="menu-list">
+
+      <button class="menu-item primary"
+        onclick="closeModal('appMenuModal');openProfile()">
+        👤 Profil
+      </button>
+
+      <button class="menu-item"
+        onclick="closeModal('appMenuModal');scrollToId('explore')">
+        🧭 Keşfet
+      </button>
+
+      <button class="menu-item"
+        onclick="closeModal('appMenuModal');openAIAssistant()">
+        🧠 AI Asistan
+      </button>
+
+      <button class="menu-item"
+        onclick="closeModal('appMenuModal');openRoute()">
+        🗺️ Bugünüm / Rota
+      </button>
+
+      <button class="menu-item"
+        onclick="closeModal('appMenuModal');scrollToId('premium')">
+        ✦ Premium
+      </button>
+
+      <div class="menu-xp">
+
+        <div class="row">
+          <b id="menuLevel">Seviye 1</b>
+          <span id="menuXp">0 / 750 XP</span>
+        </div>
+
+        <div class="xp-track" style="margin-top:8px">
+          <div id="menuXpFill" class="xp-fill"></div>
+        </div>
+
+      </div>
+
+      <button id="menuAuthBtn" class="menu-item"
+        onclick="closeModal('appMenuModal');openAuth('login')">
+        🔐 Giriş yap
+      </button>
+
+      <button id="menuLogoutBtn" class="menu-item hidden"
+        onclick="logout();closeModal('appMenuModal')">
+        ↪ Çıkış
+      </button>
+
+      <button id="menuAdminBtn" class="menu-item hidden"
+        onclick="closeModal('appMenuModal');openAdmin()">
+        🛡️ Yönetim
+      </button>
+
+    </div>
+  </div>
+</div>
+
+<div id="authModal" class="modal">
+  <div class="modalbox">
+
+    <button class="close" onclick="closeModal('authModal')">×</button>
+
+    <div class="eyebrow">ACCOUNT</div>
+
+    <h2 id="authTitle">
+      DISCOVER AI'a giriş
+    </h2>
+
+    <div class="form">
+
+      <input
+        id="authUsername"
+        placeholder="Kullanıcı adı"
+        class="join-field"
+      >
+
+      <input
+        id="authEmail"
+        type="email"
+        placeholder="E-posta"
+      >
+
+      <input
+        id="authPassword"
+        type="password"
+        placeholder="Şifre (en az 6 karakter)"
+      >
+
+      <button id="authSubmitBtn" class="btn primary" onclick="submitAuth()">
+        Giriş yap
+      </button>
+
+      <button id="authSwitchBtn" class="btn" onclick="switchAuth()">
+        Hesabın yok mu? Kayıt ol
+      </button>
+
+    </div>
+
+    <p id="authHint" class="muted" style="font-size:12px"></p>
+
+  </div>
+</div>
+
+<div id="profileModal" class="modal">
+  <div class="modalbox">
+
+    <button class="close" onclick="closeModal('profileModal')">×</button>
+
+    <div class="eyebrow">PROFILE</div>
+
+    <h2 id="profileName">Kaşif</h2>
+
+    <p id="profileEmail" class="muted"></p>
+
+    <div class="glass">
+
+      <div class="row">
+        <b id="profileLevel">Seviye 1</b>
+        <span class="badge purple" id="profilePremium">FREE</span>
+      </div>
+
+      <p>
+        XP:
+        <span id="profileXP">0</span>
+      </p>
+
+      <p>
+        Favori işletmeler:
+        <span id="profileFav">0</span>
+      </p>
+
+    </div>
+
+    <button class="btn" onclick="logout()">
+      Çıkış
+    </button>
+
+  </div>
+</div>
+
+<div id="businessModal" class="modal">
+  <div class="modalbox wide">
+
+    <button class="close" onclick="closeModal('businessModal')">×</button>
+
+    <div class="eyebrow">
+      İŞLETME PROFİLİ
+    </div>
+
+    <div id="businessModalBody" style="margin-top:12px"></div>
+
+  </div>
+</div>
+
+<div id="menuModal" class="modal">
+  <div class="modalbox wide">
+
+    <button class="close" onclick="closeModal('menuModal')">×</button>
+
+    <div class="eyebrow">
+      🍽️ CANLI MENÜ
+    </div>
+
+    <h2 id="menuTitle" style="margin-bottom:5px">
+      Menü
+    </h2>
+
+    <p id="menuMeta" class="muted" style="margin-top:0"></p>
+
+    <div id="menuBody">
+      <div class="empty">Menü yükleniyor...</div>
+    </div>
+
+  </div>
+</div>
+
+<div id="reviewsModal" class="modal">
+  <div class="modalbox wide">
+
+    <button class="close" onclick="closeModal('reviewsModal')">×</button>
+
+    <div class="eyebrow">💬 YORUMLAR</div>
+
+    <h2 id="reviewsTitle">
+      Yorumlar
+    </h2>
+
+    <div id="reviewsBody">
+      <div class="empty">Yorumlar yükleniyor...</div>
+    </div>
+
+  </div>
+</div>
+
+<div id="reviewEditorModal" class="modal">
+  <div class="modalbox">
+
+    <button class="close" onclick="closeModal('reviewEditorModal')">×</button>
+
+    <div class="eyebrow">⭐ DEĞERLENDİR</div>
+
+    <h2 id="reviewEditorTitle">
+      İşletmeyi değerlendir
+    </h2>
+
+    <div id="reviewCriteria" class="stack"></div>
+
+    <textarea
+      id="reviewText"
+      rows="4"
+      maxlength="800"
+      placeholder="Deneyimini kısaca anlat..."
+    ></textarea>
+
+    <div id="reviewDistance" class="notice" style="margin-top:10px"></div>
+
+    <button class="btn primary" style="margin-top:10px" onclick="submitReview()">
+      Değerlendirmeyi gönder
+    </button>
+
+  </div>
+</div>
+
+<div id="routeModal" class="modal">
+  <div class="modalbox">
+
+    <button class="close" onclick="closeModal('routeModal')">×</button>
+
+    <div class="eyebrow">BUGÜNÜM</div>
+
+    <h2>Bugünkü rotan</h2>
+
+    <div id="routeBody"></div>
+
+  </div>
+</div>
+
+<div id="aiModal" class="modal">
+  <div class="modalbox wide">
+
+    <button class="close" onclick="closeModal('aiModal')">×</button>
+
+    <div class="eyebrow">
+      ✦ DISCOVER AI ASSISTANT
+    </div>
+
+    <h2>Bugününü AI ile tasarla</h2>
+
+    <div id="aiConversation" class="glass" style="max-height:360px;overflow:auto">
+
+      <div class="muted">
+        İsteğini yaz. AI servisi bağlıysa cevap verir;
+        bağlı değilse DISCOVER Score ile sonuç üretmeye devam eder.
+      </div>
+
+    </div>
+
+    <div class="form" style="margin-top:10px">
+
+      <textarea
+        id="aiPrompt"
+        rows="3"
+        placeholder="Örn. Sevgilimle 1000 TL bütçeyle sakin bir akşam istiyorum."
+      ></textarea>
+
+      <button id="aiSendBtn" class="btn primary" onclick="sendAI()">
+        ✦ AI'ya sor
+      </button>
+
+    </div>
+
+  </div>
+</div>
+
+<div id="adminModal" class="modal">
+  <div class="modalbox wide">
+
+    <button class="close" onclick="closeModal('adminModal')">×</button>
+
+    <div class="eyebrow">
+      COMMAND CENTER
+    </div>
+
+    <h2>
+      Yönetim merkezi
+    </h2>
+
+    <p class="muted">
+      Yetki, profil rolü ve Supabase RLS tarafından korunmalıdır.
+    </p>
+
+    <div id="adminStats" class="admin-grid">
+
+      <div class="stat">
+        <span class="muted">Kullanıcı</span>
+        <b>—</b>
+      </div>
+
+      <div class="stat">
+        <span class="muted">İşletme</span>
+        <b>—</b>
+      </div>
+
+      <div class="stat">
+        <span class="muted">Deneyim</span>
+        <b>—</b>
+      </div>
+
+      <div class="stat">
+        <span class="muted">Rapor</span>
+        <b>—</b>
+      </div>
+
+    </div>
+
+    <div class="glass" style="margin-top:12px">
+
+      <textarea
+        id="reportText"
+        rows="4"
+        placeholder="Bir sorun veya moderasyon notu yaz..."
+      ></textarea>
+
+      <button
+        class="btn primary"
+        style="margin-top:8px"
+        onclick="submitReport()"
+      >
+        Rapor oluştur
+      </button>
+
+    </div>
+
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const SUPABASE_URL=
+  "https://ymevkncvdkabohrzqasy.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY=
+  "sb_publishable_b_srPWflLRrFV4ayykMa-g_mFb3Z8rz";
+
+const sb=
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
   );
 
+const $=
+  id=>document.getElementById(id);
+
+const state={
+  user:null,
+  profile:null,
+  location:null,
+  level:1,
+  xp:0,
+  premium:false,
+  mood:"",
+  mode:"Kişisel",
+  sort:"match",
+  results:[],
+  favorites:new Set(),
+  route:[],
+  reviewBusiness:null,
+  reviewScores:{}
+};
+
+const registry=
+  new Map();
+
+const menuCache=
+  new Map();
+
+let resultOffset=0;
+
+function esc(v){
+  return String(v??"").replace(
+    /[&<>"']/g,
+    m=>({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#039;"
+    }[m])
+  );
+}
+
+function normalize(v){
+  return String(v||"")
+    .toLocaleLowerCase("tr-TR")
+    .replace(/ı/g,"i")
+    .replace(/ş/g,"s")
+    .replace(/ğ/g,"g")
+    .replace(/ü/g,"u")
+    .replace(/ö/g,"o")
+    .replace(/ç/g,"c")
+    .replace(/[^a-z0-9 ]/g," ")
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+function clamp(n,a,b){
+  return Math.max(
+    a,
+    Math.min(b,n)
+  );
+}
+
+function toast(msg){
+  const t=$("toast");
+
+  t.textContent=msg;
+
+  t.style.display="block";
+
+  clearTimeout(
+    window.__toastTimer
+  );
+
+  window.__toastTimer=
+    setTimeout(
+      ()=>t.style.display="none",
+      3300
+    );
+}
+
+function openModal(id){
+  $(id)?.classList.add("open");
+  document.body.classList.add("modal-lock");
+}
+
+function closeModal(id){
+  $(id)?.classList.remove("open");
+
+  if(
+    !document.querySelector(
+      ".modal.open"
+    )
+  ){
+    document.body.classList.remove(
+      "modal-lock"
+    );
+  }
+}
+
+function scrollToId(id){
+  $(id)?.scrollIntoView({
+    behavior:"smooth"
+  });
+}
+
+function openAppMenu(){
+  updateMenuUI();
+  openModal("appMenuModal");
+}
+
+function closeLocationGate(){
+  $("locationGate")
+    .classList
+    .remove("open");
+}
+
+function businessKey(b){
+  return String(
+    b.key ||
+    b.id ||
+    b.place_id ||
+    [
+      b.name,
+      b.latitude,
+      b.longitude
+    ].join("|")
+  );
+}
+
+function registerBusiness(b){
+  const k=
+    businessKey(b);
+
+  registry.set(
+    k,
+    b
+  );
+
+  return k;
+}
+
+function getBusiness(k){
+  return registry.get(
+    String(k)
+  );
+}
+
+function safeUrl(v){
+  const s=
+    String(v||"").trim();
+
+  if(!s)return "";
+
+  return /^https?:\/\//i.test(s)
+    ?s
+    :"https://"+
+      s.replace(/^\/+/,"");
+}
+
+function stars(r){
+  const x=
+    Number(r||0);
+
+  const normalized=
+    x>5
+      ?x/2
+      :x;
+
+  return "★★★★★"
+    .split("")
+    .map(
+      (s,i)=>
+      `<span style="opacity:${i<Math.round(normalized)?1:.25}">${s}</span>`
+    )
+    .join("");
+}
+
+function haversine(a,b,c,d){
+
+  if(
+    ![a,b,c,d]
+      .every(Number.isFinite)
+  ){
+    return null;
+  }
+
+  const R=6371;
+
+  const toRad=
+    x=>x*Math.PI/180;
+
+  const dLat=
+    toRad(c-a);
+
+  const dLon=
+    toRad(d-b);
+
+  const la1=
+    toRad(a);
+
+  const la2=
+    toRad(c);
+
+  const h=
+    Math.sin(dLat/2)**2+
+    Math.cos(la1)*
+    Math.cos(la2)*
+    Math.sin(dLon/2)**2;
+
+  return R*2*
+    Math.atan2(
+      Math.sqrt(h),
+      Math.sqrt(1-h)
+    );
+}
+
+function budget(){
+  return Math.max(
+    0,
+    Number(
+      $("budget").value||0
+    )
+  );
+}
+
+function timeMinutes(){
+  return Math.max(
+    1,
+    Number(
+      $("timeValue").value||1
+    )
+  )*
+  Number(
+    $("timeUnit").value||60
+  );
+}
+
+function priceLevelFromBudget(v){
+  if(v<=300)return 1;
+  if(v<=700)return 2;
+  if(v<=1500)return 3;
+  return 4;
+}
+
+function priceLevelLabel(v){
+  const n=Number(v||0);
+
+  return n
+    ?"₺".repeat(
+      clamp(n,1,4)
+    )
+    :"Fiyat doğrulanmadı";
+}
+
+function localPriceLabel(b){
+
+  const a=
+    Number(b.price_from);
+
+  const z=
+    Number(b.price_to);
+
+  if(
+    Number.isFinite(a) &&
+    a>=0 &&
+    Number.isFinite(z) &&
+    z>=a
+  ){
+    return (
+      `₺${a.toLocaleString("tr-TR")}`+
+      `–₺${z.toLocaleString("tr-TR")}`
+    );
+  }
+
+  if(
+    Number.isFinite(a) &&
+    a>=0
+  ){
+    return (
+      `₺${a.toLocaleString("tr-TR")}+`
+    );
+  }
+
+  return (
+    b.price_note ||
+    "Fiyat doğrulanmadı"
+  );
+}
+
+function currentQuery(){
+  return String(
+    $("query").value||""
+  ).trim();
+}
+
+function currentCity(){
+  return String(
+    $("city").value||
+    "İstanbul"
+  ).trim()||
+  "İstanbul";
+}
+
+function categoryLabel(c){
+  return ({
+    food:"Yeme & İçme",
+    coffee:"Kahve",
+    culture:"Kültür & Sanat",
+    nightlife:"Gece Hayatı",
+    outdoor:"Doğa & Açık Alan",
+    shopping:"Alışveriş",
+    sport:"Spor",
+    beauty:"Güzellik",
+    hotel:"Konaklama",
+    health:"Sağlık",
+    pharmacy:"Eczane",
+    services:"Hizmetler"
+  })[c]||
+  c||
+  "Keşif";
+}
+
+function classifyCategory(
+  name,
+  cats
+){
+
+  const t=
+    normalize(
+      name+" "+
+      (
+        Array.isArray(cats)
+          ?cats.join(" ")
+          :cats||""
+      )
+    );
+
+  if(
+    /kahve|coffee|cafe/
+      .test(t)
+  ){
+    return "coffee";
+  }
+
+  if(
+    /restaurant|restoran|lokanta|yemek|food|bakery|fırın|borek|börek|ocakbasi|mangal/
+      .test(t)
+  ){
+    return "food";
+  }
+
+  if(
+    /museum|müze|sanat|art|gallery|galeri|theatre|tiyatro|culture|kultur/
+      .test(t)
+  ){
+    return "culture";
+  }
+
+  if(
+    /bar|pub|night|club|eglence|eğlence/
+      .test(t)
+  ){
+    return "nightlife";
+  }
+
+  if(
+    /park|garden|bahce|bahçe|outdoor|orman|sahil/
+      .test(t)
+  ){
+    return "outdoor";
+  }
+
+  if(
+    /shop|store|market|mall|alisveris|alışveriş/
+      .test(t)
+  ){
+    return "shopping";
+  }
+
+  if(
+    /gym|sport|fitness|spor/
+      .test(t)
+  ){
+    return "sport";
+  }
+
+  if(
+    /beauty|guzellik|güzellik|hair|kuafor|kuaför/
+      .test(t)
+  ){
+    return "beauty";
+  }
+
+  if(
+    /hotel|otel|hostel/
+      .test(t)
+  ){
+    return "hotel";
+  }
+
+  return "other";
+}
+
+function setMood(
+  m,
+  el
+){
+  state.mood=m;
+
+  document
+    .querySelectorAll(
+      "#moodRow .chip"
+    )
+    .forEach(
+      x=>x.classList.remove(
+        "active"
+      )
+    );
+
+  el?.classList.add(
+    "active"
+  );
+}
+
+function setSort(
+  sort,
+  el
+){
+  state.sort=sort;
+
+  document
+    .querySelectorAll(
+      ".sort-btn"
+    )
+    .forEach(
+      x=>x.classList.remove(
+        "active"
+      )
+    );
+
+  el?.classList.add(
+    "active"
+  );
+
+  renderResults(
+    sortResults(
+      state.results
+    ).slice(0,9)
+  );
+}
+
+function sortResults(list){
+
+  const a=
+    list.slice();
+
+  if(
+    state.sort==="distance"
+  ){
+    a.sort(
+      (x,y)=>
+      (x.distance_km??999)-
+      (y.distance_km??999)||
+      y.score-x.score
+    );
+  }
+  else if(
+    state.sort==="price"
+  ){
+    a.sort(
+      (x,y)=>
+      (x.price_sort??Infinity)-
+      (y.price_sort??Infinity)||
+      y.score-x.score
+    );
+  }
+  else{
+    a.sort(
+      (x,y)=>
+      y.score-x.score||
+      (x.distance_km??999)-
+      (y.distance_km??999)
+    );
+  }
+
+  return a;
+}
+
+async function requestLocation(
+  userAction=false
+){
+
+  if(
+    !navigator.geolocation
+  ){
+    toast(
+      "Tarayıcı konumu desteklemiyor."
+    );
+
+    return false;
+  }
+
+  if(userAction){
+    $("locationGateStatus")
+      .textContent=
+      "Konum izni bekleniyor…";
+  }
+
+  return new Promise(
+    resolve=>
+      navigator
+        .geolocation
+        .getCurrentPosition(
+          pos=>{
+
+            state.location={
+              latitude:
+                Number(
+                  pos.coords.latitude
+                ),
+
+              longitude:
+                Number(
+                  pos.coords.longitude
+                ),
+
+              accuracy:
+                Number(
+                  pos.coords.accuracy||0
+                )
+            };
+
+            sessionStorage.setItem(
+              "discover_location",
+              JSON.stringify(
+                state.location
+              )
+            );
+
+            $("locationLine")
+              .textContent=
+              `Konum aktif · yaklaşık ${Math.round(state.location.accuracy||0)} m doğruluk · arama 10 km ile sınırlandırılır.`;
+
+            closeLocationGate();
+
+            syncLocationToProfile();
+
+            resolve(true);
+          },
+
+          err=>{
+
+            $("locationGateStatus")
+              .textContent=
+              err.code===1
+              ?"Konum izni reddedildi. Şehir ile aramaya devam edebilirsin."
+              :"Konum alınamadı. Şehir ile aramaya devam edebilirsin.";
+
+            resolve(false);
+          },
+
+          {
+            enableHighAccuracy:true,
+            timeout:16000,
+            maximumAge:300000
+          }
+        )
+  );
+}
+
+function restoreLocation(){
+
   try{
 
-    const requestBody={
+    const x=
+      JSON.parse(
+        sessionStorage.getItem(
+          "discover_location"
+        )||
+        "null"
+      );
 
-      /*
-        Foursquare kaydından gelen bir ID
-        zaten varsa yeniden işletme araması yapılmaz.
-      */
+    if(
+      x &&
+      Number.isFinite(
+        Number(x.latitude)
+      ) &&
+      Number.isFinite(
+        Number(x.longitude)
+      )
+    ){
+
+      state.location=x;
+
+      $("locationLine")
+        .textContent=
+        "Konum aktif · arama 10 km ile sınırlandırılır.";
+
+      return true;
+    }
+
+  }catch{}
+
+  return false;
+}
+
+async function syncLocationToProfile(){
+
+  if(
+    !state.user ||
+    !state.location
+  ){
+    return;
+  }
+
+  try{
+
+    await sb
+      .from("profiles")
+      .update({
+        location_lat:
+          state.location.latitude,
+
+        location_lng:
+          state.location.longitude,
+
+        location_accuracy:
+          state.location.accuracy,
+
+        location_updated_at:
+          new Date()
+            .toISOString()
+      })
+      .eq(
+        "id",
+        state.user.id
+      );
+
+  }catch{}
+}
+
+function normalizeLive(p){
+
+  const loc=
+    p.location||{};
+
+  const cats=
+    Array.isArray(
+      p.categories
+    )
+    ?p.categories
+      .map(
+        x=>x?.name
+      )
+      .filter(Boolean)
+    :[];
+
+  const lat=
+    Number(
+      p.latitude??
+      loc.latitude
+    );
+
+  const lng=
+    Number(
+      p.longitude??
+      loc.longitude
+    );
+
+  const dist=
+    Number.isFinite(
+      Number(p.distance)
+    )
+    ?Number(p.distance)/1000
+    :(
+      state.location
+        ?haversine(
+          state.location.latitude,
+          state.location.longitude,
+          lat,
+          lng
+        )
+        :null
+    );
+
+  return {
+    source:"live",
+
+    key:
+      "fsq:"+
+      String(
+        p.place_id||
+        p.name
+      ),
+
+    place_id:
+      p.place_id||
+      p.fsq_place_id||
+      "",
+
+    name:
+      p.name||
+      "Mekan",
+
+    category:
+      classifyCategory(
+        p.name,
+        cats
+      ),
+
+    categories:
+      cats,
+
+    city:
+      loc.locality||
+      currentCity(),
+
+    district:
+      loc.district||
+      loc.sublocality||
+      "",
+
+    address:
+      loc.formatted_address||
+      [
+        loc.address,
+        loc.locality
+      ]
+      .filter(Boolean)
+      .join(", "),
+
+    latitude:
+      lat,
+
+    longitude:
+      lng,
+
+    distance_km:
+      dist,
+
+    rating:
+      Number(
+        p.rating||0
+      ),
+
+    review_count:
+      Number(
+        p.review_count||0
+      ),
+
+    price_level:
+      Number(
+        p.price||0
+      ),
+
+    price_known:
+      Number(
+        p.price||0
+      )>0,
+
+    price_sort:
+      Number(
+        p.price||0
+      )>0
+        ?Number(p.price)
+        :Infinity,
+
+    website:
+      p.website||"",
+
+    phone:
+      p.tel||"",
+
+    menu_url:
+      p.menu||"",
+
+    description:
+      p.description||
+      cats
+        .slice(0,3)
+        .join(" · "),
+
+    raw:p
+  };
+}
+
+function normalizeLocal(b){
+
+  const lat=
+    Number(
+      b.latitude
+    );
+
+  const lng=
+    Number(
+      b.longitude
+    );
+
+  const dist=
+    state.location
+      ?haversine(
+        state.location.latitude,
+        state.location.longitude,
+        lat,
+        lng
+      )
+      :null;
+
+  const price=
+    Number(
+      b.price_from
+    );
+
+  return {
+    source:"local",
+
+    key:
+      "db:"+
+      String(b.id),
+
+    id:
+      b.id,
+
+    name:
+      b.name||
+      "İşletme",
+
+    category:
+      classifyCategory(
+        b.name,
+        [
+          b.category,
+          b.description
+        ]
+      ),
+
+    categories:
+      [b.category]
+      .filter(Boolean),
+
+    city:
+      b.city||
+      "Türkiye",
+
+    district:
+      b.district||
+      "",
+
+    address:
+      b.address||
+      "",
+
+    latitude:
+      lat,
+
+    longitude:
+      lng,
+
+    distance_km:
+      dist,
+
+    rating:
+      Number(
+        b.rating||0
+      ),
+
+    review_count:
+      Number(
+        b.review_count||0
+      ),
+
+    price_known:
+      Number.isFinite(price) &&
+      price>=0,
+
+    price_sort:
+      Number.isFinite(price) &&
+      price>=0
+        ?price
+        :Infinity,
+
+    price_from:
+      b.price_from,
+
+    price_to:
+      b.price_to,
+
+    price_note:
+      b.price_note||
+      "",
+
+    website:
+      b.website||
+      "",
+
+    phone:
+      b.phone||
+      "",
+
+    menu_url:
+      b.menu_url||
+      "",
+
+    menu_text:
+      b.menu_text||
+      "",
+
+    description:
+      b.description||
+      "",
+
+    mood_tags:
+      Array.isArray(
+        b.mood_tags
+      )
+      ?b.mood_tags
+      :[],
+
+    raw:b
+  };
+}
+
+function scoreBusiness(b){
+
+  const q=
+    normalize(
+      currentQuery()
+    );
+
+  const mood=
+    normalize(
+      state.mood
+    );
+
+  const selected=
+    $("category").value;
+
+  const hay=
+    normalize(
+      [
+        b.name,
+        b.category,
+        b.categories?.join(" "),
+        b.description,
+        b.mood_tags?.join(" ")
+      ].join(" ")
+    );
+
+  const words=
+    (q+" "+mood)
+      .split(/\s+/)
+      .filter(
+        w=>w.length>2
+      );
+
+  const hits=
+    words
+      .filter(
+        w=>hay.includes(w)
+      )
+      .length;
+
+  const textScore=
+    words.length
+      ?clamp(
+        hits/
+        Math.min(
+          4,
+          words.length
+        ),
+        0,
+        1
+      )
+      :.65;
+
+  const categoryFit=
+    !selected
+      ?1
+      :(
+        b.category===selected
+          ?1
+          :(
+            (
+              selected==="food" &&
+              b.category==="coffee"
+            )
+              ?.85
+              :0
+          )
+      );
+
+  const dist=
+    Number.isFinite(
+      b.distance_km
+    )
+    ?b.distance_km
+    :null;
+
+  const distanceFit=
+    dist==null
+      ?.55
+      :clamp(
+        1-dist/10,
+        0,
+        1
+      );
+
+  const r=
+    b.rating>5
+      ?b.rating/10
+      :b.rating/5;
+
+  const ratingFit=
+    clamp(
+      r||.55,
+      0,
+      1
+    );
+
+  let priceFit=.55;
+
+  if(
+    b.source==="local" &&
+    b.price_known
+  ){
+
+    priceFit=
+      budget()===0
+        ?(
+          b.price_sort===0
+            ?1
+            :0
+        )
+        :clamp(
+          1-
+          Math.max(
+            0,
+            b.price_sort-budget()
+          )/
+          Math.max(
+            1,
+            budget()
+          ),
+          0,
+          1
+        );
+  }
+  else if(
+    b.source==="live" &&
+    b.price_known
+  ){
+
+    priceFit=
+      clamp(
+        1-
+        Math.abs(
+          priceLevelFromBudget(
+            budget()
+          )-
+          b.price_level
+        )/4,
+        0,
+        1
+      );
+  }
+
+  let score=
+    textScore*.34+
+    categoryFit*.2+
+    distanceFit*.2+
+    ratingFit*.14+
+    priceFit*.12;
+
+  if(
+    $("mode").value==="Çift" &&
+    /romantik|restaurant|coffee|cafe|bar|manzara/
+      .test(hay)
+  ){
+    score+=.08;
+  }
+
+  if(
+    $("mode").value==="Arkadaş" &&
+    /bar|eglence|oyun|coffee|restaurant/
+      .test(hay)
+  ){
+    score+=.06;
+  }
+
+  if(
+    state.mood==="sakin" &&
+    /park|coffee|cafe|museum|sanat|sahil/
+      .test(hay)
+  ){
+    score+=.06;
+  }
+
+  return Math.round(
+    clamp(
+      score*100,
+      0,
+      100
+    )
+  );
+}
+
+function passesHardFilters(b){
+
+  if(
+    Number.isFinite(
+      b.distance_km
+    ) &&
+    b.distance_km>10
+  ){
+    return false;
+  }
+
+  const selected=
+    $("category").value;
+
+  if(
+    selected &&
+    !(
+      b.category===selected ||
+      (
+        selected==="food" &&
+        b.category==="coffee"
+      )
+    )
+  ){
+    return false;
+  }
+
+  if(
+    b.source==="local" &&
+    b.price_known &&
+    b.price_sort>budget()
+  ){
+    return false;
+  }
+
+  return true;
+}
+
+async function fetchLocalBusinesses(){
+
+  try{
+
+    const {
+      data,
+      error
+    }=
+      await sb
+      .from(
+        "businesses"
+      )
+      .select("*")
+      .eq(
+        "is_active",
+        true
+      )
+      .limit(1500);
+
+    if(error){
+      throw error;
+    }
+
+    return (
+      data||[]
+    )
+    .filter(
+      x=>
+        x.is_blocked!==true
+    )
+    .map(
+      normalizeLocal
+    )
+    .filter(
+      passesHardFilters
+    );
+
+  }catch(e){
+
+    console.warn(
+      "LOCAL BUSINESS",
+      e
+    );
+
+    return [];
+  }
+}
+
+async function fetchLiveBusinesses(){
+
+  const q=
+    currentQuery()||
+    ({
+      romantik:"romantik mekanlar",
+      sakin:"sakin mekanlar",
+      eglenceli:"eğlenceli mekanlar",
+      kesif:"gezilecek yerler",
+      sanat:"sanat kültür"
+    }[state.mood]||
+    "popüler mekanlar");
+
+  const body={
+    query_text:q,
+    city:currentCity(),
+    radius_m:10000,
+    max_results:20,
+    max_price:
+      priceLevelFromBudget(
+        budget()
+      ),
+    sort:"RELEVANCE"
+  };
+
+  if(state.location){
+    body.lat=
+      state.location.latitude;
+
+    body.lng=
+      state.location.longitude;
+  }
+
+  try{
+
+    const {
+      data,
+      error
+    }=
+      await sb
+      .functions
+      .invoke(
+        "discover-live",
+        {
+          body
+        }
+      );
+
+    if(error){
+      throw error;
+    }
+
+    if(
+      !data?.ok ||
+      !Array.isArray(
+        data.places
+      )
+    ){
+      throw new Error(
+        data?.error||
+        "Canlı servis sonuç vermedi"
+      );
+    }
+
+    return data
+      .places
+      .map(
+        normalizeLive
+      )
+      .filter(
+        passesHardFilters
+      );
+
+  }catch(e){
+
+    console.warn(
+      "LIVE BUSINESS",
+      e
+    );
+
+    const m=
+      String(
+        e?.message||""
+      );
+
+    if(
+      /429|credit|kredi/i
+        .test(m)
+    ){
+      toast(
+        "Foursquare kotası şu anda kullanılamıyor; Supabase işletmeleri gösteriliyor."
+      );
+    }
+
+    return [];
+  }
+}
+
+function mergeBusinesses(
+  local,
+  live
+){
+
+  const seen=
+    new Set();
+
+  const out=[];
+
+  for(
+    const b of
+    [
+      ...local,
+      ...live
+    ]
+  ){
+
+    const k=
+      normalize(
+        b.name
+      )+
+      "|"+
+      normalize(
+        b.city
+      );
+
+    if(
+      seen.has(k)
+    ){
+      continue;
+    }
+
+    seen.add(k);
+
+    b.score=
+      scoreBusiness(b);
+
+    registerBusiness(b);
+
+    out.push(b);
+  }
+
+  return out;
+}
+
+async function runDiscovery(
+  silent=false
+){
+
+  if(
+    !state.user
+  ){
+    if(!silent){
+      openAuth("login");
+    }
+
+    return;
+  }
+
+  const btn=
+    $("recommendBtn");
+
+  btn.disabled=true;
+  btn.textContent="Aranıyor…";
+
+  $("results").innerHTML=
+    '<div class="empty">✦ İşletmeler ve canlı kaynaklar değerlendiriliyor...</div>';
+
+  $("searchState").textContent=
+    "Arama yapılıyor…";
+
+  try{
+
+    const [
+      local,
+      live
+    ]=
+      await Promise.all([
+        fetchLocalBusinesses(),
+        fetchLiveBusinesses()
+      ]);
+
+    state.results=
+      sortResults(
+        mergeBusinesses(
+          local,
+          live
+        )
+      );
+
+    resultOffset=0;
+
+    renderResults(
+      state.results
+        .slice(0,9)
+    );
+
+    $("searchState")
+      .textContent=
+      `${state.results.length} uygun aday · ${local.length} kayıtlı · ${live.length} canlı`;
+
+    $("resultSummary")
+      .textContent=
+      `10 km · ₺${budget().toLocaleString("tr-TR")} · ${timeMinutes()} dk · ${$("mode").value} · ${state.mood||"ruh hali serbest"}`;
+
+    if(!silent){
+
+      toast(
+        state.results.length
+          ?"DISCOVER Score güncellendi."
+          :"Bu kriterlerle uygun işletme bulunamadı."
+      );
+    }
+
+  }finally{
+
+    btn.disabled=false;
+    btn.textContent="✦ Bana Öner";
+  }
+}
+
+function surpriseMe(){
+
+  if(
+    !state.results.length
+  ){
+    return runDiscovery()
+      .then(
+        surpriseMe
+      );
+  }
+
+  const pool=
+    state.results.slice(
+      0,
+      Math.min(
+        12,
+        state.results.length
+      )
+    );
+
+  renderResults([
+    pool[
+      Math.floor(
+        Math.random()*
+        pool.length
+      )
+    ]
+  ]);
+
+  toast(
+    "Sürpriz seçim hazır."
+  );
+}
+
+function betterResults(){
+
+  if(
+    !state.results.length
+  ){
+    return runDiscovery();
+  }
+
+  resultOffset=
+    (
+      resultOffset+6
+    )%
+    Math.max(
+      1,
+      state.results.length
+    );
+
+  renderResults(
+    state.results
+      .slice(
+        resultOffset,
+        resultOffset+9
+      )
+      .concat(
+        state.results.slice(
+          0,
+          Math.max(
+            0,
+            resultOffset+
+            9-
+            state.results.length
+          )
+        )
+      )
+      .slice(0,9)
+  );
+
+  toast(
+    "Alternatif sonuçlar getirildi."
+  );
+}
+
+function renderResults(list){
+
+  const box=
+    $("results");
+
+  if(
+    !list.length
+  ){
+
+    box.innerHTML=
+      '<div class="empty"><b>Bu kriterlere uygun sonuç bulunamadı.</b><br>Bütçe, kategori veya arama metnini değiştirip tekrar dene.</div>';
+
+    return;
+  }
+
+  box.innerHTML=
+    list
+    .map(
+      b=>{
+
+        const k=
+          registerBusiness(b);
+
+        const live=
+          b.source==="live";
+
+        const price=
+          live
+          ?priceLevelLabel(
+            b.price_level
+          )
+          :localPriceLabel(b);
+
+        const dist=
+          Number.isFinite(
+            b.distance_km
+          )
+          ?b.distance_km
+            .toFixed(1)+
+            " km"
+          :"Mesafe bilinmiyor";
+
+        const rating=
+          b.rating
+          ?(
+            b.rating>5
+            ?b.rating.toFixed(1)+"/10"
+            :b.rating.toFixed(1)+"/5"
+          )
+          :"Puan yok";
+
+        const menuLabel=
+          b.menu_url
+          ?"📖 Menüyü gör"
+          :"🍽️ Menüyü kontrol et";
+
+        const fav=
+          state.favorites.has(k);
+
+        return `
+        <article class="business-card ${live?"live":""}">
+
+          <div class="business-card-head">
+
+            <div>
+              <h3 class="business-name">
+                ${esc(b.name)}
+              </h3>
+
+              <div class="rating-line">
+
+                <span class="stars">
+                  ${stars(b.rating)}
+                </span>
+
+                <span>
+                  ${esc(rating)}
+                  ${b.review_count?` · ${b.review_count} yorum`:""}
+                </span>
+
+              </div>
+            </div>
+
+            <span class="distance-badge">
+              ${esc(dist)}
+            </span>
+
+          </div>
+
+          <div class="business-meta">
+            ${esc(categoryLabel(b.category))}
+            ·
+            ${esc(b.city||"Türkiye")}
+            ${b.district?" · "+esc(b.district):""}
+          </div>
+
+          <div class="fit-box">
+            <span class="badge ${live?"live":"purple"}">
+              ${live?"● CANLI FOURSQUARE":"SUPABASE"}
+            </span>
+
+            · %${b.score} uyum
+          </div>
+
+          <div class="price-row">
+
+            <div>
+
+              <div class="price-main">
+                ${esc(price)}
+              </div>
+
+              <div class="price-note">
+                ${
+                  b.price_known
+                    ?(
+                      live
+                        ?"Foursquare fiyat seviyesi"
+                        :"doğrulanmış/tanımlı fiyat"
+                    )
+                    :"fiyat bilinmiyor — uydurulmadı"
+                }
+              </div>
+
+            </div>
+
+            <div class="price-note">
+              ${
+                Number.isFinite(
+                  b.distance_km
+                )
+                ?Math.max(
+                  3,
+                  Math.ceil(
+                    b.distance_km*4
+                  )
+                )+
+                " dk tahmini yol"
+                :""
+              }
+            </div>
+
+          </div>
+
+          <div class="reason-box">
+            <b>Neden önerildi?</b>
+            Ruh hali, kategori, bütçe, mesafe ve puan birlikte değerlendirildi.
+          </div>
+
+          <div class="business-actions">
+
+            <button
+              class="btn primary"
+              onclick="openBusiness('${esc(k)}')"
+            >
+              Detaylar
+            </button>
+
+            <button
+              class="btn"
+              onclick="openBusinessMenu('${esc(k)}')"
+            >
+              ${menuLabel}
+            </button>
+
+            <button
+              class="btn"
+              onclick="openReviews('${esc(k)}')"
+            >
+              💬 Yorumlar
+            </button>
+
+            <button
+              class="btn"
+              onclick="openReviewEditor('${esc(k)}')"
+            >
+              ⭐ Değerlendir
+            </button>
+
+            <button
+              class="btn"
+              onclick="toggleFavorite('${esc(k)}')"
+            >
+              ${fav?"♥ Favori":"♡ Favori"}
+            </button>
+
+            <button
+              class="btn wide"
+              onclick="routeToBusiness('${esc(k)}')"
+            >
+              🗺️ Rotaya git
+            </button>
+
+          </div>
+
+        </article>
+        `;
+      }
+    )
+    .join("");
+}
+
+function openBusiness(k){
+
+  const b=
+    getBusiness(k);
+
+  if(!b)return;
+
+  const website=
+    safeUrl(
+      b.website
+    );
+
+  const phone=
+    String(
+      b.phone||""
+    );
+
+  $("businessModalBody")
+    .innerHTML=`
+
+    <div class="glass">
+
+      <div class="row" style="align-items:flex-start">
+
+        <div>
+
+          <span class="badge ${b.source==="live"?"live":"purple"}">
+            ${b.source==="live"?"CANLI FOURSQUARE":"DISCOVER DB"}
+          </span>
+
+          <h2 style="margin:10px 0 4px">
+            ${esc(b.name)}
+          </h2>
+
+          <div class="muted">
+            ${esc(categoryLabel(b.category))}
+            ·
+            ${esc(b.city||"Türkiye")}
+            ${b.district?" · "+esc(b.district):""}
+          </div>
+
+        </div>
+
+        <span class="distance-badge">
+          ${
+            Number.isFinite(
+              b.distance_km
+            )
+            ?b.distance_km.toFixed(1)+" km"
+            :"—"
+          }
+        </span>
+
+      </div>
+
+      <div class="menu-grid" style="margin-top:14px">
+
+        <div class="menu-card">
+          <small>Adres</small>
+          <b>${esc(b.address||"Adres bilgisi yok")}</b>
+        </div>
+
+        <div class="menu-card">
+          <small>Fiyat</small>
+          <b>
+            ${
+              esc(
+                b.source==="live"
+                ?priceLevelLabel(
+                  b.price_level
+                )
+                :localPriceLabel(b)
+              )
+            }
+          </b>
+        </div>
+
+        <div class="menu-card">
+          <small>Puan</small>
+          <b>${esc(b.rating?String(b.rating):"Puan yok")}</b>
+        </div>
+
+        <div class="menu-card">
+          <small>Kaynak</small>
+          <b>
+            ${b.source==="live"?"Foursquare Places API":"Supabase businesses"}
+          </b>
+        </div>
+
+      </div>
+
+      ${
+        b.description
+        ?`
+          <div class="notice" style="margin-top:12px">
+            ${esc(b.description)}
+          </div>
+        `
+        :""
+      }
+
+      <div class="search-actions">
+
+        ${
+          website
+          ?`
+            <a
+              class="btn"
+              href="${esc(website)}"
+              target="_blank"
+              rel="noopener"
+            >
+              🌐 Web sitesi
+            </a>
+          `
+          :""
+        }
+
+        ${
+          phone
+          ?`
+            <a
+              class="btn"
+              href="tel:${esc(phone)}"
+            >
+              📞 Ara
+            </a>
+          `
+          :""
+        }
+
+        <button
+          class="btn primary"
+          onclick="openBusinessMenu('${esc(k)}')"
+        >
+          🍽️ Menü
+        </button>
+
+        <button
+          class="btn"
+          onclick="addRouteBusiness('${esc(k)}')"
+        >
+          ＋ Rotama ekle
+        </button>
+
+        <button
+          class="btn"
+          onclick="routeToBusiness('${esc(k)}')"
+        >
+          🗺️ Navigasyon
+        </button>
+
+      </div>
+
+    </div>
+  `;
+
+  openModal(
+    "businessModal"
+  );
+}
+
+function routeToBusiness(k){
+
+  const b=
+    getBusiness(k);
+
+  if(
+    !b ||
+    !Number.isFinite(
+      Number(b.latitude)
+    ) ||
+    !Number.isFinite(
+      Number(b.longitude)
+    )
+  ){
+    return toast(
+      "Bu işletmenin koordinatı bulunamadı."
+    );
+  }
+
+  const origin=
+    state.location
+      ?`&origin=${encodeURIComponent(
+        state.location.latitude+
+        ","+
+        state.location.longitude
+      )}`
+      :"";
+
+  window.open(
+    `https://www.google.com/maps/dir/?api=1${origin}&destination=${encodeURIComponent(Number(b.latitude)+","+Number(b.longitude))}`,
+    "_blank",
+    "noopener,noreferrer"
+  );
+}
+
+async function openBusinessMenu(k){
+
+  const b=
+    getBusiness(k);
+
+  if(!b)return;
+
+  openModal(
+    "menuModal"
+  );
+
+  $("menuTitle")
+    .textContent=
+    b.name;
+
+  $("menuMeta")
+    .textContent=
+    "Güncel menü kaynağı kontrol ediliyor…";
+
+  $("menuBody")
+    .innerHTML=
+    '<div class="empty">Menü bilgileri yükleniyor...</div>';
+
+  const existing=
+    safeUrl(
+      b.menu_url
+    );
+
+  if(existing){
+
+    renderMenu(
+      b,
+      {
+        ok:true,
+
+        source:
+          "DISCOVER AI doğrulanmış işletme verisi",
+
+        checked_at:
+          new Date()
+            .toISOString(),
+
+        place_id:
+          b.place_id||
+          "",
+
+        place:{
+          name:b.name,
+          website:b.website,
+          tel:b.phone,
+          location:{
+            formatted_address:
+              b.address
+          }
+        },
+
+        menu_url:
+          existing,
+
+        menu_items:[],
+
+        photos:[]
+      }
+    );
+
+    return;
+  }
+
+  const cacheKey=
+    businessKey(b);
+
+  if(
+    menuCache.has(
+      cacheKey
+    )
+  ){
+
+    renderMenu(
+      b,
+      menuCache.get(
+        cacheKey
+      )
+    );
+
+    return;
+  }
+
+  try{
+
+    const body={
+
       place_id:
-        b.fsq_place_id ||
-        b.place_id ||
+        b.place_id||
         "",
 
-      /*
-        Supabase işletmelerinde place_id olmadığı için
-        discover-menu işletmeyi isim + koordinattan bulacak.
-      */
       name:
-        b.name ||
-        b.title ||
-        "",
+        b.name,
 
       lat:
         Number.isFinite(
-          Number(b.latitude)
+          Number(
+            b.latitude
+          )
         )
-          ? Number(b.latitude)
-          : null,
+        ?Number(
+          b.latitude
+        )
+        :undefined,
 
       lng:
         Number.isFinite(
-          Number(b.longitude)
+          Number(
+            b.longitude
+          )
         )
-          ? Number(b.longitude)
-          : null,
+        ?Number(
+          b.longitude
+        )
+        :undefined,
 
       address:
-        b.address ||
+        b.address||
         "",
 
       city:
-        b.city ||
-        "",
+        b.city||
+        currentCity(),
 
       include_photos:
         true,
@@ -183,690 +3401,2055 @@ async function openBusinessMenu(b){
         true
     };
 
-
     const {
       data,
       error
     }=
-      await sb.functions.invoke(
+      await sb
+      .functions
+      .invoke(
         "discover-menu",
         {
-          body:
-            requestBody
+          body
         }
       );
-
 
     if(error){
 
-      let detail="";
+      let detail=
+        error.message||
+        "";
 
       try{
+
+        const x=
+          await error
+          .context
+          ?.clone()
+          ?.json();
+
         detail=
-          await getFunctionErrorDetails(
-            error
-          );
-      }catch(_){}
+          x?.error||
+          x?.message||
+          detail;
+
+      }catch{}
 
       throw new Error(
-        detail ||
-        error.message ||
-        "Menü servisine ulaşılamadı."
+        detail||
+        "Menü servisine ulaşılamadı"
       );
     }
 
-
-    if(!data?.ok){
-
+    if(
+      !data?.ok
+    ){
       throw new Error(
-        data?.error ||
-        "Menü servisi sonuç vermedi."
+        data?.error||
+        "Menü servisi sonuç vermedi"
       );
     }
 
+    menuCache.set(
+      cacheKey,
+      data
+    );
 
-    const place=
-      data.place ||
-      {};
+    renderMenu(
+      b,
+      data
+    );
 
+  }catch(e){
 
-    const menuUrl=
-      businessEscapeUrl(
-        data.menu_url ||
-        place.menu ||
-        place.menu_url ||
-        ""
+    const m=
+      String(
+        e?.message||
+        "Menü alınamadı"
       );
 
+    $("menuMeta")
+      .textContent=
+      "Menü kontrolü tamamlanamadı";
 
-    const website=
-      businessEscapeUrl(
-        place.website ||
-        b.website ||
-        ""
-      );
+    $("menuBody")
+      .innerHTML=`
 
+      <div class="notice danger">
 
-    const photos=
-      (
-        Array.isArray(data.photos)
-          ? data.photos
-          : []
+        <b>
+          ${
+            /429|credit|kredi/i
+            .test(m)
+              ?"Foursquare API kotası şu anda kullanılamıyor."
+              :"Menü verisi alınamadı."
+          }
+        </b>
+
+        <br>
+
+        ${esc(m)}
+
+      </div>
+
+      ${
+        b.website
+        ?`
+          <div class="search-actions">
+
+            <a
+              class="btn primary"
+              href="${esc(safeUrl(b.website))}"
+              target="_blank"
+              rel="noopener"
+            >
+              🌐 İşletmenin web sitesini aç
+            </a>
+
+          </div>
+        `
+        :""
+      }
+    `;
+  }
+}
+
+function renderMenu(
+  b,
+  data
+){
+
+  const p=
+    data.place||
+    {};
+
+  const menu=
+    safeUrl(
+      data.menu_url||
+      p.menu||
+      ""
+    );
+
+  const website=
+    safeUrl(
+      p.website||
+      b.website||
+      ""
+    );
+
+  const phone=
+    p.tel||
+    b.phone||
+    "";
+
+  const address=
+    p.location
+    ?.formatted_address||
+    b.address||
+    "";
+
+  const photos=
+    (
+      Array.isArray(
+        data.photos
       )
-      .map(photo=>{
+      ?data.photos
+      :[]
+    )
+    .map(
+      x=>
+        typeof x==="string"
+        ?x
+        :x?.url
+    )
+    .map(
+      safeUrl
+    )
+    .filter(Boolean);
 
-        if(typeof photo==="string"){
-          return photo;
+  const items=
+    Array.isArray(
+      data.menu_items
+    )
+    ?data.menu_items
+    :[];
+
+  $("menuTitle")
+    .textContent=
+    p.name||
+    b.name;
+
+  $("menuMeta")
+    .textContent=
+    [
+      address,
+
+      data.source||
+      "Foursquare Places API",
+
+      data.checked_at
+      ?"Son kontrol: "+
+        new Date(
+          data.checked_at
+        )
+        .toLocaleString(
+          "tr-TR"
+        )
+      :""
+    ]
+    .filter(Boolean)
+    .join(" · ");
+
+  const actions=[
+    menu
+    ?`
+      <a
+        class="btn primary"
+        href="${esc(menu)}"
+        target="_blank"
+        rel="noopener"
+      >
+        📖 Menüyü aç
+      </a>
+    `
+    :"",
+
+    website
+    ?`
+      <a
+        class="btn"
+        href="${esc(website)}"
+        target="_blank"
+        rel="noopener"
+      >
+        🌐 Web sitesi
+      </a>
+    `
+    :"",
+
+    phone
+    ?`
+      <a
+        class="btn"
+        href="tel:${esc(phone)}"
+      >
+        📞 Ara
+      </a>
+    `
+    :""
+  ]
+  .filter(Boolean)
+  .join("");
+
+  const itemHtml=
+    items.length
+    ?`
+      <h3>Menü ürünleri</h3>
+
+      <div class="stack">
+
+        ${
+          items
+          .slice(0,80)
+          .map(
+            x=>`
+
+            <div class="menu-card row">
+
+              <div>
+
+                <b>
+                  ${esc(x.name||x.title||"Ürün")}
+                </b>
+
+                ${
+                  x.description
+                  ?`
+                    <small>
+                      ${esc(x.description)}
+                    </small>
+                  `
+                  :""
+                }
+
+              </div>
+
+              ${
+                x.price!=null
+                ?`
+                  <b>
+                    ${esc(String(x.price))}
+                    ${esc(x.currency||data.menu_currency||"")}
+                  </b>
+                `
+                :""
+              }
+
+            </div>
+
+          `
+          )
+          .join("")
         }
 
-        return (
-          photo?.url ||
-          photo?.photo_url ||
-          ""
-        );
+      </div>
+    `
+    :"";
 
-      })
-      .map(
-        businessEscapeUrl
+  const photoHtml=
+    photos.length
+    ?`
+      <h3>Menü görselleri</h3>
+
+      <div class="menu-photos">
+
+        ${
+          photos
+          .slice(0,12)
+          .map(
+            u=>`
+
+            <a
+              href="${esc(u)}"
+              target="_blank"
+              rel="noopener"
+            >
+
+              <img
+                src="${esc(u)}"
+                alt="Menü görseli"
+                loading="lazy"
+                onerror="this.closest('a')?.remove()"
+              >
+
+            </a>
+
+          `
+          )
+          .join("")
+        }
+
+      </div>
+    `
+    :"";
+
+  const note=
+    !menu &&
+    !items.length &&
+    !photos.length
+      ?"Bu işletme için doğrulanmış menü URL'si veya menü görseli bulunamadı. Eksik veri tahmin edilmedi."
+      :"Menü/fiyat bilgileri yalnızca kaynak tarafından sağlandığı biçimde gösterilir; DISCOVER AI eksik fiyat uydurmaz.";
+
+  $("menuBody")
+    .innerHTML=`
+
+    <div class="search-actions">
+      ${actions}
+    </div>
+
+    ${itemHtml}
+
+    ${photoHtml}
+
+    <div class="notice" style="margin-top:14px">
+      ${esc(note)}
+    </div>
+  `;
+}
+
+function favoriteStorage(){
+
+  try{
+
+    return new Set(
+      JSON.parse(
+        localStorage.getItem(
+          "discover_business_favorites"
+        )||
+        "[]"
       )
-      .filter(Boolean);
+    );
 
+  }catch{
 
-    const menuItems=
-      Array.isArray(
-        data.menu_items
-      )
-        ? data.menu_items
-        : [];
+    return new Set();
+  }
+}
 
+function saveFavorites(){
 
-    /*
-      1. Öncelik:
-      Gerçek menü URL'si.
-    */
-    if(menuUrl){
+  localStorage.setItem(
+    "discover_business_favorites",
+    JSON.stringify(
+      [
+        ...state.favorites
+      ]
+    )
+  );
+}
 
-      if(menuWindow){
+async function toggleFavorite(k){
 
-        menuWindow.location.replace(
-          menuUrl
+  const b=
+    getBusiness(k);
+
+  if(!b)return;
+
+  if(
+    b.source==="local" &&
+    state.user
+  ){
+
+    try{
+
+      const {
+        data,
+        error
+      }=
+        await sb.rpc(
+          "toggle_business_favorite",
+          {
+            p_business_id:
+              b.id
+          }
         );
 
-      }else{
+      if(!error){
 
-        window.open(
-          menuUrl,
-          "_blank",
-          "noopener,noreferrer"
-        );
+        data?.favorited
+          ?state.favorites.add(k)
+          :state.favorites.delete(k);
 
-      }
+        saveFavorites();
 
-      toast(
-        "Güncel menü açıldı."
-      );
-
-      return;
-    }
-
-
-    /*
-      2. Menü URL'si yoksa fakat
-      Foursquare menü fotoğrafları veya
-      yapılandırılmış menü ürünleri bulduysa
-      DISCOVER AI görünümünde göster.
-    */
-    if(
-      photos.length ||
-      menuItems.length
-    ){
-
-      const target=
-        menuWindow ||
-        window.open(
-          "about:blank",
-          "_blank"
-        );
-
-
-      if(!target){
-
-        toast(
-          "Menü bulundu fakat yeni pencere tarayıcı tarafından engellendi."
+        renderResults(
+          sortResults(
+            state.results
+          )
+          .slice(
+            resultOffset,
+            resultOffset+9
+          )
         );
 
         return;
       }
 
+    }catch{}
+  }
 
-      const safeItems=
-        menuItems
-        .slice(0,100)
-        .map(item=>{
+  state.favorites.has(k)
+    ?state.favorites.delete(k)
+    :state.favorites.add(k);
 
-          const name=
-            esc(
-              item?.name ||
-              item?.title ||
-              "Ürün"
-            );
+  saveFavorites();
 
-          const description=
-            item?.description
-              ? `<div class="desc">${esc(item.description)}</div>`
-              : "";
+  renderResults(
+    sortResults(
+      state.results
+    )
+    .slice(
+      resultOffset,
+      resultOffset+9
+    )
+  );
 
-          let price="";
+  toast(
+    state.favorites.has(k)
+      ?"Favorilere eklendi."
+      :"Favorilerden çıkarıldı."
+  );
+}
 
-          const amount=
-            item?.price ??
-            item?.amount;
+async function openReviews(k){
 
-          if(
-            amount !== undefined &&
-            amount !== null &&
-            amount !== ""
-          ){
+  const b=
+    getBusiness(k);
 
-            const currency=
-              esc(
-                item?.currency ||
-                data.menu_currency ||
-                "₺"
-              );
+  if(!b)return;
 
-            price=
-              `<strong class="price">${esc(amount)} ${currency}</strong>`;
+  $("reviewsTitle")
+    .textContent=
+    b.name;
+
+  openModal(
+    "reviewsModal"
+  );
+
+  if(
+    b.source!=="local" ||
+    !b.id
+  ){
+
+    $("reviewsBody")
+      .innerHTML=
+      '<div class="notice">Canlı Foursquare mekanlarında DISCOVER AI kullanıcı yorumları, işletme Supabase veritabanına bağlandıktan sonra açılır.</div>';
+
+    return;
+  }
+
+  $("reviewsBody")
+    .innerHTML=
+    '<div class="empty">Yorumlar yükleniyor...</div>';
+
+  try{
+
+    const {
+      data,
+      error
+    }=
+      await sb.rpc(
+        "get_business_reviews",
+        {
+          p_business_id:
+            b.id
+        }
+      );
+
+    if(error){
+      throw error;
+    }
+
+    const rows=
+      data||
+      [];
+
+    $("reviewsBody")
+      .innerHTML=
+      rows.length
+      ?`
+        <div class="review-list">
+
+          ${
+            rows.map(
+              r=>`
+
+              <div class="review-item">
+
+                <div class="row">
+
+                  <b>
+                    ${esc(r.display_name||"Kullanıcı")}
+                  </b>
+
+                  <small class="muted">
+                    ${
+                      r.created_at
+                      ?new Date(
+                        r.created_at
+                      )
+                      .toLocaleDateString(
+                        "tr-TR"
+                      )
+                      :""
+                    }
+                  </small>
+
+                </div>
+
+                <div class="stars">
+                  ${stars(r.overall_rating)}
+                </div>
+
+                <p>
+                  ${esc(r.review_text??r.comment??"")}
+                </p>
+
+              </div>
+
+            `
+            ).join("")
           }
 
-          return `
-            <div class="menu-item">
-              <div>
-                <b>${name}</b>
-                ${description}
-              </div>
-
-              ${price}
-            </div>
-          `;
-
-        })
-        .join("");
-
-
-      const safePhotos=
-        photos
-        .slice(0,12)
-        .map(url=>`
-          <a
-            href="${esc(url)}"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="photo"
-          >
-            <img
-              src="${esc(url)}"
-              alt="Menü görseli"
-              loading="lazy"
-            >
-          </a>
-        `)
-        .join("");
-
-
-      target.document.open();
-
-      target.document.write(`
-        <!doctype html>
-
-        <html lang="tr">
-
-        <head>
-
-          <meta charset="utf-8">
-
-          <meta
-            name="viewport"
-            content="width=device-width,initial-scale=1"
-          >
-
-          <title>
-            ${esc(place.name || b.name || "DISCOVER AI Menü")}
-          </title>
-
-          <style>
-
-            :root{
-              --bg:#08060d;
-              --panel:#100b18;
-              --panel2:#151020;
-              --text:#f7f3ff;
-              --muted:#aaa0b7;
-              --purple:#8b5cf6;
-              --purple2:#c084fc;
-              --line:#3a2b4b;
-              --green:#69e7b7;
-            }
-
-            *{
-              box-sizing:border-box;
-            }
-
-            body{
-              margin:0;
-              padding:30px 16px 60px;
-              background:
-                radial-gradient(
-                  circle at 70% 5%,
-                  #261343 0,
-                  #10091a 34%,
-                  #08060d 75%
-                );
-              color:var(--text);
-              font-family:
-                Inter,
-                system-ui,
-                -apple-system,
-                Segoe UI,
-                sans-serif;
-            }
-
-            .wrap{
-              width:min(
-                940px,
-                94%
-              );
-              margin:auto;
-            }
-
-            .panel{
-              padding:24px;
-              border:1px solid #543572;
-              border-radius:26px;
-              background:
-                linear-gradient(
-                  145deg,
-                  #100b18,
-                  #09070e
-                );
-              box-shadow:
-                0 30px 80px
-                rgba(
-                  91,
-                  35,
-                  150,
-                  .16
-                );
-            }
-
-            .eyebrow{
-              display:inline-flex;
-              align-items:center;
-              gap:8px;
-              border:
-                1px solid
-                #50326e;
-              border-radius:999px;
-              padding:8px 12px;
-              color:#dccdff;
-              background:#0d0914;
-              font-size:12px;
-            }
-
-            h1{
-              margin:
-                18px 0
-                6px;
-              font-size:
-                clamp(
-                  28px,
-                  6vw,
-                  48px
-                );
-            }
-
-            .meta{
-              color:
-                var(--muted);
-              line-height:1.6;
-            }
-
-            .live{
-              display:inline-flex;
-              gap:6px;
-              align-items:center;
-              margin-top:12px;
-              color:#8cf0c5;
-              background:#0d241d;
-              border:
-                1px solid
-                #245f4c;
-              border-radius:999px;
-              padding:6px 9px;
-              font-size:11px;
-            }
-
-            .menu-list{
-              display:grid;
-              gap:9px;
-              margin-top:20px;
-            }
-
-            .menu-item{
-              display:flex;
-              justify-content:
-                space-between;
-              align-items:
-                flex-start;
-              gap:15px;
-              background:#0d0913;
-              border:
-                1px solid
-                var(--line);
-              border-radius:14px;
-              padding:13px;
-            }
-
-            .menu-item b{
-              display:block;
-              font-size:15px;
-            }
-
-            .desc{
-              margin-top:4px;
-              color:
-                var(--muted);
-              font-size:12px;
-              line-height:1.45;
-            }
-
-            .price{
-              white-space:
-                nowrap;
-              color:
-                #d9c6ff;
-            }
-
-            .photos{
-              display:grid;
-              grid-template-columns:
-                repeat(
-                  3,
-                  minmax(
-                    0,
-                    1fr
-                  )
-                );
-              gap:9px;
-              margin-top:20px;
-            }
-
-            .photo{
-              display:block;
-              border:
-                1px solid
-                var(--line);
-              border-radius:14px;
-              overflow:hidden;
-              background:#0d0913;
-            }
-
-            .photo img{
-              display:block;
-              width:100%;
-              height:190px;
-              object-fit:cover;
-            }
-
-            .actions{
-              display:flex;
-              flex-wrap:wrap;
-              gap:8px;
-              margin-top:20px;
-            }
-
-            .btn{
-              display:inline-block;
-              text-decoration:none;
-              color:#fff;
-              border:
-                1px solid
-                var(--line);
-              background:#120d1c;
-              padding:
-                12px 16px;
-              border-radius:14px;
-            }
-
-            .btn.primary{
-              border-color:
-                #a855f7;
-              background:
-                linear-gradient(
-                  135deg,
-                  #7c3aed,
-                  #b04cff
-                );
-            }
-
-            .note{
-              margin-top:20px;
-              padding:
-                12px 14px;
-              border-left:
-                3px solid
-                var(--purple);
-              border-radius:12px;
-              background:#120c1b;
-              color:#cfc3da;
-              line-height:1.55;
-              font-size:12px;
-            }
-
-            @media(
-              max-width:700px
-            ){
-
-              .photos{
-                grid-template-columns:
-                  1fr 1fr;
-              }
-
-              .photo img{
-                height:140px;
-              }
-
-            }
-
-          </style>
-
-        </head>
-
-        <body>
-
-          <main class="wrap">
-
-            <section class="panel">
-
-              <div class="eyebrow">
-                ✦ DISCOVER AI · LIVE MENU
-              </div>
-
-              <h1>
-                ${esc(place.name || b.name || "İşletme")}
-              </h1>
-
-              <div class="meta">
-                ${esc(
-                  place?.location?.formatted_address ||
-                  b.address ||
-                  ""
-                )}
-              </div>
-
-              <div class="live">
-                ● FOURSQUARE CANLI VERİ
-              </div>
-
-              ${
-                safeItems
-                  ? `
-                    <h2>
-                      Menü
-                    </h2>
-
-                    <div class="menu-list">
-                      ${safeItems}
-                    </div>
-                  `
-                  : ""
-              }
-
-              ${
-                safePhotos
-                  ? `
-                    <h2>
-                      Menü görselleri
-                    </h2>
-
-                    <div class="photos">
-                      ${safePhotos}
-                    </div>
-                  `
-                  : ""
-              }
-
-              <div class="actions">
-
-                ${
-                  website
-                    ? `
-                      <a
-                        class="btn primary"
-                        href="${esc(website)}"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        🌐 İşletmenin web sitesi
-                      </a>
-                    `
-                    : ""
-                }
-
-              </div>
-
-              <div class="note">
-                Menü ürünleri ve fiyatları yalnızca doğrulanmış
-                kaynak verisi bulunduğunda gösterilir.
-                DISCOVER AI eksik fiyat veya ürün bilgisi uydurmaz.
-              </div>
-
-            </section>
-
-          </main>
-
-        </body>
-
-        </html>
-      `);
-
-      target.document.close();
-
-      toast(
-        `${photos.length} menü görseli bulundu.`
-      );
-
-      return;
-    }
-
-
-    /*
-      3. Foursquare'de menü yoksa
-      işletmenin gerçek web sitesine düş.
-    */
-    if(website){
-
-      if(menuWindow){
-
-        menuWindow.location.replace(
-          website
-        );
-
-      }else{
-
-        window.open(
-          website,
-          "_blank",
-          "noopener,noreferrer"
-        );
-
-      }
-
-      toast(
-        "Doğrudan menü bulunamadı; işletmenin web sitesi açıldı."
-      );
-
-      return;
-    }
-
-
-    /*
-      Hiçbir doğrulanmış kaynak yok.
-    */
-    if(menuWindow){
-
-      try{
-        menuWindow.close();
-      }catch(_){}
-
-    }
-
-    toast(
-      "Bu işletme için doğrulanmış menü URL'si veya menü görseli bulunamadı."
-    );
-
+        </div>
+      `
+      :'<div class="empty">Henüz yorum yok.</div>';
 
   }catch(e){
 
-    if(menuWindow){
+    $("reviewsBody")
+      .innerHTML=
+      `<div class="notice danger">Yorumlar alınamadı: ${esc(e.message||"")}</div>`;
+  }
+}
 
-      try{
-        menuWindow.close();
-      }catch(_){}
+function openReviewEditor(k){
 
-    }
+  const b=
+    getBusiness(k);
 
-    console.error(
-      "DISCOVER MENU ERROR",
-      e
+  if(!b)return;
+
+  if(
+    !state.user
+  ){
+    return openAuth(
+      "login"
+    );
+  }
+
+  if(
+    b.source!=="local" ||
+    !b.id
+  ){
+    return toast(
+      "Canlı mekan değerlendirmesi için işletmenin DISCOVER AI veritabanına bağlı olması gerekir."
+    );
+  }
+
+  state.reviewBusiness=b;
+  state.reviewScores={};
+
+  $("reviewEditorTitle")
+    .textContent=
+    b.name;
+
+  $("reviewText")
+    .value="";
+
+  const labels=[
+    "Hizmet",
+    "Atmosfer",
+    "Fiyat / performans"
+  ];
+
+  $("reviewCriteria")
+    .innerHTML=
+    labels
+    .map(
+      (l,i)=>`
+
+      <div class="review-criterion">
+
+        <div class="row">
+          <b>${l}</b>
+          <span id="rv${i}">0/5</span>
+        </div>
+
+        <div class="star-picker" data-i="${i}">
+
+          ${
+            [1,2,3,4,5]
+            .map(
+              v=>`
+                <button
+                  onclick="setReviewScore(${i},${v})"
+                >
+                  ★
+                </button>
+              `
+            )
+            .join("")
+          }
+
+        </div>
+
+      </div>
+    `
+    )
+    .join("");
+
+  const dist=
+    Number(
+      b.distance_km??
+      999
+    )*
+    1000;
+
+  $("reviewDistance")
+    .innerHTML=
+    dist<=200
+      ?`✅ Yaklaşık ${Math.round(dist)} metre uzaktasın. Gönderimde sunucu tekrar kontrol eder.`
+      :`🔒 Değerlendirme için işletmeye 200 metre içinde olmalısın. Şu an yaklaşık ${Math.round(dist)} m.`;
+
+  openModal(
+    "reviewEditorModal"
+  );
+}
+
+function setReviewScore(
+  i,
+  v
+){
+
+  state.reviewScores[i]=v;
+
+  $("rv"+i)
+    .textContent=
+    v+"/5";
+
+  document
+    .querySelectorAll(
+      `.star-picker[data-i="${i}"] button`
+    )
+    .forEach(
+      (b,n)=>
+        b.classList.toggle(
+          "active",
+          n<v
+        )
+    );
+}
+
+async function submitReview(){
+
+  const b=
+    state.reviewBusiness;
+
+  if(
+    !b ||
+    !state.user
+  ){
+    return;
+  }
+
+  const vals=
+    [0,1,2]
+    .map(
+      i=>
+        Number(
+          state.reviewScores[i]||0
+        )
     );
 
+  if(
+    vals.some(
+      v=>v<1
+    )
+  ){
+    return toast(
+      "Üç kriteri de puanla."
+    );
+  }
 
-    const message=
-      String(
-        e?.message ||
-        "Menü servisi kullanılamıyor."
+  if(
+    Number(
+      b.distance_km??
+      999
+    )*
+    1000>
+    200
+  ){
+    return toast(
+      "İşletmeye 200 metre içinde değilsin."
+    );
+  }
+
+  try{
+
+    await syncLocationToProfile();
+
+    const criteria={
+      criterion_1:vals[0],
+      criterion_2:vals[1],
+      criterion_3:vals[2],
+
+      labels:[
+        "Hizmet",
+        "Atmosfer",
+        "Fiyat / performans"
+      ]
+    };
+
+    const {
+      error
+    }=
+      await sb.rpc(
+        "submit_business_review",
+        {
+          p_business_id:
+            b.id,
+
+          p_criteria:
+            criteria,
+
+          p_comment:
+            String(
+              $("reviewText").value||
+              ""
+            )
+            .trim()
+        }
       );
 
+    if(error){
+      throw error;
+    }
+
+    closeModal(
+      "reviewEditorModal"
+    );
+
+    toast(
+      "Değerlendirmen kaydedildi."
+    );
+
+    openReviews(
+      businessKey(b)
+    );
+
+    gainXP(
+      20,
+      "İşletme değerlendirmesi"
+    );
+
+  }catch(e){
+
+    toast(
+      "Değerlendirme kaydedilemedi: "+
+      (e.message||"")
+    );
+  }
+}
+
+function addRouteBusiness(k){
+
+  const b=
+    getBusiness(k);
+
+  if(!b)return;
+
+  state.route.push({
+    key:k,
+    name:b.name,
+    latitude:b.latitude,
+    longitude:b.longitude
+  });
+
+  localStorage.setItem(
+    "discover_route",
+    JSON.stringify(
+      state.route
+    )
+  );
+
+  updateRoutePreview();
+
+  toast(
+    "Rotaya eklendi."
+  );
+}
+
+function updateRoutePreview(){
+
+  $("routePreview")
+    .textContent=
+    state.route.length
+      ?`${state.route.length} yer rotana eklendi.`
+      :"Henüz rota oluşturmadın.";
+}
+
+function openRoute(){
+
+  const body=
+    $("routeBody");
+
+  if(
+    !state.route.length
+  ){
+
+    body.innerHTML=
+      '<div class="empty">Henüz rota oluşturmadın. İşletme detayından rotaya ekleyebilirsin.</div>';
+
+  }else{
+
+    body.innerHTML=`
+
+      <div class="stack">
+
+        ${
+          state.route
+          .map(
+            (x,i)=>`
+
+            <div class="menu-card row">
+
+              <b>
+                ${i+1}. ${esc(x.name)}
+              </b>
+
+              <button
+                class="btn mini danger"
+                onclick="removeRoute(${i})"
+              >
+                Sil
+              </button>
+
+            </div>
+
+          `
+          )
+          .join("")
+        }
+
+      </div>
+
+      <div class="search-actions">
+
+        <button
+          class="btn primary"
+          onclick="openCombinedRoute()"
+        >
+          🗺️ Google Maps rotasını aç
+        </button>
+
+        <button
+          class="btn"
+          onclick="clearRoute()"
+        >
+          Temizle
+        </button>
+
+      </div>
+    `;
+  }
+
+  openModal(
+    "routeModal"
+  );
+}
+
+function removeRoute(i){
+
+  state.route.splice(
+    i,
+    1
+  );
+
+  localStorage.setItem(
+    "discover_route",
+    JSON.stringify(
+      state.route
+    )
+  );
+
+  openRoute();
+
+  updateRoutePreview();
+}
+
+function clearRoute(){
+
+  state.route=[];
+
+  localStorage.setItem(
+    "discover_route",
+    "[]"
+  );
+
+  openRoute();
+
+  updateRoutePreview();
+}
+
+function openCombinedRoute(){
+
+  if(
+    !state.route.length
+  ){
+    return;
+  }
+
+  const dest=
+    state.route[
+      state.route.length-1
+    ];
+
+  const waypoints=
+    state.route
+    .slice(0,-1)
+    .map(
+      x=>
+        `${x.latitude},${x.longitude}`
+    )
+    .join("|");
+
+  const origin=
+    state.location
+      ?`${state.location.latitude},${state.location.longitude}`
+      :"";
+
+  const url=
+    `https://www.google.com/maps/dir/?api=1`+
+    `${origin?"&origin="+encodeURIComponent(origin):""}`+
+    `&destination=${encodeURIComponent(dest.latitude+","+dest.longitude)}`+
+    `${waypoints?"&waypoints="+encodeURIComponent(waypoints):""}`;
+
+  window.open(
+    url,
+    "_blank",
+    "noopener,noreferrer"
+  );
+}
+
+function levelName(l){
+
+  return [
+    "Kaşif",
+    "Meraklı",
+    "Gezgin",
+    "Deneyimci",
+    "Keşif Ustası",
+    "Insider",
+    "Explorer+",
+    "Elite",
+    "Master",
+    "Legend"
+  ][
+    clamp(
+      l,
+      1,
+      10
+    )-1
+  ];
+}
+
+function updateLevels(){
+
+  state.level=
+    clamp(
+      Number(
+        state.profile?.level||
+        Math.floor(
+          state.xp/750
+        )+1
+      ),
+      1,
+      10
+    );
+
+  const cur=
+    state.xp%750;
+
+  const pct=
+    Math.round(
+      cur/750*100
+    );
+
+  $("levelLabel")
+    .textContent=
+    `Seviye ${state.level} · ${levelName(state.level)}`;
+
+  $("xpLabel")
+    .textContent=
+    `${cur} / 750 XP`;
+
+  $("xpFill")
+    .style.width=
+    pct+"%";
+
+  $("menuLevel")
+    .textContent=
+    `Seviye ${state.level}`;
+
+  $("menuXp")
+    .textContent=
+    `${cur} / 750 XP`;
+
+  $("menuXpFill")
+    .style.width=
+    pct+"%";
+
+  $("levelsGrid")
+    .innerHTML=
+    Array
+    .from(
+      {
+        length:10
+      },
+      (_,i)=>`
+
+      <div class="level ${i+1===state.level?"active":""}">
+
+        <b>
+          ${i+1}
+        </b>
+
+        <small>
+          ${levelName(i+1)}
+        </small>
+
+      </div>
+    `
+    )
+    .join("");
+}
+
+async function gainXP(
+  amount,
+  reason
+){
+
+  if(
+    !state.user
+  ){
+    return;
+  }
+
+  state.xp+=amount;
+
+  try{
+
+    await sb
+      .from(
+        "xp_events"
+      )
+      .insert({
+        user_id:
+          state.user.id,
+
+        amount,
+
+        reason
+      });
+
+    await sb
+      .from(
+        "profiles"
+      )
+      .update({
+        xp:
+          state.xp,
+
+        level:
+          clamp(
+            Math.floor(
+              state.xp/750
+            )+1,
+            1,
+            10
+          )
+      })
+      .eq(
+        "id",
+        state.user.id
+      );
+
+  }catch{}
+
+  updateLevels();
+}
+
+async function openAuth(
+  type="login"
+){
+
+  const join=
+    type==="join";
+
+  $("authModal")
+    .dataset.mode=
+    join
+      ?"join"
+      :"login";
+
+  $("authTitle")
+    .textContent=
+    join
+      ?"DISCOVER AI'a katıl"
+      :"DISCOVER AI'a giriş";
+
+  $("authSubmitBtn")
+    .textContent=
+    join
+      ?"Hesap oluştur"
+      :"Giriş yap";
+
+  $("authSwitchBtn")
+    .textContent=
+    join
+      ?"Zaten hesabın var mı? Giriş yap"
+      :"Hesabın yok mu? Kayıt ol";
+
+  document
+    .querySelectorAll(
+      ".join-field"
+    )
+    .forEach(
+      x=>
+        x.classList.toggle(
+          "hidden",
+          !join
+        )
+    );
+
+  $("authHint")
+    .textContent=
+    join
+      ?"Kullanıcı adı, e-posta ve şifre yeterli."
+      :"E-posta ve şifrenle giriş yap.";
+
+  openModal(
+    "authModal"
+  );
+}
+
+function switchAuth(){
+
+  openAuth(
+    $("authModal")
+      .dataset.mode===
+      "login"
+      ?"join"
+      :"login"
+  );
+}
+
+async function submitAuth(){
+
+  const mode=
+    $("authModal")
+      .dataset.mode||
+    "login";
+
+  const email=
+    $("authEmail")
+      .value
+      .trim();
+
+  const password=
+    $("authPassword")
+      .value;
+
+  const username=
+    $("authUsername")
+      .value
+      .trim();
+
+  if(
+    !email ||
+    password.length<6
+  ){
+    return toast(
+      "Geçerli e-posta ve en az 6 karakterli şifre gerekli."
+    );
+  }
+
+  try{
 
     if(
-      /429|credit|credits|kredi/i
-      .test(message)
+      mode==="join"
     ){
 
+      const {
+        error
+      }=
+        await sb
+        .auth
+        .signUp({
+          email,
+          password,
+
+          options:{
+            data:{
+              username:
+                username||
+                email.split("@")[0]
+            }
+          }
+        });
+
+      if(error){
+        throw error;
+      }
+
       toast(
-        "Foursquare API kotası şu anda kullanılamıyor. Menü daha sonra tekrar denenebilir."
+        "Kayıt işlemi tamamlandı."
       );
+
+    }else{
+
+      const {
+        error
+      }=
+        await sb
+        .auth
+        .signInWithPassword({
+          email,
+          password
+        });
+
+      if(error){
+        throw error;
+      }
+
+      toast(
+        "Giriş başarılı."
+      );
+    }
+
+    closeModal(
+      "authModal"
+    );
+
+    await syncUser();
+
+  }catch(e){
+
+    toast(
+      "Hesap işlemi başarısız: "+
+      (e.message||"")
+    );
+  }
+}
+
+async function syncUser(){
+
+  try{
+
+    const {
+      data:{
+        user
+      }
+    }=
+      await sb
+      .auth
+      .getUser();
+
+    state.user=user;
+
+    if(!user){
+
+      state.profile=null;
+      state.xp=0;
+      state.premium=false;
+
+      $("authGate")
+        .classList
+        .add("open");
+
+      updateAuthUI();
+      updateLevels();
 
       return;
     }
 
+    $("authGate")
+      .classList
+      .remove("open");
 
-    toast(
-      "Menü kontrol edilemedi: "+
-      message
+    let {
+      data:profile,
+      error
+    }=
+      await sb
+      .from(
+        "profiles"
+      )
+      .select("*")
+      .eq(
+        "id",
+        user.id
+      )
+      .maybeSingle();
+
+    if(error){
+      console.warn(error);
+    }
+
+    if(!profile){
+
+      const username=
+        user.user_metadata
+          ?.username||
+        user.email
+          ?.split("@")[0]||
+        "Kaşif";
+
+      const ins=
+        await sb
+        .from(
+          "profiles"
+        )
+        .insert({
+          id:user.id,
+          username,
+          level:1,
+          xp:0
+        })
+        .select()
+        .maybeSingle();
+
+      profile=
+        ins.data||
+        {
+          id:user.id,
+          username,
+          level:1,
+          xp:0
+        };
+    }
+
+    state.profile=
+      profile;
+
+    state.xp=
+      Number(
+        profile?.xp||0
+      );
+
+    state.premium=
+      !!(
+        profile?.is_premium||
+        profile?.premium||
+        profile?.premium_active
+      );
+
+    updateAuthUI();
+    updateLevels();
+
+    if(
+      state.location
+    ){
+      syncLocationToProfile();
+    }
+
+  }catch(e){
+
+    console.warn(
+      "SYNC USER",
+      e
     );
 
+    updateAuthUI();
+  }
+}
+
+function isAdmin(){
+
+  const r=
+    normalize(
+      state.profile?.role||
+      state.profile?.user_role||
+      ""
+    );
+
+  return (
+    r==="admin"||
+    r==="owner"||
+    state.profile?.is_admin===true
+  );
+}
+
+function updateAuthUI(){
+
+  const logged=
+    !!state.user;
+
+  $("navUser")
+    .textContent=
+    logged
+      ?(
+        state.profile?.username||
+        state.user.email||
+        "Kullanıcı"
+      )
+      :"Misafir";
+
+  $("navProfileBtn")
+    .textContent=
+    logged
+      ?"Profil"
+      :"Giriş";
+
+  $("navProfileBtn")
+    .onclick=
+    logged
+      ?openProfile
+      :()=>openAuth("login");
+
+  $("navJoinBtn")
+    .textContent=
+    logged
+      ?"Çıkış"
+      :"Katıl";
+
+  $("navJoinBtn")
+    .onclick=
+    logged
+      ?logout
+      :()=>openAuth("join");
+
+  $("menuUser")
+    .textContent=
+    logged
+      ?(
+        state.profile?.username||
+        state.user.email
+      )
+      :"Misafir";
+
+  $("menuAuthBtn")
+    .classList
+    .toggle(
+      "hidden",
+      logged
+    );
+
+  $("menuLogoutBtn")
+    .classList
+    .toggle(
+      "hidden",
+      !logged
+    );
+
+  $("menuAdminBtn")
+    .classList
+    .toggle(
+      "hidden",
+      !isAdmin()
+    );
+}
+
+function updateMenuUI(){
+  updateAuthUI();
+  updateLevels();
+}
+
+function openProfile(){
+
+  if(
+    !state.user
+  ){
+    return openAuth(
+      "login"
+    );
   }
 
+  $("profileName")
+    .textContent=
+    state.profile
+      ?.username||
+    "Kaşif";
+
+  $("profileEmail")
+    .textContent=
+    state.user.email||
+    "";
+
+  $("profileLevel")
+    .textContent=
+    `Seviye ${state.level} · ${levelName(state.level)}`;
+
+  $("profileXP")
+    .textContent=
+    state.xp;
+
+  $("profileFav")
+    .textContent=
+    state.favorites.size;
+
+  $("profilePremium")
+    .textContent=
+    state.premium
+      ?"ELITE"
+      :"FREE";
+
+  openModal(
+    "profileModal"
+  );
 }
+
+async function logout(){
+
+  await sb
+    .auth
+    .signOut();
+
+  state.user=null;
+  state.profile=null;
+  state.xp=0;
+  state.premium=false;
+
+  $("authGate")
+    .classList
+    .add("open");
+
+  updateAuthUI();
+  updateLevels();
+
+  closeModal(
+    "profileModal"
+  );
+
+  toast(
+    "Çıkış yapıldı."
+  );
+}
+
+function subscribe(plan){
+
+  if(
+    !state.user
+  ){
+    return openAuth(
+      "join"
+    );
+  }
+
+  toast(
+    `${plan} Premium seçildi. Ödeme sağlayıcısı bağlandığında checkout burada başlayacak.`
+  );
+}
+
+async function openAdmin(){
+
+  if(
+    !state.user
+  ){
+    return openAuth(
+      "login"
+    );
+  }
+
+  if(
+    !isAdmin()
+  ){
+    return toast(
+      "Bu alan yalnızca yetkili hesaplara açıktır."
+    );
+  }
+
+  openModal(
+    "adminModal"
+  );
+
+  const stats=
+    await Promise.all([
+      safeCount("profiles"),
+      safeCount("businesses"),
+      safeCount("activities"),
+      safeCount("reports")
+    ]);
+
+  $("adminStats")
+    .innerHTML=
+    [
+      [
+        "Kullanıcı",
+        stats[0]
+      ],
+      [
+        "İşletme",
+        stats[1]
+      ],
+      [
+        "Deneyim",
+        stats[2]
+      ],
+      [
+        "Rapor",
+        stats[3]
+      ]
+    ]
+    .map(
+      x=>`
+
+      <div class="stat">
+
+        <span class="muted">
+          ${x[0]}
+        </span>
+
+        <b>
+          ${x[1]}
+        </b>
+
+      </div>
+    `
+    )
+    .join("");
+}
+
+async function safeCount(
+  table
+){
+
+  try{
+
+    const {
+      count,
+      error
+    }=
+      await sb
+      .from(table)
+      .select(
+        "*",
+        {
+          count:"exact",
+          head:true
+        }
+      );
+
+    return error
+      ?"—"
+      :count??0;
+
+  }catch{
+
+    return "—";
+  }
+}
+
+async function submitReport(){
+
+  if(
+    !state.user
+  ){
+    return openAuth(
+      "login"
+    );
+  }
+
+  const text=
+    $("reportText")
+      .value
+      .trim();
+
+  if(!text){
+    return toast(
+      "Rapor metni gerekli."
+    );
+  }
+
+  try{
+
+    let res=
+      await sb
+      .from(
+        "reports"
+      )
+      .insert({
+        user_id:
+          state.user.id,
+
+        type:
+          "manual_report",
+
+        description:
+          text
+      });
+
+    if(
+      res.error
+    ){
+
+      const x=
+        await sb.rpc(
+          "create_activity_report_v67",
+          {
+            p_type:
+              "manual_report",
+
+            p_description:
+              text
+          }
+        );
+
+      if(
+        x.error
+      ){
+        throw x.error;
+      }
+    }
+
+    $("reportText")
+      .value="";
+
+    toast(
+      "Rapor kaydedildi."
+    );
+
+  }catch(e){
+
+    toast(
+      "Rapor kaydedilemedi: "+
+      (e.message||"")
+    );
+  }
+}
+
+function openAIAssistant(){
+
+  if(
+    !state.user
+  ){
+    return openAuth(
+      "login"
+    );
+  }
+
+  openModal(
+    "aiModal"
+  );
+}
+
+async function sendAI(){
+
+  const prompt=
+    $("aiPrompt")
+      .value
+      .trim();
+
+  if(!prompt)return;
+
+  const box=
+    $("aiConversation");
+
+  box.innerHTML+=`
+    <div class="notice" style="margin-top:8px">
+      <b>Sen:</b>
+      ${esc(prompt)}
+    </div>
+  `;
+
+  $("aiPrompt").value="";
+
+  const btn=
+    $("aiSendBtn");
+
+  btn.disabled=true;
+  btn.textContent="AI düşünüyor…";
+
+  try{
+
+    const candidates=
+      state.results
+      .slice(0,12)
+      .map(
+        b=>({
+          id:
+            businessKey(b),
+
+          name:
+            b.name,
+
+          category:
+            b.category,
+
+          distance_km:
+            b.distance_km,
+
+          score:
+            b.score,
+
+          price:
+            b.source==="local"
+            ?localPriceLabel(b)
+            :priceLevelLabel(
+              b.price_level
+            )
+        })
+      );
+
+    const {
+      data,
+      error
+    }=
+      await sb
+      .functions
+      .invoke(
+        "discover-ai-assistant",
+        {
+          body:{
+            message:
+              prompt,
+
+            context:{
+              budget:
+                budget(),
+
+              time_minutes:
+                timeMinutes(),
+
+              mode:
+                $("mode").value,
+
+              location:
+                state.location,
+
+              candidates
+            }
+          }
+        }
+      );
+
+    if(error){
+      throw error;
+    }
+
+    const answer=
+      String(
+        data?.answer||""
+      )
+      .trim();
+
+    if(!answer){
+      throw new Error(
+        "AI_EMPTY"
+      );
+    }
+
+    box.innerHTML+=`
+      <div class="notice" style="margin-top:8px">
+        <b>DISCOVER AI:</b>
+        ${esc(answer)}
+      </div>
+    `;
+
+  }catch(e){
+
+    box.innerHTML+=`
+      <div class="notice" style="margin-top:8px">
+        <b>DISCOVER AI:</b>
+        AI servis bağlantısı şu anda yanıt vermedi.
+        Mevcut DISCOVER Score sonuçlarını kullanmaya devam edebilirsin.
+      </div>
+    `;
+
+  }finally{
+
+    btn.disabled=false;
+    btn.textContent="✦ AI'ya sor";
+
+    box.scrollTop=
+      box.scrollHeight;
+  }
+}
+
+function loadPersistent(){
+
+  state.favorites=
+    favoriteStorage();
+
+  try{
+
+    state.route=
+      JSON.parse(
+        localStorage.getItem(
+          "discover_route"
+        )||
+        "[]"
+      );
+
+  }catch{
+
+    state.route=[];
+  }
+
+  updateRoutePreview();
+}
+
+[
+  "appMenuModal",
+  "authModal",
+  "profileModal",
+  "businessModal",
+  "menuModal",
+  "reviewsModal",
+  "reviewEditorModal",
+  "routeModal",
+  "aiModal",
+  "adminModal"
+]
+.forEach(
+  id=>
+    $(id)
+    ?.addEventListener(
+      "click",
+      e=>{
+
+        if(
+          e.target
+          .classList
+          .contains(
+            "modal"
+          )
+        ){
+          closeModal(id);
+        }
+      }
+    )
+);
+
+$("query")
+  .addEventListener(
+    "keydown",
+    e=>{
+
+      if(
+        e.key==="Enter"
+      ){
+        runDiscovery();
+      }
+    }
+  );
+
+$("budget")
+  .addEventListener(
+    "keydown",
+    e=>{
+
+      if(
+        e.key==="Enter"
+      ){
+        runDiscovery();
+      }
+    }
+  );
+
+$("timeValue")
+  .addEventListener(
+    "keydown",
+    e=>{
+
+      if(
+        e.key==="Enter"
+      ){
+        runDiscovery();
+      }
+    }
+  );
+
+sb.auth
+  .onAuthStateChange(
+    ()=>
+      setTimeout(
+        syncUser,
+        0
+      )
+  );
+
+(async()=>{
+
+  loadPersistent();
+
+  restoreLocation();
+
+  updateAuthUI();
+
+  updateLevels();
+
+  await syncUser();
+
+  if(
+    !state.location
+  ){
+    $("locationGate")
+      .classList
+      .add("open");
+  }
+
+  if(
+    state.user
+  ){
+    setTimeout(
+      ()=>runDiscovery(true),
+      250
+    );
+  }
+
+})();
+</script>
+</body>
+</html>
