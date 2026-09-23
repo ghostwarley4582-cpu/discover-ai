@@ -2486,186 +2486,45 @@ function scoreBusiness(b){
 }
 
 function passesHardFilters(b){
-
-  if(
-    Number.isFinite(
-      b.distance_km
-    ) &&
-    b.distance_km>10
-  ){
-    return false;
-  }
-
-  const selected=
-    $("category").value;
-
-  if(
-    selected &&
-    !(
-      b.category===selected ||
-      (
-        selected==="food" &&
-        b.category==="coffee"
-      )
-    )
-  ){
-    return false;
-  }
-
-  if(
-    b.source==="local" &&
-    b.price_known &&
-    b.price_sort>budget()
-  ){
-    return false;
-  }
-
+  if(state.location && Number.isFinite(b.distance_km) && b.distance_km>10) return false;
+  if(!state.location && b.source==="local" && normalize(b.city)!==normalize(currentCity())) return false;
+  const selected=$("category").value;
+  if(selected && b.category!==selected && !(selected==="food" && b.category==="coffee")) return false;
+  if(b.source==="local" && b.price_known && b.price_sort>budget()) return false;
   return true;
 }
-
 async function fetchLocalBusinesses(){
-
+  const out=[];
   try{
-
-    const {
-      data,
-      error
-    }=
-      await sb
-      .from(
-        "businesses"
-      )
-      .select("*")
-      .eq(
-        "is_active",
-        true
-      )
-      .limit(1500);
-
-    if(error){
-      throw error;
+    for(let offset=0;offset<5000;offset+=1000){
+      const {data,error}=await sb.from("businesses").select("*")
+        .eq("is_active",true).ilike("city",currentCity()).range(offset,offset+999);
+      if(error) throw error;
+      out.push(...(data||[]));
+      if(!data || data.length<1000) break;
     }
-
-    return (
-      data||[]
-    )
-    .filter(
-      x=>
-        x.is_blocked!==true
-    )
-    .map(
-      normalizeLocal
-    )
-    .filter(
-      passesHardFilters
-    );
-
+    return {places:out.filter(x=>x.is_blocked!==true).map(normalizeLocal).filter(passesHardFilters),error:null};
   }catch(e){
-
-    console.warn(
-      "LOCAL BUSINESS",
-      e
-    );
-
-    return [];
+    console.warn("LOCAL BUSINESS",e);
+    return {places:[],error:"Kayıtlı işletmeler alınamadı: "+(e.message||"veritabanı hatası")};
   }
 }
-
 async function fetchLiveBusinesses(){
-
-  const q=
-    currentQuery()||
-    ({
-      romantik:"romantik mekanlar",
-      sakin:"sakin mekanlar",
-      eglenceli:"eğlenceli mekanlar",
-      kesif:"gezilecek yerler",
-      sanat:"sanat kültür"
-    }[state.mood]||
-    "popüler mekanlar");
-
+  const queries={food:"restaurant",coffee:"coffee",culture:"museum",nightlife:"bar",outdoor:"park",shopping:"shopping",sport:"gym",beauty:"beauty",hotel:"hotel"};
   const body={
-    query_text:q,
-    city:currentCity(),
-    radius_m:10000,
-    max_results:20,
-    max_price:
-      priceLevelFromBudget(
-        budget()
-      ),
-    sort:"RELEVANCE"
+    query_text:queries[$("category").value]||"restaurant",
+    city:currentCity(),radius_m:10000,max_results:50,
+    max_price:priceLevelFromBudget(budget()),sort:"RELEVANCE"
   };
-
-  if(state.location){
-    body.lat=
-      state.location.latitude;
-
-    body.lng=
-      state.location.longitude;
-  }
-
+  if(state.location){body.lat=state.location.latitude;body.lng=state.location.longitude}
   try{
-
-    const {
-      data,
-      error
-    }=
-      await sb
-      .functions
-      .invoke(
-        "discover-live",
-        {
-          body
-        }
-      );
-
-    if(error){
-      throw error;
-    }
-
-    if(
-      !data?.ok ||
-      !Array.isArray(
-        data.places
-      )
-    ){
-      throw new Error(
-        data?.error||
-        "Canlı servis sonuç vermedi"
-      );
-    }
-
-    return data
-      .places
-      .map(
-        normalizeLive
-      )
-      .filter(
-        passesHardFilters
-      );
-
+    const {data,error}=await sb.functions.invoke("discover-live",{body});
+    if(error) throw error;
+    if(!data?.ok || !Array.isArray(data.places)) throw new Error(data?.error||"Canlı servis geçersiz yanıt verdi");
+    return {places:data.places.map(normalizeLive).filter(passesHardFilters),error:null};
   }catch(e){
-
-    console.warn(
-      "LIVE BUSINESS",
-      e
-    );
-
-    const m=
-      String(
-        e?.message||""
-      );
-
-    if(
-      /429|credit|kredi/i
-        .test(m)
-    ){
-      toast(
-        "Foursquare kotası şu anda kullanılamıyor; Supabase işletmeleri gösteriliyor."
-      );
-    }
-
-    return [];
+    console.warn("LIVE BUSINESS",e);
+    return {places:[],error:"Canlı işletmeler alınamadı: "+(e.message||"servis hatası")};
   }
 }
 
@@ -2715,91 +2574,45 @@ function mergeBusinesses(
   return out;
 }
 
-async function runDiscovery(
-  silent=false
-){
-
-  if(
-    !state.user
-  ){
-    if(!silent){
-      openAuth("login");
-    }
-
-    return;
-  }
-
-  const btn=
-    $("recommendBtn");
-
+async function runDiscovery(silent=false){
+  if(!state.user){if(!silent)openAuth("login");return}
+  const btn=$("recommendBtn");
   btn.disabled=true;
   btn.textContent="Aranıyor…";
-
-  $("results").innerHTML=
-    '<div class="empty">✦ İşletmeler ve canlı kaynaklar değerlendiriliyor...</div>';
-
-  $("searchState").textContent=
-    "Arama yapılıyor…";
-
+  $("results").innerHTML='<div class="empty">✦ İşletmeler ve canlı kaynaklar değerlendiriliyor...</div>';
+  $("searchState").textContent="Arama yapılıyor…";
   try{
-
-    const [
-      local,
-      live
-    ]=
-      await Promise.all([
-        fetchLocalBusinesses(),
-        fetchLiveBusinesses()
-      ]);
-
-    state.results=
-      sortResults(
-        mergeBusinesses(
-          local,
-          live
-        )
-      );
-
+    const [localResult,liveResult]=await Promise.all([fetchLocalBusinesses(),fetchLiveBusinesses()]);
+    const local=localResult.places,live=liveResult.places;
+    const errors=[localResult.error,liveResult.error].filter(Boolean);
+    state.results=sortResults(mergeBusinesses(local,live));
     resultOffset=0;
-
-    renderResults(
-      state.results
-        .slice(0,9)
-    );
-
-    $("searchState")
-      .textContent=
-      `${state.results.length} uygun aday · ${local.length} kayıtlı · ${live.length} canlı`;
-
-    $("resultSummary")
-      .textContent=
-      `10 km · ₺${budget().toLocaleString("tr-TR")} · ${timeMinutes()} dk · ${$("mode").value} · ${state.mood||"ruh hali serbest"}`;
-
-    if(!silent){
-
-      toast(
-        state.results.length
-          ?"DISCOVER Score güncellendi."
-          :"Bu kriterlerle uygun işletme bulunamadı."
-      );
+    if(state.results.length || !errors.length) renderResults(state.results.slice(0,9));
+    else{
+      $("results").innerHTML='<div class="empty"></div>';
+      $("results").firstElementChild.textContent=errors.join(" · ");
     }
-
-  }finally{
-
-    btn.disabled=false;
-    btn.textContent="✦ Bana Öner";
-  }
+    $("searchState").textContent=errors.length
+      ?errors.join(" · ")
+      :`${state.results.length} uygun aday · ${local.length} kayıtlı · ${live.length} canlı`;
+    $("resultSummary").textContent=
+      `${state.location?"10 km":currentCity()} · ₺${budget().toLocaleString("tr-TR")} · ${timeMinutes()} dk · ${$("mode").value} · ${state.mood||"ruh hali serbest"}`;
+    if(!silent)toast(state.results.length?"DISCOVER Score güncellendi.":errors.length?"Veri kaynaklarına erişilemedi.":"Bu kriterlerle uygun işletme bulunamadı.");
+  }catch(e){
+    console.error("DISCOVER search",e);
+    $("searchState").textContent="Arama hatası";
+    $("results").innerHTML='<div class="empty"></div>';
+    $("results").firstElementChild.textContent="Arama tamamlanamadı: "+(e.message||"bilinmeyen hata");
+  }finally{btn.disabled=false;btn.textContent="✦ Bana Öner"}
 }
 
 function surpriseMe(){
 
-  if(
-    !state.results.length
-  ){
-    return runDiscovery()
-      .then(
-        surpriseMe
-      );
+  if(!state.results.length){
+    return runDiscovery().then(()=>{
+      if(state.results.length) surpriseMe();
+      else toast("Sürpriz seçim için uygun işletme bulunamadı.");
+    });
   }
 
   const pool=
