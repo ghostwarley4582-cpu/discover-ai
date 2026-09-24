@@ -839,6 +839,7 @@ footer{
         Konum izni verirsen sonuçlar 10 km çevrende hassaslaştırılır.
       </span>
       <button id="locationAction" type="button" class="btn" style="padding:5px 10px;font-size:12px" onclick="requestLocation(true)">📍 Konumu aç</button>
+      <button type="button" class="btn" style="padding:5px 10px;font-size:12px" onclick="inspectLocation()">🗺️ Konumumu kontrol et</button>
     </div>
 
   </div>
@@ -1406,6 +1407,9 @@ const registry=
 const menuCache=
   new Map();
 
+let discoveryRequestId=0;
+let locationRequestPending=false;
+
 let resultOffset=0;
 
 function esc(v){
@@ -1861,88 +1865,72 @@ function sortResults(list){
   return a;
 }
 
-async function requestLocation(
-  userAction=false
-){
-
-  if(
-    !navigator.geolocation
-  ){
-    toast(
-      "Tarayıcı konumu desteklemiyor."
-    );
-
+async function requestLocation(userAction=false){
+  if(locationRequestPending)return false;
+  if(!navigator.geolocation){
+    toast("Tarayıcı konumu desteklemiyor.");
     return false;
   }
+  locationRequestPending=true;
+  const action=$("locationAction");
+  action.disabled=true;
+  $("locationGateStatus").textContent="Konum ölçülüyor…";
+  return new Promise(resolve=>navigator.geolocation.getCurrentPosition(
+    pos=>{
+      locationRequestPending=false;
+      action.disabled=false;
+      const latitude=Number(pos.coords.latitude);
+      const longitude=Number(pos.coords.longitude);
+      const accuracy=Number(pos.coords.accuracy);
+      const fresh=Number.isFinite(pos.timestamp) && Date.now()-pos.timestamp<60000 && pos.timestamp<=Date.now()+5000;
+      const valid=Number.isFinite(latitude)&&Number.isFinite(longitude)
+        &&Math.abs(latitude)<=90&&Math.abs(longitude)<=180&&(latitude!==0||longitude!==0);
+      // Geolocation API doğruluk değeri metre cinsinden yarıçaptır.
+      if(!valid||!fresh||!Number.isFinite(accuracy)||accuracy<=0||accuracy>500){
+        state.location=null;
+        discoveryRequestId++;
+        const detail=Number.isFinite(accuracy)&&accuracy>0
+          ?`Konumun doğruluğu yaklaşık ${Math.round(accuracy)} m; yakınlık için 500 m veya daha iyi gerekli.`
+          :"Konum doğrulanamadı.";
+        $("locationLine").textContent=detail+" Konumu yenile veya şehirle ara.";
+        $("locationGateStatus").textContent=detail+" Cihazının konum servislerini açıp tekrar dene.";
+        action.textContent="📍 Yeniden dene";
+        if(state.user)runDiscovery(true);
+        resolve(false);
+        return;
+      }
+      state.location={latitude,longitude,accuracy};
+      sessionStorage.removeItem("discover_location");
+      $("locationLine").textContent=`Konum aktif · yaklaşık ${Math.round(accuracy)} m doğruluk · 10 km kuş uçuşu çevre.`;
+      $("locationGateStatus").textContent="";
+      action.textContent="📍 Konumu yenile";
+      closeLocationGate();
+      if(state.user)runDiscovery(true);
+      syncLocationToProfile();
+      resolve(true);
+    },
+    err=>{
+      locationRequestPending=false;
+      action.disabled=false;
+      state.location=null;
+      discoveryRequestId++;
+      sessionStorage.removeItem("discover_location");
+      $("locationLine").textContent="Konum kapalı · mesafe gösterilmez; şehirle arama yapılır.";
+      $("locationGateStatus").textContent=err.code===1
+        ?"Konum izni reddedildi. Tarayıcı izinlerinden konumu açabilir veya şehirle arayabilirsin."
+        :"Konum alınamadı. Konum servislerini kontrol edip yeniden deneyebilirsin.";
+      action.textContent="📍 Konumu aç";
+      if(state.user)runDiscovery(true);
+      resolve(false);
+    },
+    {enableHighAccuracy:true,timeout:22000,maximumAge:0}
+  ));
+}
 
-  if(userAction){
-    $("locationGateStatus")
-      .textContent=
-      "Konum izni bekleniyor…";
-  }
-
-  return new Promise(
-    resolve=>
-      navigator
-        .geolocation
-        .getCurrentPosition(
-          pos=>{
-
-            state.location={
-              latitude:
-                Number(
-                  pos.coords.latitude
-                ),
-
-              longitude:
-                Number(
-                  pos.coords.longitude
-                ),
-
-              accuracy:
-                Number(
-                  pos.coords.accuracy||0
-                )
-            };
-
-            // Konum yalnızca bu sayfa açıkken bellekte tutulur.
-            sessionStorage.removeItem("discover_location");
-
-            $("locationLine")
-              .textContent=
-              `Konum aktif · yaklaşık ${Math.round(state.location.accuracy||0)} m doğruluk · arama 10 km ile sınırlandırılır.`;
-
-            closeLocationGate();
-            $("locationAction").textContent="📍 Konumu yenile";
-            if(state.user)runDiscovery(true);
-
-            syncLocationToProfile();
-
-            resolve(true);
-          },
-
-          err=>{
-            state.location=null;
-            sessionStorage.removeItem("discover_location");
-            $("locationLine").textContent="Konum kapalı · mesafe gösterilmez; şehirle arama yapılır.";
-
-            $("locationAction").textContent="📍 Konumu aç";
-            $("locationGateStatus")
-              .textContent=
-              err.code===1
-              ?"Konum izni reddedildi. Şehir ile aramaya devam edebilirsin."
-              :"Konum alınamadı. Şehir ile aramaya devam edebilirsin.";
-
-            resolve(false);
-          },
-
-          {
-            enableHighAccuracy:true,
-            timeout:16000,
-            maximumAge:300000
-          }
-        )
-  );
+function inspectLocation(){
+  if(!state.location)return toast("Önce konum izni ver.");
+  const point=state.location.latitude+","+state.location.longitude;
+  window.open("https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(point),"_blank","noopener,noreferrer");
 }
 
 function restoreLocation(){
@@ -2117,7 +2105,7 @@ function normalizeLocal(b){
   const lng=b.longitude==null || b.longitude==="" ? NaN : Number(b.longitude);
 
   const dist=
-    state.location && Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat)<=90 && Math.abs(lng)<=180 && (lat!==0||lng!==0)
+    state.location && b.location_verified===true && Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat)<=90 && Math.abs(lng)<=180 && (lat!==0||lng!==0)
       ?haversine(state.location.latitude,state.location.longitude,lat,lng)
       :null;
 
@@ -2426,7 +2414,7 @@ function credibleBusiness(b){
 }
 function passesHardFilters(b){
   if(!credibleBusiness(b))return false;
-  if(state.location && Number.isFinite(b.distance_km) && b.distance_km>10) return false;
+  if(state.location && (!Number.isFinite(b.distance_km) || b.distance_km>10)) return false;
   if(!state.location && b.source==="local" && normalize(b.city)!==normalize(currentCity())) return false;
   const selected=$("category").value;
   if(selected && b.category!==selected && !(selected==="food" && b.category==="coffee")) return false;
@@ -2437,8 +2425,15 @@ async function fetchLocalBusinesses(){
   const out=[];
   try{
     for(let offset=0;offset<5000;offset+=1000){
-      const {data,error}=await sb.from("businesses").select("*")
-        .eq("is_active",true).ilike("city",currentCity()).range(offset,offset+999);
+      let query=sb.from("businesses").select("*").eq("is_active",true);
+      if(state.location){
+        const lat=state.location.latitude,lng=state.location.longitude;
+        const deltaLat=10/111.2;
+        const deltaLng=10/(111.2*Math.max(.01,Math.cos(lat*Math.PI/180)));
+        query=query.gte("latitude",lat-deltaLat).lte("latitude",lat+deltaLat)
+          .gte("longitude",lng-deltaLng).lte("longitude",lng+deltaLng);
+      }else query=query.ilike("city",currentCity());
+      const {data,error}=await query.range(offset,offset+999);
       if(error) throw error;
       out.push(...(data||[]));
       if(!data || data.length<1000) break;
@@ -2509,6 +2504,7 @@ function mergeBusinesses(
 }
 
 async function runDiscovery(silent=false){
+  const requestId=++discoveryRequestId;
   if(!state.user){if(!silent)openAuth("login");return}
   const btn=$("recommendBtn");
   btn.disabled=true;
@@ -2517,6 +2513,7 @@ async function runDiscovery(silent=false){
   $("searchState").textContent="Arama yapılıyor…";
   try{
     const [localResult,liveResult]=await Promise.all([fetchLocalBusinesses(),fetchLiveBusinesses()]);
+    if(requestId!==discoveryRequestId)return;
     const local=localResult.places,live=liveResult.places;
     const errors=[localResult.error,liveResult.error].filter(Boolean);
     const warnings=[liveResult.warning].filter(Boolean);
@@ -2531,14 +2528,15 @@ async function runDiscovery(silent=false){
       ?errors.join(" · ")
       :`${state.results.length} uygun aday · ${local.length} kayıtlı · ${live.length} Foursquare${warnings.length?" · "+warnings.join(" · "):""}`;
     $("resultSummary").textContent=
-      `${state.location?"10 km":currentCity()} · ₺${budget().toLocaleString("tr-TR")} · ${timeMinutes()} dk · ${$("mode").value} · ${state.mood||"ruh hali serbest"}`;
+      `${state.location?"10 km kuş uçuşu çevre":currentCity()} · ₺${budget().toLocaleString("tr-TR")} · ${timeMinutes()} dk · ${$("mode").value} · ${state.mood||"ruh hali serbest"}`;
     if(!silent)toast(state.results.length?"DISCOVER Score güncellendi.":errors.length?"Veri kaynaklarına erişilemedi.":"Bu kriterlerle uygun işletme bulunamadı.");
   }catch(e){
+    if(requestId!==discoveryRequestId)return;
     console.error("DISCOVER search",e);
     $("searchState").textContent="Arama hatası";
     $("results").innerHTML='<div class="empty"></div>';
     $("results").firstElementChild.textContent="Arama tamamlanamadı: "+(e.message||"bilinmeyen hata");
-  }finally{btn.disabled=false;btn.textContent="✦ Bana Öner"}
+  }finally{if(requestId===discoveryRequestId){btn.disabled=false;btn.textContent="✦ Bana Öner"}}
 }
 
 function surpriseMe(){
