@@ -2654,7 +2654,7 @@ function renderResults(list){
           )
           ?b.distance_km
             .toFixed(1)+
-            " km"
+            " km kuş uçuşu"
           :(state.location?"Mesafe bilinmiyor":"Konum kapalı");
 
         const rating=
@@ -2713,7 +2713,7 @@ function renderResults(list){
 
           <div class="fit-box">
             <span class="badge ${live?"live":"purple"}">
-              ${live?"● FOURSQUARE KAYDI":"SUPABASE"}
+              ${live?"● FOURSQUARE KAYDI":"KAYITLI İŞLETME"}
             </span>
 
             · %${b.score} arama eşleşmesi
@@ -2747,7 +2747,7 @@ function renderResults(list){
 
           <div class="reason-box">
             <b>Neden önerildi?</b>
-            ${b.price_known?"Kategori, mesafe ve kayıtlı fiyat değerlendirildi.":"Kategori ve mesafe değerlendirildi. Bütçe uygunluğu bilinmiyor."}
+            ${b.price_known?`Kategori${Number.isFinite(b.distance_km)?", kuş uçuşu mesafe":""} ve kayıtlı fiyat değerlendirildi.`:`Kategori${Number.isFinite(b.distance_km)?" ve kuş uçuşu mesafe":""} değerlendirildi. Bütçe uygunluğu bilinmiyor.`}
           </div>
 
           <div class="business-actions">
@@ -2830,7 +2830,7 @@ function openBusiness(k){
         <div>
 
           <span class="badge ${b.source==="live"?"live":"purple"}">
-            ${b.source==="live"?"CANLI FOURSQUARE":"DISCOVER DB"}
+            ${b.source==="live"?"CANLI FOURSQUARE":"KAYITLI İŞLETME"}
           </span>
 
           <h2 style="margin:10px 0 4px">
@@ -2851,7 +2851,7 @@ function openBusiness(k){
             Number.isFinite(
               b.distance_km
             )
-            ?b.distance_km.toFixed(1)+" km"
+            ?b.distance_km.toFixed(1)+" km kuş uçuşu"
             :(state.location?"Mesafe bilinmiyor":"Konum kapalı")
           }
         </span>
@@ -2861,7 +2861,7 @@ function openBusiness(k){
       <div class="menu-grid" style="margin-top:14px">
 
         <div class="menu-card">
-          <small>Adres</small>
+          <small>Adres · yol mesafesi ve süreyi Haritalar hesaplar</small>
           <b>${esc(b.address||"Adres bilgisi yok")}</b>
         </div>
 
@@ -2971,9 +2971,12 @@ function routeToBusiness(k){
   const valid=Number.isFinite(b.latitude) && Number.isFinite(b.longitude)
     && Math.abs(b.latitude)<=90 && Math.abs(b.longitude)<=180
     && !(b.latitude===0 && b.longitude===0);
-  const destination=valid
-    ?b.latitude+","+b.longitude
-    :[b.name,b.address,b.city].filter(Boolean).join(", ");
+  // Yerel kayıt koordinatları işletme tarafından doğrulanmamış olabilir.
+  // Haritalar ad ve adresi çözsün; yalnızca adres yoksa koordinatı kullan.
+  const address=[b.name,b.address,b.city].filter(Boolean).join(", ");
+  const destination=b.source==="local" && b.address
+    ?address
+    :valid?b.latitude+","+b.longitude:address;
   if(!destination)return toast("Bu işletme için rota adresi bulunamadı.");
   const origin=state.location
     ?"&origin="+encodeURIComponent(state.location.latitude+","+state.location.longitude)
