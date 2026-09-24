@@ -838,6 +838,7 @@ footer{
       <span id="locationLine">
         Konum izni verirsen sonuçlar 10 km çevrende hassaslaştırılır.
       </span>
+      <button id="locationAction" type="button" class="btn" style="padding:5px 10px;font-size:12px" onclick="requestLocation(true)">📍 Konumu aç</button>
     </div>
 
   </div>
@@ -1912,6 +1913,8 @@ async function requestLocation(
               `Konum aktif · yaklaşık ${Math.round(state.location.accuracy||0)} m doğruluk · arama 10 km ile sınırlandırılır.`;
 
             closeLocationGate();
+            $("locationAction").textContent="📍 Konumu yenile";
+            if(state.user)runDiscovery(true);
 
             syncLocationToProfile();
 
@@ -1923,6 +1926,7 @@ async function requestLocation(
             sessionStorage.removeItem("discover_location");
             $("locationLine").textContent="Konum kapalı · mesafe gösterilmez; şehirle arama yapılır.";
 
+            $("locationAction").textContent="📍 Konumu aç";
             $("locationGateStatus")
               .textContent=
               err.code===1
@@ -1946,6 +1950,7 @@ function restoreLocation(){
   sessionStorage.removeItem("discover_location");
   state.location=null;
   $("locationLine").textContent="Konum kapalı · mesafe gösterilmez; şehirle arama yapılır.";
+  $("locationAction").textContent="📍 Konumu aç";
   return false;
 }
 
@@ -2000,19 +2005,15 @@ function normalizeLive(p){
       .filter(Boolean)
     :[];
 
-  const lat=
-    Number(
-      p.latitude??
-      loc.latitude
-    );
+  const geo=p.geocodes?.main||p.geocodes?.roof||p.geocodes?.drop_off||p.raw?.geocodes?.main||{};
+  const coord=(...values)=>{
+    const found=values.find(v=>v!==null && v!==undefined && v!=="" && Number.isFinite(Number(v)));
+    return found===undefined?NaN:Number(found);
+  };
+  const lat=coord(p.latitude,loc.latitude,geo.latitude);
+  const lng=coord(p.longitude,loc.longitude,geo.longitude);
 
-  const lng=
-    Number(
-      p.longitude??
-      loc.longitude
-    );
-
-  const dist=state.location && Number.isFinite(lat) && Number.isFinite(lng)
+  const dist=state.location && Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat)<=90 && Math.abs(lng)<=180 && (lat!==0||lng!==0)
     ?haversine(state.location.latitude,state.location.longitude,lat,lng)
     :null;
 
@@ -2116,7 +2117,7 @@ function normalizeLocal(b){
   const lng=b.longitude==null || b.longitude==="" ? NaN : Number(b.longitude);
 
   const dist=
-    state.location && Number.isFinite(lat) && Number.isFinite(lng)
+    state.location && Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat)<=90 && Math.abs(lng)<=180 && (lat!==0||lng!==0)
       ?haversine(state.location.latitude,state.location.longitude,lat,lng)
       :null;
 
