@@ -1904,12 +1904,8 @@ async function requestLocation(
                 )
             };
 
-            sessionStorage.setItem(
-              "discover_location",
-              JSON.stringify(
-                state.location
-              )
-            );
+            // Konum yalnızca bu sayfa açıkken bellekte tutulur.
+            sessionStorage.removeItem("discover_location");
 
             $("locationLine")
               .textContent=
@@ -1923,6 +1919,9 @@ async function requestLocation(
           },
 
           err=>{
+            state.location=null;
+            sessionStorage.removeItem("discover_location");
+            $("locationLine").textContent="Konum kapalı · mesafe gösterilmez; şehirle arama yapılır.";
 
             $("locationGateStatus")
               .textContent=
@@ -1943,38 +1942,10 @@ async function requestLocation(
 }
 
 function restoreLocation(){
-
-  try{
-
-    const x=
-      JSON.parse(
-        sessionStorage.getItem(
-          "discover_location"
-        )||
-        "null"
-      );
-
-    if(
-      x &&
-      Number.isFinite(
-        Number(x.latitude)
-      ) &&
-      Number.isFinite(
-        Number(x.longitude)
-      )
-    ){
-
-      state.location=x;
-
-      $("locationLine")
-        .textContent=
-        "Konum aktif · arama 10 km ile sınırlandırılır.";
-
-      return true;
-    }
-
-  }catch{}
-
+  // Eski oturumdaki koordinatları sessizce yeniden kullanma.
+  sessionStorage.removeItem("discover_location");
+  state.location=null;
+  $("locationLine").textContent="Konum kapalı · mesafe gösterilmez; şehirle arama yapılır.";
   return false;
 }
 
@@ -2041,19 +2012,9 @@ function normalizeLive(p){
       loc.longitude
     );
 
-  const dist=
-    p.distance!=null && Number.isFinite(Number(p.distance))
-    ?Number(p.distance)/1000
-    :(
-      state.location
-        ?haversine(
-          state.location.latitude,
-          state.location.longitude,
-          lat,
-          lng
-        )
-        :null
-    );
+  const dist=state.location && Number.isFinite(lat) && Number.isFinite(lng)
+    ?haversine(state.location.latitude,state.location.longitude,lat,lng)
+    :null;
 
   return {
     source:"live",
@@ -2151,24 +2112,12 @@ function normalizeLive(p){
 
 function normalizeLocal(b){
 
-  const lat=
-    Number(
-      b.latitude
-    );
-
-  const lng=
-    Number(
-      b.longitude
-    );
+  const lat=b.latitude==null || b.latitude==="" ? NaN : Number(b.latitude);
+  const lng=b.longitude==null || b.longitude==="" ? NaN : Number(b.longitude);
 
   const dist=
-    state.location
-      ?haversine(
-        state.location.latitude,
-        state.location.longitude,
-        lat,
-        lng
-      )
+    state.location && Number.isFinite(lat) && Number.isFinite(lng)
+      ?haversine(state.location.latitude,state.location.longitude,lat,lng)
       :null;
 
   const price=
@@ -2705,7 +2654,7 @@ function renderResults(list){
           ?b.distance_km
             .toFixed(1)+
             " km"
-          :"Mesafe bilinmiyor";
+          :(state.location?"Mesafe bilinmiyor":"Konum kapalı");
 
         const rating=
           b.rating
@@ -2902,7 +2851,7 @@ function openBusiness(k){
               b.distance_km
             )
             ?b.distance_km.toFixed(1)+" km"
-            :"—"
+            :(state.location?"Mesafe bilinmiyor":"Konum kapalı")
           }
         </span>
 
@@ -3016,38 +2965,20 @@ function openBusiness(k){
 }
 
 function routeToBusiness(k){
-
-  const b=
-    getBusiness(k);
-
-  if(
-    !b ||
-    !Number.isFinite(
-      Number(b.latitude)
-    ) ||
-    !Number.isFinite(
-      Number(b.longitude)
-    )
-  ){
-    return toast(
-      "Bu işletmenin koordinatı bulunamadı."
-    );
-  }
-
-  const origin=
-    state.location
-      ?`&origin=${encodeURIComponent(
-        state.location.latitude+
-        ","+
-        state.location.longitude
-      )}`
-      :"";
-
-  window.open(
-    `https://www.google.com/maps/dir/?api=1${origin}&destination=${encodeURIComponent(Number(b.latitude)+","+Number(b.longitude))}`,
-    "_blank",
-    "noopener,noreferrer"
-  );
+  const b=getBusiness(k);
+  if(!b)return;
+  const valid=Number.isFinite(b.latitude) && Number.isFinite(b.longitude)
+    && Math.abs(b.latitude)<=90 && Math.abs(b.longitude)<=180
+    && !(b.latitude===0 && b.longitude===0);
+  const destination=valid
+    ?b.latitude+","+b.longitude
+    :[b.name,b.address,b.city].filter(Boolean).join(", ");
+  if(!destination)return toast("Bu işletme için rota adresi bulunamadı.");
+  const origin=state.location
+    ?"&origin="+encodeURIComponent(state.location.latitude+","+state.location.longitude)
+    :"";
+  window.open("https://www.google.com/maps/dir/?api=1"+origin+
+    "&destination="+encodeURIComponent(destination),"_blank","noopener,noreferrer");
 }
 
 async function openBusinessMenu(k){
@@ -3250,6 +3181,27 @@ async function openBusinessMenu(k){
   }
 }
 
+let activeMenuGroup="Tümü";
+function menuGroup(item){
+  const v=normalize([item.category,item.name].filter(Boolean).join(" "));
+  if(/tatli|dessert|baklava|sutlac|kadayif|pasta|dondurma/.test(v))return "Tatlı";
+  if(/icecek|drink|beverage|kahve|coffee|cay|cola|fanta|ayran|soda|meyve suyu|salep|limonata|\bsu\b/.test(v))return "İçecek";
+  return "Yiyecek";
+}
+function filterMenuGroup(btn,group){
+  activeMenuGroup=group;
+  document.querySelectorAll("#menuGroupRow .chip").forEach(x=>x.classList.toggle("active",x===btn));
+  filterMenuItems();
+}
+function filterMenuItems(){
+  const q=normalize($("menuItemSearch")?.value||"");
+  document.querySelectorAll("#menuItems .menu-card").forEach(card=>{
+    const matchesGroup=activeMenuGroup==="Tümü" || card.dataset.menuGroup===activeMenuGroup;
+    const matchesText=!q || normalize(card.textContent).includes(q);
+    card.classList.toggle("hidden",!matchesGroup || !matchesText);
+  });
+}
+
 function renderMenu(
   b,
   data
@@ -3375,27 +3327,32 @@ function renderMenu(
   .filter(Boolean)
   .join("");
 
+  activeMenuGroup="Tümü";
+  const groups=["Tümü","Yiyecek","İçecek","Tatlı"];
   const itemHtml=
     items.length
     ?`
       <h3>Kaynak sayfadan okunan menü ürünleri</h3>
+      <input id="menuItemSearch" class="input" type="search" placeholder="Menüde ürün ara..." oninput="filterMenuItems()" style="width:100%;margin:8px 0 10px">
+      <div id="menuGroupRow" class="chips" style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px">${groups.map(g=>`<button class="chip ${g==="Tümü"?"active":""}" onclick="filterMenuGroup(this,'${g}')">${g}${g==="Tümü"?` (${items.length})`:` (${items.filter(x=>menuGroup(x)===g).length})`}</button>`).join("")}</div>
       ${data.menu_items_source?`<div class="muted" style="margin-bottom:12px">Kaynak: <a href="${esc(safeUrl(data.menu_items_source))}" target="_blank" rel="noopener">İşletmenin menü sayfası</a> · Son okuma: ${esc(new Date(data.checked_at).toLocaleString("tr-TR"))}</div>`:""}
 
-      <div class="stack">
+      <div id="menuItems" class="stack">
 
         ${
           items
-          .slice(0,80)
+          .slice(0,100)
           .map(
             x=>`
 
-            <div class="menu-card row">
+            <div class="menu-card row" data-menu-group="${esc(menuGroup(x))}">
 
               <div>
 
                 <b>
                   ${esc(x.name||x.title||"Ürün")}
                 </b>
+                ${x.category?`<small>${esc(x.category)}</small>`:""}
 
                 ${
                   x.description
